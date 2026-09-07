@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mollier HVAC Analyzer - Arga Refrigeración</title>
   <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+  <!-- Librerías para generación de PDF y captura -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  
   <style>
     :root {
       --bg-color: #121212;
@@ -38,6 +42,15 @@
       border: 1px solid var(--border);
     }
     h2, h3 { margin-top: 0; color: var(--accent); }
+    
+    .project-info {
+      background: #252525;
+      padding: 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      margin-bottom: 15px;
+    }
+
     .units-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -49,7 +62,6 @@
     }
     .input-group { margin-bottom: 12px; }
     
-    /* ESTILOS DE ETIQUETAS E ICONO INFO */
     .label-wrapper {
       display: flex;
       align-items: center;
@@ -76,7 +88,6 @@
       cursor: pointer;
       border: 1px solid var(--accent);
     }
-    /* TOOLTIP INTERACTIVO */
     .info-icon .tooltip {
       visibility: hidden;
       opacity: 0;
@@ -145,22 +156,53 @@
     .metric-card .title { font-size: 0.75rem; color: var(--text-dim); }
     .metric-card .value { font-size: 1.1rem; font-weight: bold; margin-top: 4px; }
     #mollierChart { width: 100%; height: 580px; }
+
+    /* BOTONES DE ACCIÓN */
+    .btn-action {
+      width: 100%;
+      padding: 10px;
+      background: var(--accent);
+      color: #121212;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 0.95rem;
+      cursor: pointer;
+      margin-top: 15px;
+      transition: background 0.2s;
+    }
+    .btn-action:hover {
+      background: #008c93;
+      color: #ffffff;
+    }
   </style>
 </head>
 <body>
 
-  <div class="container">
+  <div class="container" id="reportArea">
     <!-- PANEL DE CONTROL Y ENTRADA DE DATOS -->
     <div class="panel">
-      <h2>Mollier HVAC</h2>
+      <h2>Mollier HVAC Analyzer</h2>
       
+      <!-- DATOS DEL PROYECTO -->
+      <div class="project-info">
+        <div class="input-group">
+          <label for="projectName">Nombre del Proyecto / Cliente</label>
+          <input type="text" id="projectName" value="Mantenimiento Cintas - Chiller 1" placeholder="Ej: Camara Cárnica 02">
+        </div>
+        <div class="input-group" style="margin-bottom:0;">
+          <label for="techName">Técnico / Empresa</label>
+          <input type="text" id="techName" value="Arga Refrigeración" placeholder="Tu nombre o empresa">
+        </div>
+      </div>
+
       <!-- SELECCIÓN DE UNIDADES -->
       <div class="units-row">
         <div>
           <div class="label-wrapper">
             <label for="unitPress">Unidad Presión</label>
             <span class="info-icon">i
-              <span class="tooltip">Selecciona entre PSIG (manométrica), PSIA (absoluta) o Bar abs.</span>
+              <span class="tooltip">Selecciona entre PSIG, PSIA o Bar abs.</span>
             </span>
           </div>
           <select id="unitPress" onchange="changeUnits()">
@@ -173,7 +215,7 @@
           <div class="label-wrapper">
             <label for="unitTemp">Unidad Temp.</label>
             <span class="info-icon">i
-              <span class="tooltip">Unidad de escala térmica (°C o °F) para lecturas de campo.</span>
+              <span class="tooltip">Unidad de escala térmica (°C o °F).</span>
             </span>
           </div>
           <select id="unitTemp" onchange="changeUnits()">
@@ -187,7 +229,7 @@
         <div class="label-wrapper">
           <label for="refrigerant">Refrigerante</label>
           <span class="info-icon">i
-            <span class="tooltip">Refrigerante activo. Genera la campana de saturación específica en el gráfico.</span>
+            <span class="tooltip">Refrigerante activo para generar la curva termodinámica.</span>
           </span>
         </div>
         <select id="refrigerant" onchange="updateAll()">
@@ -201,7 +243,7 @@
         <div class="label-wrapper">
           <label for="pBaja">Presión Succión / Baja (<span class="lblP">Bar abs</span>)</label>
           <span class="info-icon">i
-            <span class="tooltip">Presión tomada en la válvula de servicio de succión (línea de baja).</span>
+            <span class="tooltip">Presión tomada en la válvula de servicio de succión.</span>
           </span>
         </div>
         <input type="number" id="pBaja" value="4.0" step="0.1" oninput="updateAll()">
@@ -211,7 +253,7 @@
         <div class="label-wrapper">
           <label for="tSuccion">Temp. Succión (<span class="lblT">°C</span>)</label>
           <span class="info-icon">i
-            <span class="tooltip">Temperatura real medida sobre el caño de succión antes de entrar al compresor.</span>
+            <span class="tooltip">Temperatura medida sobre el caño de succión.</span>
           </span>
         </div>
         <input type="number" id="tSuccion" value="-5.0" step="0.5" oninput="updateAll()">
@@ -221,7 +263,7 @@
         <div class="label-wrapper">
           <label for="pAlta">Presión Descarga / Alta (<span class="lblP">Bar abs</span>)</label>
           <span class="info-icon">i
-            <span class="tooltip">Presión en el lado de alta (salida de compresor o línea de líquido).</span>
+            <span class="tooltip">Presión tomada en la línea de alta/líquido.</span>
           </span>
         </div>
         <input type="number" id="pAlta" value="17.0" step="0.1" oninput="updateAll()">
@@ -231,7 +273,7 @@
         <div class="label-wrapper">
           <label for="tLiquido">Temp. Líquido / Salida Cond. (<span class="lblT">°C</span>)</label>
           <span class="info-icon">i
-            <span class="tooltip">Temperatura medida en el tubo de líquido antes de la válvula de expansión.</span>
+            <span class="tooltip">Temperatura medida en el tubo de líquido antes de la VET.</span>
           </span>
         </div>
         <input type="number" id="tLiquido" value="33.0" step="0.5" oninput="updateAll()">
@@ -241,7 +283,7 @@
         <div class="label-wrapper">
           <label for="tDescarga">Temp. Descarga Real (<span class="lblT">°C</span>)</label>
           <span class="info-icon">i
-            <span class="tooltip">Temperatura medida a 5–10 cm de la salida del compresor en la tubería de descarga.</span>
+            <span class="tooltip">Temperatura a la salida directa del compresor.</span>
           </span>
         </div>
         <input type="number" id="tDescarga" value="85.0" step="0.5" oninput="updateAll()">
@@ -253,58 +295,42 @@
         <div class="metric-card">
           <div class="title-row">
             <span class="title">Sobrecalentamiento</span>
-            <span class="info-icon">i
-              <span class="tooltip">Garantiza que no regrese líquido al compresor (Gota líquida). Ideal: 5 a 8 K.</span>
-            </span>
           </div>
           <div class="value" id="valSH">0.0 K</div>
         </div>
         <div class="metric-card">
           <div class="title-row">
             <span class="title">Subenfriamiento</span>
-            <span class="info-icon">i
-              <span class="tooltip">Asegura 100% líquido a la VET. Evita burbujas de vapor. Ideal: 4 a 7 K.</span>
-            </span>
           </div>
           <div class="value" id="valSC">0.0 K</div>
         </div>
         <div class="metric-card">
           <div class="title-row">
             <span class="title">Efecto Ref. (Qe)</span>
-            <span class="info-icon">i
-              <span class="tooltip">Calor absorbido por cada kg de refrigerante en el evaporador (h1 - h4).</span>
-            </span>
           </div>
           <div class="value" id="valQe">0 kJ/kg</div>
         </div>
         <div class="metric-card">
           <div class="title-row">
             <span class="title">Trabajo Comp. (W)</span>
-            <span class="info-icon">i
-              <span class="tooltip">Energía mecánica aportada por el compresor al refrigerante (h2 - h1).</span>
-            </span>
           </div>
           <div class="value" id="valW">0 kJ/kg</div>
         </div>
         <div class="metric-card">
           <div class="title-row">
             <span class="title">COP Real</span>
-            <span class="info-icon">i
-              <span class="tooltip">Coeficiente de Rendimiento. Eficiencia térmica global del sistema (Qe / W).</span>
-            </span>
           </div>
           <div class="value" id="valCOP">0.00</div>
         </div>
         <div class="metric-card">
           <div class="title-row">
             <span class="title">Flash Gas (x4)</span>
-            <span class="info-icon">i
-              <span class="tooltip">Porcentaje de líquido que se evapora instantáneamente tras la expansión.</span>
-            </span>
           </div>
           <div class="value" id="valFlash">0%</div>
         </div>
       </div>
+
+      <button class="btn-action" onclick="generatePDF()">📄 Descargar Reporte PDF</button>
     </div>
 
     <!-- GRÁFICA MOLLIER -->
@@ -361,6 +387,13 @@
 
     function cToDisplay(c, unit) {
       return unit === 'F' ? (c * 9/5) + 32 : c;
+    }
+
+    function getDateTimeString() {
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      const timeStr = now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      return `${dateStr} - ${timeStr}`;
     }
 
     function changeUnits() {
@@ -475,18 +508,118 @@
       };
 
       const pLabel = pUnit === 'PSI_g' ? 'PSIG' : (pUnit === 'PSI_a' ? 'PSIA' : 'Bar abs');
+      const projName = document.getElementById('projectName').value || 'Proyecto Sin Nombre';
+      const timeTag = getDateTimeString();
 
       const layout = {
-        title: { text: 'Diagrama Presión - Entalpía (Mollier) : ' + refKey, font: { color: '#eee' } },
+        title: { 
+          text: `${projName}<br><sup>Refrigerante: ${refKey} | Registro: ${timeTag}</sup>`, 
+          font: { color: '#eee', size: 16 } 
+        },
         paper_bgcolor: '#1e1e1e',
         plot_bgcolor: '#121212',
-        margin: { l: 60, r: 30, t: 50, b: 50 },
+        margin: { l: 60, r: 30, t: 70, b: 50 },
         xaxis: { title: 'Entalpía h (kJ/kg)', color: '#b0b0b0', gridcolor: '#2a2a2a' },
         yaxis: { title: 'Presión (' + pLabel + ')', type: pUnit.includes('PSI') ? 'linear' : 'log', color: '#b0b0b0', gridcolor: '#2a2a2a' },
         showlegend: false
       };
 
-      Plotly.react('mollierChart', [dataDome, cyclePoints], layout, {responsive: true});
+      // CONFIGURACIÓN DE PLOTLY: Deja únicamente el botón de descarga HD (cámara)
+      const config = {
+        responsive: true,
+        displayModeBar: true,
+        displaylogo: false,
+        modeBarButtonsToKeep: ['toImage'],
+        toImageButtonOptions: {
+          format: 'png',
+          filename: `Mollier_${projName.replace(/\s+/g, '_')}_${Date.now()}`,
+          height: 1080,
+          width: 1920,
+          scale: 2
+        }
+      };
+
+      Plotly.react('mollierChart', [dataDome, cyclePoints], layout, config);
+    }
+
+    // FUNCIÓN PARA GENERAR EL REPORTES EN PDF CON HERRAMIENTAS NATIVAS DE JS
+    async function generatePDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('p', 'mm', 'a4');
+
+      const projName = document.getElementById('projectName').value || 'Sin Nombre';
+      const techName = document.getElementById('techName').value || 'N/A';
+      const refKey = document.getElementById('refrigerant').value;
+      const dateTime = getDateTimeString();
+
+      // Encabezado
+      doc.setFillColor(30, 30, 30);
+      doc.rect(0, 0, 210, 35, 'F');
+      
+      doc.setTextColor(0, 173, 181);
+      doc.setFontSize(18);
+      doc.text("REPORTE DE DIAGNÓSTICO TERMODINÁMICO", 10, 15);
+      
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(10);
+      doc.text(`Proyecto / Cliente: ${projName}`, 10, 23);
+      doc.text(`Técnico / Empresa: ${techName}`, 10, 29);
+      doc.text(`Fecha y Hora: ${dateTime}`, 120, 23);
+      doc.text(`Refrigerante: ${refKey}`, 120, 29);
+
+      // Tabla de Parámetros Ingresados
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(12);
+      doc.text("1. Variables Medidas en Campo", 10, 45);
+
+      const pUnitLbl = document.querySelector('.lblP').innerText;
+      const tUnitLbl = document.querySelector('.lblT').innerText;
+
+      const pBaja = document.getElementById('pBaja').value;
+      const tSucc = document.getElementById('tSuccion').value;
+      const pAlta = document.getElementById('pAlta').value;
+      const tLiq = document.getElementById('tLiquido').value;
+      const tDesc = document.getElementById('tDescarga').value;
+
+      doc.setFontSize(9);
+      doc.text(`• Presión de Succión: ${pBaja} ${pUnitLbl}`, 12, 53);
+      doc.text(`• Temp. de Succión: ${tSucc} ${tUnitLbl}`, 12, 59);
+      doc.text(`• Presión de Descarga / Líquido: ${pAlta} ${pUnitLbl}`, 12, 65);
+      doc.text(`• Temp. de Líquido: ${tLiq} ${tUnitLbl}`, 105, 53);
+      doc.text(`• Temp. de Descarga Real: ${tDesc} ${tUnitLbl}`, 105, 59);
+
+      // Tabla de Resultados Calculados
+      doc.setFontSize(12);
+      doc.text("2. Métricas y Rendimiento Calculado", 10, 77);
+
+      const sh = document.getElementById('valSH').innerText;
+      const sc = document.getElementById('valSC').innerText;
+      const qe = document.getElementById('valQe').innerText;
+      const w = document.getElementById('valW').innerText;
+      doc.setFontSize(9);
+      doc.text(`• Sobrecalentamiento (SH): ${sh}`, 12, 85);
+      doc.text(`• Subenfriamiento (SC): ${sc}`, 12, 91);
+      doc.text(`• Efecto Refrigerante (Qe): ${qe}`, 105, 85);
+      doc.text(`• Trabajo Compresor (W): ${w}`, 105, 91);
+      doc.text(`• COP Real: ${document.getElementById('valCOP').innerText}`, 12, 97);
+      doc.text(`• Flash Gas Exitoso (x4): ${document.getElementById('valFlash').innerText}`, 105, 97);
+
+      // Captura e inclusión de la gráfica
+      doc.setFontSize(12);
+      doc.text("3. Diagrama Presión - Entalpía (Mollier)", 10, 110);
+
+      const chartElem = document.getElementById('mollierChart');
+      const canvas = await html2canvas(chartElem, { scale: 2 });
+      const imgData = canvas.toDataURL('image/png');
+
+      doc.addImage(imgData, 'PNG', 10, 115, 190, 110);
+
+      // Pie de Página
+      doc.setFontSize(8);
+      doc.setTextColor(120, 120, 120);
+      doc.text("Generado con Mollier HVAC Analyzer - Arga Refrigeración", 10, 285);
+
+      doc.save(`Reporte_HVAC_${projName.replace(/\s+/g, '_')}.pdf`);
     }
 
     window.onload = updateAll;
