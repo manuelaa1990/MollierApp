@@ -79,7 +79,7 @@
       min-width: 0;
     }
 
-    /* Grilla ULTRA COMPACTA de 3 columnas para mediciones */
+    /* Grilla de 3 columnas para mediciones */
     .controls-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -110,7 +110,7 @@
       background-color: #0f172a;
       color: #f8fafc;
       width: 100%;
-      height: 24px; /* Altura recortada */
+      height: 24px;
     }
 
     .input-group select {
@@ -136,7 +136,7 @@
       border-color: #38bdf8;
     }
 
-    /* Barra de Botones (Ubicada sobre la gráfica) */
+    /* Barra de Botones sobre la gráfica */
     .action-bar {
       display: flex;
       gap: 6px;
@@ -768,9 +768,9 @@
         name: 'Ciclo Operativo Real',
         text: ['1 (Succ)', '2 (Desc)', '3 (Liq)', '4 (Evap)', ''],
         textposition: ['bottom right', 'top right', 'top left', 'bottom left', ''],
-        textfont: { color: '#f8fafc', size: 10 },
+        textfont: { color: '#f8fafc', size: 11 },
         line: { color: '#ef4444', width: 2.5 },
-        marker: { size: 5, color: '#f59e0b' }
+        marker: { size: 6, color: '#f59e0b' }
       };
 
       const traces = [getDomeTrace(refData), cycleTrace];
@@ -786,56 +786,61 @@
         showlegend: false
       });
 
-      // DEFINICIÓN DE LÍMITES FIJOS (DOMO COMPLETO vs ZONA ACTIVA)
+      // DEFINICIÓN DE LÍMITES FIJOS RECOR TADOS (SIN ZONA MUERTA INFERIOR)
       let xRangeFinal, yRangeFinal;
 
       const maxH_Ciclo = Math.max(h1, h2, h3, h4);
       const minH_Ciclo = Math.min(h1, h2, h3, h4);
 
       if (zonaActivaHabilitada) {
-        // MODO ZONA ACTIVA: Zoom enfocado en el ciclo
-        const hMargin = (maxH_Ciclo - minH_Ciclo) * 0.25;
-        const minPLog = Math.log10(Math.min(pSuctPlot, pDescPlot)) - 0.15;
-        const maxPLog = Math.log10(Math.max(pSuctPlot, pDescPlot)) + 0.15;
+        // MODO ZONA ACTIVA: Zoom ultra enfocado
+        const hMargin = (maxH_Ciclo - minH_Ciclo) * 0.2;
+        const minPLog = Math.log10(Math.min(pSuctPlot, pDescPlot)) - 0.12;
+        const maxPLog = Math.log10(Math.max(pSuctPlot, pDescPlot)) + 0.12;
 
         xRangeFinal = [minH_Ciclo - hMargin, maxH_Ciclo + hMargin];
         yRangeFinal = [minPLog, maxPLog];
       } else {
-        // MODO NORMAL (OFF): Domo Completo
-        const xLimitMax = Math.max(refData.xRange[1], maxH_Ciclo + 30);
+        // MODO NORMAL: Recorta la base inútil (mínimo a 50% de la P. Succión)
+        const pMinUtil = Math.max(pSuctPlot * 0.55, refData.dome[0].p * pf);
+        const pMaxUtil = Math.max(refData.pRange[1] * pf, pDescPlot * 1.25);
+
+        const xLimitMax = Math.max(refData.xRange[1], maxH_Ciclo + 20);
         xRangeFinal = [refData.xRange[0], xLimitMax];
         yRangeFinal = [
-          Math.log10(refData.pRange[0] * pf),
-          Math.log10(refData.pRange[1] * pf)
+          Math.log10(pMinUtil),
+          Math.log10(pMaxUtil)
         ];
       }
 
-      // CONFIGURACIÓN DEL LAYOUT
+      // LAYOUT CON EJES TOTALMENTE OCULTOS / LIMPIOS
       const layout = {
-        margin: { l: 45, r: 15, t: 25, b: 35 },
+        margin: { l: 10, r: 10, t: 25, b: 10 },
         autosize: true,
         paper_bgcolor: '#1e293b',
         plot_bgcolor: '#0f172a',
         dragmode: false,
         showlegend: false,
         title: {
-          text: `Diagrama Mollier p-h (${refData.nombre}) - Operación Real`,
+          text: `Diagrama Mollier p-h (${refData.nombre})`,
           font: { color: '#f8fafc', size: 12 }
         },
         xaxis: {
-          title: { text: 'Entalpía h [kJ/kg]', font: { color: '#94a3b8', size: 10 } },
+          visible: true,
+          showticklabels: false, // Sin números en X
+          showgrid: true,
+          gridcolor: '#1e293b',
           range: xRangeFinal,
-          fixedrange: true,
-          gridcolor: '#334155',
-          tickfont: { color: '#94a3b8', size: 9 }
+          fixedrange: true
         },
         yaxis: {
-          title: { text: `Presión P_abs [${pUnits[pUnitActual].label}]`, font: { color: '#94a3b8', size: 10 } },
+          visible: true,
+          showticklabels: false, // Sin números en Y (Regla ocultada)
+          showgrid: true,
+          gridcolor: '#1e293b',
           type: 'log',
           range: yRangeFinal,
-          fixedrange: true,
-          gridcolor: '#334155',
-          tickfont: { color: '#94a3b8', size: 9 }
+          fixedrange: true
         }
       };
 
