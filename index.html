@@ -47,6 +47,7 @@
       border-radius: 8px;
       padding: 8px 12px;
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+      transition: background-color 0.3s ease, border-color 0.3s ease;
     }
 
     .card h2 {
@@ -79,6 +80,9 @@
     .input-group {
       display: flex;
       flex-direction: column;
+      border-radius: 4px;
+      padding: 2px;
+      transition: all 0.3s ease;
     }
 
     .input-group label {
@@ -189,6 +193,7 @@
       padding: 6px 8px;
       max-height: 110px;
       overflow-y: auto;
+      transition: all 0.3s ease;
     }
 
     .diag-item {
@@ -217,6 +222,38 @@
       min-height: 340px;
     }
 
+    /* --- ESTILOS DE ALARMA INTERMITENTE EN ROJO --- */
+    .alarm-active-card {
+      animation: blink-card-bg 0.9s infinite alternate;
+      border-color: #ef4444 !important;
+    }
+
+    .alarm-active-input {
+      animation: blink-input-bg 0.9s infinite alternate;
+    }
+
+    @keyframes blink-card-bg {
+      0% {
+        background-color: #7f1d1d;
+        box-shadow: 0 0 12px rgba(239, 68, 68, 0.7);
+      }
+      100% {
+        background-color: #1e293b;
+        box-shadow: 0 0 4px rgba(239, 68, 68, 0.3);
+      }
+    }
+
+    @keyframes blink-input-bg {
+      0% {
+        background-color: #991b1b;
+        color: #ffffff;
+      }
+      100% {
+        background-color: #0f172a;
+        color: #f8fafc;
+      }
+    }
+
     @media (max-width: 680px) {
       .chart-container {
         height: 340px;
@@ -229,7 +266,7 @@
   <div class="app-container">
     
     <header class="top-panel">
-      <div class="card">
+      <div class="card" id="cardDatosCampo">
         <h2><span>Datos de Campo</span></h2>
         
         <div class="config-row">
@@ -293,7 +330,7 @@
             <input type="number" id="tLiq" value="45" step="0.5" oninput="guardarYActualizar()">
           </div>
 
-          <div class="input-group">
+          <div class="input-group" id="grpTDescReal">
             <label for="tDescReal" id="lblTDescReal">T. Descarga</label>
             <input type="number" id="tDescReal" value="90" step="1" oninput="guardarYActualizar()">
           </div>
@@ -311,7 +348,7 @@
 
       </div>
 
-      <div class="card">
+      <div class="card" id="cardIndicadores">
         <h2>Indicadores y Diagnóstico</h2>
         <div class="results-grid">
           <div class="kpi-box" style="border-left-color: #38bdf8;">
@@ -662,10 +699,12 @@
 
     function evaluarDiagnostico(refData, rP, tDescRealC, SH, SC) {
       const alertas = [];
+      let hayAlarmaTDesc = false;
 
-      // 1. Temperatura de Descarga por Refrigerante
+      // 1. Temperatura de Descarga por Refrigerante (Soberanía según el tipo de gas)
       if (tDescRealC > refData.tDescMax) {
-        alertas.push(`🔴 <b>Peligro Alta T. Descarga (${tDescRealC.toFixed(0)}°C > ${refData.tDescMax}°C):</b> Riesgo de carbonización de aceite en ${refData.nombre}.`);
+        hayAlarmaTDesc = true;
+        alertas.push(`🔴 <b>CRÍTICO: Temp. Descarga (${tDescRealC.toFixed(0)}°C > Límite ${refData.tDescMax}°C):</b> Riesgo de carbonización de aceite y fallo en ${refData.nombre}.`);
       }
 
       // 2. Relación de Compresión
@@ -694,7 +733,7 @@
         alertas.push(`ℹ️ <b>Mezcla Zeotrópica (Glide ${refData.glide} K):</b> Considere la diferencia punto de rocío / burbuja en mediciones de precisión.`);
       }
 
-      return alertas;
+      return { alertas, hayAlarmaTDesc };
     }
 
     function actualizarTodo() {
@@ -764,12 +803,24 @@
       document.getElementById('kpiw').innerText = `${w.toFixed(1)} kJ/kg`;
       document.getElementById('kpicop').innerText = cop.toFixed(2);
 
-      // 6. Diagnóstico Técnico Adaptativo
-      const alertas = evaluarDiagnostico(refData, rP, tDescRealC, superHeatK, subCoolK);
-      const panelAlertas = document.getElementById('panelAlertas');
+      // 6. Diagnóstico Técnico y Control de Alarma Intermitente
+      const { alertas, hayAlarmaTDesc } = evaluarDiagnostico(refData, rP, tDescRealC, superHeatK, subCoolK);
       
+      const cardDatos = document.getElementById('cardDatosCampo');
+      const grpDesc = document.getElementById('grpTDescReal');
+      const panelAlertas = document.getElementById('panelAlertas');
+
+      // Gestión visual del destello de alarma intermitente
+      if (hayAlarmaTDesc) {
+        cardDatos.classList.add('alarm-active-card');
+        grpDesc.classList.add('alarm-active-input');
+      } else {
+        cardDatos.classList.remove('alarm-active-card');
+        grpDesc.classList.remove('alarm-active-input');
+      }
+
       if (alertas.length === 0) {
-        panelAlertas.innerHTML = `<div class="diag-item" style="color: #34d399;">✅ <b>Sistema Estable:</b> El equipo con ${refData.nombre} ópera dentro de los parámetros de diseño previstos.</div>`;
+        panelAlertas.innerHTML = `<div class="diag-item" style="color: #34d399;">✅ <b>Sistema Estable:</b> El equipo con ${refData.nombre} opera dentro de los parámetros de diseño previstos.</div>`;
       } else {
         panelAlertas.innerHTML = alertas.map(a => `<div class="diag-item" style="color: #cbd5e1;">${a}</div>`).join('');
       }
