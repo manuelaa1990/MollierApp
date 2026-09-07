@@ -228,15 +228,15 @@
               <optgroup label="Puros y Tradicionales">
                 <option value="R134a">R-134a</option>
                 <option value="R22">R-22</option>
-                <option value="R410A" selected>R-410A</option>
+                <option value="R410A">R-410A</option>
                 <option value="R32">R-32</option>
               </optgroup>
               <optgroup label="Hidrocarburos (HC)">
                 <option value="R290">R-290 (Propano)</option>
-                <option value="R600a">R-600a (Isobubano)</option>
+                <option value="R600a">R-600a (Isobutano)</option>
               </optgroup>
               <optgroup label="Mezclas HFC (Serie 400 / 500)">
-                <option value="R404A">R-404A</option>
+                <option value="R404A" selected>R-404A</option>
                 <option value="R507A">R-507A</option>
                 <option value="R407C">R-407C</option>
                 <option value="R407A">R-407A</option>
@@ -252,8 +252,8 @@
           <div class="input-group">
             <label for="pUnitSelect">U. Presión</label>
             <select id="pUnitSelect" onchange="cambiarUnidades()">
-              <option value="psi" selected>PSI</option>
-              <option value="bar">Bar</option>
+              <option value="psi">PSI</option>
+              <option value="bar" selected>Bar</option>
               <option value="kpa">kPa</option>
             </select>
           </div>
@@ -268,24 +268,24 @@
 
           <!-- Mediciones Presión de Campo -->
           <div class="input-group">
-            <label for="pSuct" id="lblPSuct">P. Succión (PSI)</label>
-            <input type="number" id="pSuct" value="120" step="1" oninput="actualizarTodo()">
+            <label for="pSuct" id="lblPSuct">P. Succión (Bar)</label>
+            <input type="number" id="pSuct" value="3.5" step="0.1" oninput="actualizarTodo()">
           </div>
 
           <div class="input-group">
-            <label for="pDesc" id="lblPDesc">P. Descarga (PSI)</label>
-            <input type="number" id="pDesc" value="380" step="5" oninput="actualizarTodo()">
+            <label for="pDesc" id="lblPDesc">P. Descarga (Bar)</label>
+            <input type="number" id="pDesc" value="18.0" step="0.5" oninput="actualizarTodo()">
           </div>
 
           <!-- Mediciones Temperatura de Campo -->
           <div class="input-group">
             <label for="tSuct" id="lblTSuct">T. Tubería Succ (°C)</label>
-            <input type="number" id="tSuct" value="12" step="0.5" oninput="actualizarTodo()">
+            <input type="number" id="tSuct" value="10" step="0.5" oninput="actualizarTodo()">
           </div>
 
           <div class="input-group">
             <label for="tLiq" id="lblTLiq">T. Tubería Liq (°C)</label>
-            <input type="number" id="tLiq" value="42" step="0.5" oninput="actualizarTodo()">
+            <input type="number" id="tLiq" value="35" step="0.5" oninput="actualizarTodo()">
           </div>
 
           <div class="input-group col-2">
@@ -361,16 +361,16 @@
   <script>
     // ESTADO GLOBAL
     let zonaActivaHabilitada = false;
-    let pUnitActual = 'psi';
+    let pUnitActual = 'bar';
     let tUnitActual = 'C';
 
     const pUnits = {
-      bar: { factor: 1.0, label: 'bar' },
+      bar: { factor: 1.0, label: 'Bar' },
       psi: { factor: 14.5038, label: 'PSI' },
       kpa: { factor: 100.0, label: 'kPa' }
     };
 
-    // BASE DE DATOS DE REFRIGERANTES CON DOMO REDONDEADO PERFECTO
+    // BASE DE DATOS DE REFRIGERANTES (Presión Absoluta en Bar)
     const refrigerantes = {
       R134a: {
         nombre: "R-134a", criticalP: 40.6, xRange: [100, 500], pRange: [0.3, 42],
@@ -391,7 +391,7 @@
         ]
       },
       R404A: {
-        nombre: "R-404A", criticalP: 36.8, xRange: [100, 520], pRange: [0.3, 40],
+        nombre: "R-404A", criticalP: 36.8, xRange: [100, 600], pRange: [0.3, 40],
         dome: [
           {p: 0.3, hL: 120, hV: 381.3, tSat: -45}, {p: 1.0, hL: 140, hV: 381.0, tSat: -35},
           {p: 3.0, hL: 166, hV: 379.8, tSat: -18}, {p: 7.0, hL: 198, hV: 377.8, tSat: 5},
@@ -571,15 +571,15 @@
       };
     }
 
-    // INTERPOLADOR DE PROPIEDADES EN BAR
-    function getPropAtP(refData, pBar) {
+    // INTERPOLADOR DE PROPIEDADES EN BAR (ABSOLUTA)
+    function getPropAtP(refData, pBarAbs) {
       const dome = refData.dome;
-      if (pBar <= dome[0].p) return dome[0];
-      if (pBar >= refData.criticalP) return dome[dome.length - 1];
+      if (pBarAbs <= dome[0].p) return dome[0];
+      if (pBarAbs >= refData.criticalP) return dome[dome.length - 1];
 
       for (let i = 0; i < dome.length - 1; i++) {
-        if (pBar >= dome[i].p && pBar <= dome[i+1].p) {
-          const factor = (pBar - dome[i].p) / (dome[i+1].p - dome[i].p);
+        if (pBarAbs >= dome[i].p && pBarAbs <= dome[i+1].p) {
+          const factor = (pBarAbs - dome[i].p) / (dome[i+1].p - dome[i].p);
           return {
             hL: dome[i].hL + factor * (dome[i+1].hL - dome[i].hL),
             hV: dome[i].hV + factor * (dome[i+1].hV - dome[i].hV),
@@ -596,20 +596,28 @@
       const refData = refrigerantes[refKey];
       const pf = pUnits[pUnitActual].factor;
 
-      // Lectura Inputs Presión -> Convertir a bar interno
-      let pSuctInput = parseFloat(document.getElementById('pSuct').value) || (60 * pf);
-      let pDescInput = parseFloat(document.getElementById('pDesc').value) || (250 * pf);
+      // Lectura Inputs Presión -> Convertir a bar relativo
+      let pSuctInput = parseFloat(document.getElementById('pSuct').value);
+      let pDescInput = parseFloat(document.getElementById('pDesc').value);
 
-      let pSuctBar = pSuctInput / pf;
-      let pDescBar = pDescInput / pf;
+      if (isNaN(pSuctInput)) pSuctInput = 3.5 * pf;
+      if (isNaN(pDescInput)) pDescInput = 18.0 * pf;
 
-      // Validaciones de presión
-      if (pDescBar >= refData.criticalP) pDescBar = refData.criticalP - 0.5;
-      if (pSuctBar >= pDescBar) pSuctBar = pDescBar - 0.5;
+      // Convertir a Bar Manométrico
+      let pSuctBarRel = pSuctInput / pf;
+      let pDescBarRel = pDescInput / pf;
+
+      // Asegurar valores válidos (Garantizar que P_descarga > P_succión)
+      if (pSuctBarRel < 0.1) pSuctBarRel = 0.1;
+      if (pDescBarRel <= pSuctBarRel) pDescBarRel = pSuctBarRel + 2.0;
+
+      // Convertir a Presión Absoluta (P_abs = P_rel + 1.013 bar) para el Diagrama de Mollier
+      const pSuctBarAbs = pSuctBarRel + 1.013;
+      const pDescBarAbs = Math.min(pDescBarRel + 1.013, refData.criticalP - 0.2);
 
       // Lectura Inputs Temperatura -> Convertir a °C interno
       let tSuctVal = parseFloat(document.getElementById('tSuct').value) || 10;
-      let tLiqVal = parseFloat(document.getElementById('tLiq').value) || 40;
+      let tLiqVal = parseFloat(document.getElementById('tLiq').value) || 35;
       let tDescRealVal = parseFloat(document.getElementById('tDescReal').value) || 75;
 
       if (tUnitActual === 'F') {
@@ -624,18 +632,18 @@
       const pKw = (vVolt * iAmp * 0.9) / 1000.0; // Estimación kW (Factor potencia = 0.9)
 
       // Propiedades de Saturación en Succión y Descarga
-      const propEvap = getPropAtP(refData, pSuctBar);
-      const propCond = getPropAtP(refData, pDescBar);
+      const propEvap = getPropAtP(refData, pSuctBarAbs);
+      const propCond = getPropAtP(refData, pDescBarAbs);
 
       // Cálculos Recalentamiento y Subenfriamiento
       const superHeatK = Math.max(tSuctVal - propEvap.tSat, 0);
       const subCoolK = Math.max(propCond.tSat - tLiqVal, 0);
 
       // 1. Enthalpy Pt 1 (Entrada Compresor con Recalentamiento)
-      const h1 = propEvap.hV + (superHeatK * 1.6);
+      const h1 = propEvap.hV + (superHeatK * 1.25);
 
       // 2. Enthalpy Pt 2 (Salida Compresor con Temp Real de Descarga)
-      const h2 = propCond.hV + Math.max(tDescRealVal - propCond.tSat, 10) * 1.8;
+      const h2 = propCond.hV + Math.max(tDescRealVal - propCond.tSat, 5) * 1.35;
 
       // 3. Enthalpy Pt 3 (Salida Condensador con Subenfriamiento)
       const h3 = propCond.hL - (subCoolK * 1.25);
@@ -656,9 +664,9 @@
       document.getElementById('kpiw').innerText = `${w.toFixed(1)} kJ/kg`;
       document.getElementById('kpicop').innerText = cop.toFixed(2);
 
-      // TRAZADO DEL CICLO EN LA UNIDAD DE PRESIÓN SELECCIONADA
-      const pSuctPlot = pSuctBar * pf;
-      const pDescPlot = pDescBar * pf;
+      // TRAZADO DEL CICLO EN LA UNIDAD DE PRESIÓN SELECCIONADA (Eje P_abs)
+      const pSuctPlot = pSuctBarAbs * pf;
+      const pDescPlot = pDescBarAbs * pf;
 
       const cycleTrace = {
         x: [h1, h2, h3, h4, h1],
@@ -685,23 +693,25 @@
         showlegend: false
       });
 
-      // DETERMINACIÓN DEL RANGO Y ZOOM (BOTÓN ZONA ACTIVA)
+      // DETERMINACIÓN DEL RANGO Y ZOOM
       let xRangeFinal, yRangeFinal;
 
+      const maxH_Ciclo = Math.max(h1, h2, h3, h4);
+      const minH_Ciclo = Math.min(h1, h2, h3, h4);
+
       if (zonaActivaHabilitada) {
-        // ZOOM EXACTO SOBRE LA ZONA DE TRABAJO (+25% de margen)
-        const minH = Math.min(h1, h2, h3, h4);
-        const maxH = Math.max(h1, h2, h3, h4);
-        const hMargin = (maxH - minH) * 0.25;
+        // ZOOM EXACTO SOBRE LA ZONA DE TRABAJO (+20% de margen)
+        const hMargin = (maxH_Ciclo - minH_Ciclo) * 0.2;
 
         const minPLog = Math.log10(Math.min(pSuctPlot, pDescPlot)) - 0.15;
         const maxPLog = Math.log10(Math.max(pSuctPlot, pDescPlot)) + 0.15;
 
-        xRangeFinal = [minH - hMargin, maxH + hMargin];
+        xRangeFinal = [minH_Ciclo - hMargin, maxH_Ciclo + hMargin];
         yRangeFinal = [minPLog, maxPLog];
       } else {
-        // VISTA COMPLETA DEL REFRIGERANTE
-        xRangeFinal = refData.xRange;
+        // VISTA COMPLETA DEL REFRIGERANTE ADAPTADA A $h_2$
+        const xLimitMax = Math.max(refData.xRange[1], maxH_Ciclo + 30);
+        xRangeFinal = [refData.xRange[0], xLimitMax];
         yRangeFinal = [
           Math.log10(refData.pRange[0] * pf),
           Math.log10(refData.pRange[1] * pf)
@@ -719,13 +729,13 @@
           font: { color: '#f8fafc', size: 13 }
         },
         xaxis: {
-          title: { text: 'Entalpia h [kJ/kg]', font: { color: '#94a3b8', size: 11 } },
+          title: { text: 'Entalpía h [kJ/kg]', font: { color: '#94a3b8', size: 11 } },
           range: xRangeFinal,
           gridcolor: '#334155',
           tickfont: { color: '#94a3b8' }
         },
         yaxis: {
-          title: { text: `Presion P [${pUnits[pUnitActual].label}]`, font: { color: '#94a3b8', size: 11 } },
+          title: { text: `Presión P_abs [${pUnits[pUnitActual].label}]`, font: { color: '#94a3b8', size: 11 } },
           type: 'log',
           range: yRangeFinal,
           gridcolor: '#334155',
