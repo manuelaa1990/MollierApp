@@ -1,4 +1,599 @@
-// ACTUALIZACIÓN DE LA GRÁFICA MOLLIER
+Aquí tienes el **código HTML/JavaScript completo**, integrado con las correcciones de inmovilización y el control exclusivo mediante el botón de **Zoom Zona Activa**.
+
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Diagramas de Mollier (p-h) Pro - Mediciones de Campo</title>
+  
+  <!-- CDN de Plotly.js -->
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      height: 100dvh;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #0f172a;
+      color: #f8fafc;
+    }
+
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100dvh;
+      padding: 8px;
+      gap: 8px;
+    }
+
+    /* --- PANEL SUPERIOR --- */
+    .top-panel {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 8px 12px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    }
+
+    .card h2 {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      color: #38bdf8;
+      margin-bottom: 6px;
+      letter-spacing: 0.5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .input-group.col-2 {
+      grid-column: span 2;
+    }
+
+    .input-group label {
+      font-size: 0.62rem;
+      font-weight: 600;
+      margin-bottom: 2px;
+      color: #94a3b8;
+      white-space: nowrap;
+    }
+
+    .input-group input, .input-group select {
+      padding: 3px 5px;
+      border: 1px solid #475569;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      outline: none;
+      background-color: #0f172a;
+      color: #f8fafc;
+    }
+
+    .input-group select {
+      cursor: pointer;
+      border-color: #38bdf8;
+      font-weight: 600;
+    }
+
+    .input-group select optgroup {
+      background-color: #1e293b;
+      color: #38bdf8;
+      font-style: normal;
+      font-weight: bold;
+    }
+
+    .input-group select option {
+      background-color: #0f172a;
+      color: #f8fafc;
+    }
+
+    .input-group input:focus, .input-group select:focus {
+      border-color: #38bdf8;
+    }
+
+    /* Barra de Botones */
+    .action-bar {
+      display: flex;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 5px 8px;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .btn-primary {
+      background-color: #0284c7;
+      color: #ffffff;
+    }
+    .btn-primary:hover { background-color: #0369a1; }
+
+    .btn-toggle {
+      background-color: #334155;
+      color: #cbd5e1;
+    }
+    .btn-toggle.active {
+      background-color: #10b981;
+      color: #ffffff;
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+    }
+
+    /* Resultados KPI */
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5px;
+      height: calc(100% - 22px);
+      align-content: center;
+    }
+
+    .kpi-box {
+      background-color: #0f172a;
+      border-left: 3px solid #38bdf8;
+      padding: 4px 6px;
+      border-radius: 4px;
+    }
+
+    .kpi-box .label {
+      font-size: 0.58rem;
+      color: #94a3b8;
+      display: block;
+      white-space: nowrap;
+    }
+
+    .kpi-box .value {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #f8fafc;
+    }
+
+    /* --- PANEL INFERIOR: GRÁFICA --- */
+    .chart-card {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      position: relative;
+      padding: 4px;
+    }
+
+    .chart-container {
+      width: 100%;
+      height: 100%;
+    }
+
+    @media (max-width: 680px) {
+      .app-container { padding: 4px; gap: 4px; }
+      .controls-grid { grid-template-columns: repeat(2, 1fr); }
+      .input-group.col-2 { grid-column: span 1; }
+      .results-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    
+    <!-- PANEL SUPERIOR: CONTROLES Y KPIS -->
+    <header class="top-panel">
+      
+      <!-- Panel de Controles -->
+      <div class="card">
+        <h2>
+          <span>Datos de Campo</span>
+        </h2>
+        
+        <div class="controls-grid">
+          
+          <!-- Selector Refrigerante + Unidades -->
+          <div class="input-group col-2">
+            <label for="refSelect">Refrigerante</label>
+            <select id="refSelect" onchange="actualizarTodo()">
+              <optgroup label="Puros y Tradicionales">
+                <option value="R134a">R-134a</option>
+                <option value="R22">R-22</option>
+                <option value="R410A">R-410A</option>
+                <option value="R32">R-32</option>
+              </optgroup>
+              <optgroup label="Hidrocarburos (HC)">
+                <option value="R290">R-290 (Propano)</option>
+                <option value="R600a">R-600a (Isobutano)</option>
+              </optgroup>
+              <optgroup label="Mezclas HFC (Serie 400 / 500)">
+                <option value="R404A" selected>R-404A</option>
+                <option value="R507A">R-507A</option>
+                <option value="R407C">R-407C</option>
+                <option value="R407A">R-407A</option>
+                <option value="R407F">R-407F</option>
+                <option value="R417A">R-417A</option>
+              </optgroup>
+              <optgroup label="HFO Nueva Generación">
+                <option value="R1234yf">R-1234yf</option>
+              </optgroup>
+            </select>
+          </div>
+
+          <div class="input-group">
+            <label for="pUnitSelect">U. Presión</label>
+            <select id="pUnitSelect" onchange="cambiarUnidades()">
+              <option value="psi">PSI</option>
+              <option value="bar" selected>Bar</option>
+              <option value="kpa">kPa</option>
+            </select>
+          </div>
+
+          <div class="input-group">
+            <label for="tUnitSelect">U. Temp</label>
+            <select id="tUnitSelect" onchange="cambiarUnidades()">
+              <option value="C" selected>°C</option>
+              <option value="F">°F</option>
+            </select>
+          </div>
+
+          <!-- Mediciones Presión de Campo -->
+          <div class="input-group">
+            <label for="pSuct" id="lblPSuct">P. Succión (Bar)</label>
+            <input type="number" id="pSuct" value="3.5" step="0.1" oninput="actualizarTodo()">
+          </div>
+
+          <div class="input-group">
+            <label for="pDesc" id="lblPDesc">P. Descarga (Bar)</label>
+            <input type="number" id="pDesc" value="18.0" step="0.5" oninput="actualizarTodo()">
+          </div>
+
+          <!-- Mediciones Temperatura de Campo -->
+          <div class="input-group">
+            <label for="tSuct" id="lblTSuct">T. Tubería Succ (°C)</label>
+            <input type="number" id="tSuct" value="10" step="0.5" oninput="actualizarTodo()">
+          </div>
+
+          <div class="input-group">
+            <label for="tLiq" id="lblTLiq">T. Tubería Liq (°C)</label>
+            <input type="number" id="tLiq" value="35" step="0.5" oninput="actualizarTodo()">
+          </div>
+
+          <div class="input-group col-2">
+            <label for="tDescReal" id="lblTDescReal">T. Descarga Compresor (°C)</label>
+            <input type="number" id="tDescReal" value="75" step="1" oninput="actualizarTodo()">
+          </div>
+
+          <!-- Mediciones Eléctricas -->
+          <div class="input-group">
+            <label for="vVolt">Voltaje (V)</label>
+            <input type="number" id="vVolt" value="220" step="1" oninput="actualizarTodo()">
+          </div>
+
+          <div class="input-group">
+            <label for="iAmp">Amperaje (A)</label>
+            <input type="number" id="iAmp" value="10.5" step="0.1" oninput="actualizarTodo()">
+          </div>
+
+        </div>
+
+        <!-- Barra de Botones -->
+        <div class="action-bar">
+          <button class="btn btn-toggle" id="btnZonaActiva" onclick="toggleZonaActiva()">
+            🔍 Zoom Zona Activa: OFF
+          </button>
+          <button class="btn btn-primary" onclick="descargarGrafica()">
+            📷 Descargar PNG
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Panel de Resultados KPI -->
+      <div class="card">
+        <h2>Indicadores Calculados</h2>
+        <div class="results-grid">
+          <div class="kpi-box" style="border-left-color: #38bdf8;">
+            <span class="label">Recalentamiento</span>
+            <span class="value" id="kpiSH">0.0 K</span>
+          </div>
+          <div class="kpi-box" style="border-left-color: #10b981;">
+            <span class="label">Subenfriamiento</span>
+            <span class="value" id="kpiSC">0.0 K</span>
+          </div>
+          <div class="kpi-box" style="border-left-color: #f59e0b;">
+            <span class="label">Potencia Elect. (kW)</span>
+            <span class="value" id="kpiKW">0.00 kW</span>
+          </div>
+          <div class="kpi-box" style="border-left-color: #a855f7;">
+            <span class="label">Cap. Frigorífica (qn)</span>
+            <span class="value" id="kpiqn">0 kJ/kg</span>
+          </div>
+          <div class="kpi-box" style="border-left-color: #ef4444;">
+            <span class="label">Trabajo Compresor (w)</span>
+            <span class="value" id="kpiw">0 kJ/kg</span>
+          </div>
+          <div class="kpi-box" style="border-left-color: #ec4899;">
+            <span class="label">COP Estimado</span>
+            <span class="value" id="kpicop">0.0</span>
+          </div>
+        </div>
+      </div>
+
+    </header>
+
+    <!-- PANEL INFERIOR: GRÁFICO MOLLIER -->
+    <main class="card chart-card">
+      <div id="mollierPlot" class="chart-container"></div>
+    </main>
+
+  </div>
+
+  <script>
+    // ESTADO GLOBAL
+    let zonaActivaHabilitada = false;
+    let pUnitActual = 'bar';
+    let tUnitActual = 'C';
+
+    const pUnits = {
+      bar: { factor: 1.0, label: 'Bar' },
+      psi: { factor: 14.5038, label: 'PSI' },
+      kpa: { factor: 100.0, label: 'kPa' }
+    };
+
+    // BASE DE DATOS DE REFRIGERANTES (Presión Absoluta en Bar)
+    const refrigerantes = {
+      R134a: {
+        nombre: "R-134a", criticalP: 40.6, xRange: [100, 500], pRange: [0.3, 42],
+        dome: [
+          {p: 0.3, hL: 135, hV: 382.0, tSat: -40}, {p: 1.0, hL: 165, hV: 392.0, tSat: -26},
+          {p: 2.5, hL: 195, hV: 400.0, tSat: -4},  {p: 5.0, hL: 225, hV: 408.0, tSat: 16},
+          {p: 10.0, hL: 256, hV: 415.0, tSat: 40}, {p: 20.0, hL: 300, hV: 412.0, tSat: 67},
+          {p: 35.0, hL: 355, hV: 390.0, tSat: 93}, {p: 40.6, hL: 382, hV: 382, tSat: 101}
+        ]
+      },
+      R22: {
+        nombre: "R-22", criticalP: 49.9, xRange: [100, 520], pRange: [0.4, 52],
+        dome: [
+          {p: 0.4, hL: 130, hV: 390.0, tSat: -50}, {p: 1.0, hL: 160, hV: 398.0, tSat: -40},
+          {p: 3.0, hL: 195, hV: 406.0, tSat: -15}, {p: 7.0, hL: 230, hV: 413.0, tSat: 12},
+          {p: 15.0, hL: 270, hV: 416.0, tSat: 40}, {p: 30.0, hL: 320, hV: 405.0, tSat: 72},
+          {p: 45.0, hL: 375, hV: 380.0, tSat: 92}, {p: 49.9, hL: 395, hV: 395, tSat: 96}
+        ]
+      },
+      R404A: {
+        nombre: "R-404A", criticalP: 36.8, xRange: [100, 600], pRange: [0.3, 40],
+        dome: [
+          {p: 0.3, hL: 120, hV: 381.3, tSat: -45}, {p: 1.0, hL: 140, hV: 381.0, tSat: -35},
+          {p: 3.0, hL: 166, hV: 379.8, tSat: -18}, {p: 7.0, hL: 198, hV: 377.8, tSat: 5},
+          {p: 15.0, hL: 236, hV: 371.0, tSat: 32}, {p: 25.0, hL: 271, hV: 360.0, tSat: 55},
+          {p: 35.5, hL: 312, hV: 337.0, tSat: 68}, {p: 36.8, hL: 325, hV: 325, tSat: 72}
+        ]
+      },
+      R410A: {
+        nombre: "R-410A", criticalP: 49.0, xRange: [120, 550], pRange: [0.5, 55],
+        dome: [
+          {p: 0.5, hL: 130, hV: 422.0, tSat: -50}, {p: 2.0, hL: 162, hV: 423.5, tSat: -37},
+          {p: 5.0, hL: 195, hV: 424.0, tSat: -20}, {p: 12.0, hL: 238, hV: 422.0, tSat: 8},
+          {p: 22.0, hL: 280, hV: 415.0, tSat: 35}, {p: 35.0, hL: 325, hV: 400.0, tSat: 58},
+          {p: 47.5, hL: 382, hV: 370.0, tSat: 70}, {p: 49.0, hL: 396, hV: 396, tSat: 72}
+        ]
+      },
+      R32: {
+        nombre: "R-32", criticalP: 57.8, xRange: [150, 650], pRange: [0.5, 60],
+        dome: [
+          {p: 0.5, hL: 120, hV: 510.0, tSat: -52}, {p: 2.0, hL: 160, hV: 515.0, tSat: -35},
+          {p: 6.0, hL: 210, hV: 520.0, tSat: -10}, {p: 15.0, hL: 270, hV: 522.0, tSat: 20},
+          {p: 30.0, hL: 335, hV: 515.0, tSat: 50}, {p: 45.0, hL: 400, hV: 495.0, tSat: 68},
+          {p: 57.8, hL: 470, hV: 470, tSat: 78}
+        ]
+      },
+      R290: {
+        nombre: "R-290", criticalP: 42.5, xRange: [150, 700], pRange: [0.3, 48],
+        dome: [
+          {p: 0.3, hL: 160, hV: 560.0, tSat: -48}, {p: 1.0, hL: 200, hV: 568.0, tSat: -40},
+          {p: 3.0, hL: 250, hV: 578.0, tSat: -22}, {p: 8.0, hL: 320, hV: 585.0, tSat: 18},
+          {p: 16.0, hL: 390, hV: 582.0, tSat: 45}, {p: 28.0, hL: 460, hV: 565.0, tSat: 72},
+          {p: 42.5, hL: 571, hV: 571, tSat: 96}
+        ]
+      },
+      R600a: {
+        nombre: "R-600a", criticalP: 36.5, xRange: [150, 680], pRange: [0.2, 40],
+        dome: [
+          {p: 0.2, hL: 165, hV: 530.0, tSat: -40}, {p: 1.0, hL: 210, hV: 550.0, tSat: -12},
+          {p: 3.0, hL: 260, hV: 570.0, tSat: 22}, {p: 8.0, hL: 330, hV: 580.0, tSat: 56},
+          {p: 20.0, hL: 420, hV: 570.0, tSat: 98}, {p: 36.5, hL: 544, hV: 544, tSat: 135}
+        ]
+      },
+      R507A: {
+        nombre: "R-507A", criticalP: 37.1, xRange: [100, 510], pRange: [0.3, 40],
+        dome: [
+          {p: 0.3, hL: 118, hV: 378.0, tSat: -46}, {p: 1.0, hL: 138, hV: 378.0, tSat: -36},
+          {p: 3.0, hL: 164, hV: 376.0, tSat: -19}, {p: 7.0, hL: 195, hV: 374.0, tSat: 4},
+          {p: 15.0, hL: 234, hV: 367.0, tSat: 31},  {p: 25.0, hL: 268, hV: 356.0, tSat: 54},
+          {p: 37.1, hL: 322, hV: 322, tSat: 71}
+        ]
+      },
+      R407C: {
+        nombre: "R-407C", criticalP: 46.3, xRange: [120, 540], pRange: [0.4, 50],
+        dome: [
+          {p: 0.4, hL: 135, hV: 410.0, tSat: -45}, {p: 2.0, hL: 175, hV: 416.0, tSat: -25},
+          {p: 6.0, hL: 215, hV: 420.0, tSat: 5},   {p: 15.0, hL: 270, hV: 415.0, tSat: 38},
+          {p: 30.0, hL: 335, hV: 400.0, tSat: 68},  {p: 46.3, hL: 414, hV: 414, tSat: 86}
+        ]
+      },
+      R407A: {
+        nombre: "R-407A", criticalP: 45.2, xRange: [110, 520], pRange: [0.4, 48],
+        dome: [
+          {p: 0.4, hL: 130, hV: 395.0, tSat: -45}, {p: 2.0, hL: 168, hV: 400.0, tSat: -25},
+          {p: 6.0, hL: 205, hV: 403.0, tSat: 3},   {p: 15.0, hL: 260, hV: 398.0, tSat: 35},
+          {p: 30.0, hL: 325, hV: 385.0, tSat: 65},  {p: 45.2, hL: 403, hV: 403, tSat: 82}
+        ]
+      },
+      R407F: {
+        nombre: "R-407F", criticalP: 47.5, xRange: [115, 530], pRange: [0.4, 50],
+        dome: [
+          {p: 0.4, hL: 132, hV: 400.0, tSat: -45}, {p: 2.0, hL: 170, hV: 406.0, tSat: -25},
+          {p: 6.0, hL: 210, hV: 410.0, tSat: 4},   {p: 15.0, hL: 265, hV: 406.0, tSat: 36},
+          {p: 30.0, hL: 330, hV: 395.0, tSat: 66},  {p: 47.5, hL: 414, hV: 414, tSat: 83}
+        ]
+      },
+      R417A: {
+        nombre: "R-417A", criticalP: 40.4, xRange: [110, 500], pRange: [0.3, 44],
+        dome: [
+          {p: 0.3, hL: 125, hV: 375.0, tSat: -48}, {p: 2.0, hL: 162, hV: 380.0, tSat: -22},
+          {p: 6.0, hL: 202, hV: 384.0, tSat: 8},   {p: 15.0, hL: 255, hV: 378.0, tSat: 40},
+          {p: 30.0, hL: 318, hV: 358.0, tSat: 70},  {p: 40.4, hL: 363, hV: 363, tSat: 87}
+        ]
+      },
+      R1234yf: {
+        nombre: "R-1234yf", criticalP: 33.8, xRange: [100, 480], pRange: [0.3, 36],
+        dome: [
+          {p: 0.3, hL: 130, hV: 360.0, tSat: -42}, {p: 1.0, hL: 155, hV: 368.0, tSat: -29},
+          {p: 2.5, hL: 185, hV: 375.0, tSat: -8},  {p: 5.0, hL: 212, hV: 381.0, tSat: 12},
+          {p: 10.0, hL: 245, hV: 385.0, tSat: 36}, {p: 20.0, hL: 290, hV: 380.0, tSat: 64},
+          {p: 33.8, hL: 361, hV: 361, tSat: 94}
+        ]
+      }
+    };
+
+    // CONVERSIÓN DE UNIDADES
+    function cambiarUnidades() {
+      const nuevaPUnit = document.getElementById('pUnitSelect').value;
+      const nuevaTUnit = document.getElementById('tUnitSelect').value;
+
+      const pFactorViejo = pUnits[pUnitActual].factor;
+      const pFactorNuevo = pUnits[nuevaPUnit].factor;
+
+      // Convertir Presiones
+      ['pSuct', 'pDesc'].forEach(id => {
+        const elem = document.getElementById(id);
+        const valBar = parseFloat(elem.value) / pFactorViejo;
+        elem.value = (valBar * pFactorNuevo).toFixed(nuevaPUnit === 'psi' ? 0 : 1);
+      });
+
+      // Convertir Temperaturas
+      if (tUnitActual !== nuevaTUnit) {
+        ['tSuct', 'tLiq', 'tDescReal'].forEach(id => {
+          const elem = document.getElementById(id);
+          let val = parseFloat(elem.value);
+          if (nuevaTUnit === 'F') {
+            elem.value = (val * 9/5 + 32).toFixed(1);
+          } else {
+            elem.value = ((val - 32) * 5/9).toFixed(1);
+          }
+        });
+      }
+
+      pUnitActual = nuevaPUnit;
+      tUnitActual = nuevaTUnit;
+
+      document.getElementById('lblPSuct').innerText = `P. Succión (${pUnits[pUnitActual].label})`;
+      document.getElementById('lblPDesc').innerText = `P. Descarga (${pUnits[pUnitActual].label})`;
+      document.getElementById('lblTSuct').innerText = `T. Tubería Succ (°${tUnitActual})`;
+      document.getElementById('lblTLiq').innerText = `T. Tubería Liq (°${tUnitActual})`;
+      document.getElementById('lblTDescReal').innerText = `T. Descarga Compresor (°${tUnitActual})`;
+
+      actualizarTodo();
+    }
+
+    // BOTÓN ZONA ACTIVA
+    function toggleZonaActiva() {
+      zonaActivaHabilitada = !zonaActivaHabilitada;
+      const btn = document.getElementById('btnZonaActiva');
+      btn.innerText = `🔍 Zoom Zona Activa: ${zonaActivaHabilitada ? 'ON' : 'OFF'}`;
+      btn.classList.toggle('active', zonaActivaHabilitada);
+      actualizarTodo();
+    }
+
+    // DESCARGAR GRÁFICA EN PNG
+    function descargarGrafica() {
+      const refKey = document.getElementById('refSelect').value;
+      Plotly.downloadImage('mollierPlot', {
+        format: 'png',
+        width: 1200,
+        height: 700,
+        filename: `Mollier_Campo_${refKey}_${pUnitActual.toUpperCase()}`
+      });
+    }
+
+    // DOMO DE SATURACIÓN CONVERTIDO A LA UNIDAD DE PRESIÓN SELECCIONADA
+    function getDomeTrace(refData) {
+      const hVals = [];
+      const pVals = [];
+      const f = pUnits[pUnitActual].factor;
+
+      refData.dome.forEach(pt => {
+        hVals.push(pt.hL);
+        pVals.push(pt.p * f);
+      });
+
+      for (let i = refData.dome.length - 1; i >= 0; i--) {
+        hVals.push(refData.dome[i].hV);
+        pVals.push(refData.dome[i].p * f);
+      }
+
+      return {
+        x: hVals,
+        y: pVals,
+        mode: 'lines',
+        name: `Domo ${refData.nombre}`,
+        line: { color: '#38bdf8', width: 2.5, shape: 'spline', smoothing: 1.1 }
+      };
+    }
+
+    // INTERPOLADOR DE PROPIEDADES EN BAR (ABSOLUTA)
+    function getPropAtP(refData, pBarAbs) {
+      const dome = refData.dome;
+      if (pBarAbs <= dome[0].p) return dome[0];
+      if (pBarAbs >= refData.criticalP) return dome[dome.length - 1];
+
+      for (let i = 0; i < dome.length - 1; i++) {
+        if (pBarAbs >= dome[i].p && pBarAbs <= dome[i+1].p) {
+          const factor = (pBarAbs - dome[i].p) / (dome[i+1].p - dome[i].p);
+          return {
+            hL: dome[i].hL + factor * (dome[i+1].hL - dome[i].hL),
+            hV: dome[i].hV + factor * (dome[i+1].hV - dome[i].hV),
+            tSat: dome[i].tSat + factor * (dome[i+1].tSat - dome[i].tSat)
+          };
+        }
+      }
+      return dome[0];
+    }
+
+    // ACTUALIZACIÓN COMPLETA
     function actualizarTodo() {
       const refKey = document.getElementById('refSelect').value;
       const refData = refrigerantes[refKey];
@@ -93,7 +688,7 @@
         showlegend: false
       });
 
-      // DEFINICIÓN DE LIMITES FIJOS (DOMO COMPLETO vs ZONA ACTIVA)
+      // DEFINICIÓN DE LÍMITES FIJOS (DOMO COMPLETO vs ZONA ACTIVA)
       let xRangeFinal, yRangeFinal;
 
       const maxH_Ciclo = Math.max(h1, h2, h3, h4);
@@ -123,7 +718,7 @@
         autosize: true,
         paper_bgcolor: '#1e293b',
         plot_bgcolor: '#0f172a',
-        dragmode: false, // <-- DESACTIVA EL ARRASTRE / MOVIMIENTO CON EL MOUSE O TÁCTIL
+        dragmode: false, // Bloquea el arrastre manual con el mouse/dedo
         title: {
           text: `Diagrama Mollier p-h (${refData.nombre}) - Operación Real`,
           font: { color: '#f8fafc', size: 13 }
@@ -131,7 +726,7 @@
         xaxis: {
           title: { text: 'Entalpía h [kJ/kg]', font: { color: '#94a3b8', size: 11 } },
           range: xRangeFinal,
-          fixedrange: true, // <-- BLOQUEA EL EJE X CONTRA ZOOM MANUAL
+          fixedrange: true, // Bloquea el zoom manual en el eje X
           gridcolor: '#334155',
           tickfont: { color: '#94a3b8' }
         },
@@ -139,7 +734,7 @@
           title: { text: `Presión P_abs [${pUnits[pUnitActual].label}]`, font: { color: '#94a3b8', size: 11 } },
           type: 'log',
           range: yRangeFinal,
-          fixedrange: true, // <-- BLOQUEA EL EJE Y CONTRA ZOOM MANUAL
+          fixedrange: true, // Bloquea el zoom manual en el eje Y
           gridcolor: '#334155',
           tickfont: { color: '#94a3b8' }
         },
@@ -150,12 +745,26 @@
         }
       };
 
-      // OPCIONES DE PLOTLY (Sin botones ni interacción)
+      // OPCIONES DE PLOTLY
       const config = {
         responsive: true,
-        displayModeBar: false, // Oculta la barra flotante de herramientas
-        scrollZoom: false      // Desactiva el zoom con la rueda del mouse o gestos táctiles
+        displayModeBar: false, // Oculta la barra flotante
+        scrollZoom: false      // Desactiva el zoom con la rueda o pellizco táctil
       };
 
       Plotly.react('mollierPlot', traces, layout, config);
     }
+
+    // INICIALIZACIÓN
+    window.addEventListener('DOMContentLoaded', () => {
+      actualizarTodo();
+    });
+
+    window.addEventListener('resize', () => {
+      Plotly.Plots.resize('mollierPlot');
+    });
+  </script>
+</body>
+</html>
+
+```
