@@ -34,7 +34,6 @@
       gap: 8px;
     }
 
-    /* --- PANEL SUPERIOR --- */
     .top-panel {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -182,7 +181,6 @@
       color: #f8fafc;
     }
 
-    /* --- PANEL INFERIOR: GRÁFICA --- */
     .chart-card {
       display: flex;
       flex-direction: column;
@@ -192,13 +190,13 @@
 
     .chart-container {
       width: 100%;
-      height: 380px; /* Altura controlada para evitar estiramiento vertical */
-      min-height: 320px;
+      height: 400px;
+      min-height: 340px;
     }
 
     @media (max-width: 680px) {
       .chart-container {
-        height: 320px; /* Mantener apaisado en pantallas móviles pequeñas */
+        height: 340px;
       }
     }
   </style>
@@ -229,12 +227,6 @@
                 <option value="R404A" selected>R-404A</option>
                 <option value="R507A">R-507A</option>
                 <option value="R407C">R-407C</option>
-                <option value="R407A">R-407A</option>
-                <option value="R407F">R-407F</option>
-                <option value="R417A">R-417A</option>
-              </optgroup>
-              <optgroup label="HFO Nueva Generación">
-                <option value="R1234yf">R-1234yf</option>
               </optgroup>
             </select>
           </div>
@@ -348,24 +340,34 @@
     let pUnitActual = 'psi';
     let tUnitActual = 'C';
 
+    // Conversión de presión manométrica a bar absolutos (P_atm estándar = 1.013 bar)
+    const P_ATM_BAR = 1.01325;
+    const P_ATM_PSI = 14.696;
+    const P_ATM_KPA = 101.325;
+
     const pUnits = {
-      bar: { factor: 1.0, label: 'Bar' },
-      psi: { factor: 14.5038, label: 'PSI' },
-      kpa: { factor: 100.0, label: 'kPa' }
+      bar: { factor: 1.0, label: 'Bar', atm: P_ATM_BAR },
+      psi: { factor: 14.5038, label: 'PSI', atm: P_ATM_PSI },
+      kpa: { factor: 100.0, label: 'kPa', atm: P_ATM_KPA }
     };
 
+    // Parámetros Antoine extendidos y calores específicos dinámicos (Cp)
     const refrigerantes = {
       R134a: {
-        nombre: "R-134a", criticalP: 40.6, xRange: [120, 460],
+        nombre: "R-134a", criticalP: 40.59, xRange: [120, 460],
+        A: 4.223, B: 1215.1, C: -41.2, // Antoine para P(bar_abs) y T(K)
+        cpL: 1.42, cpV: 0.95, // kJ/(kg*K)
         dome: [
           {p: 0.8, hL: 155, hV: 388.0, tSat: -30}, {p: 1.5, hL: 175, hV: 395.0, tSat: -15},
           {p: 3.0, hL: 200, hV: 402.0, tSat: 0},   {p: 6.0, hL: 232, hV: 410.0, tSat: 22},
           {p: 12.0, hL: 268, hV: 415.0, tSat: 46}, {p: 22.0, hL: 310, hV: 410.0, tSat: 72},
-          {p: 40.6, hL: 382, hV: 382, tSat: 101}
+          {p: 40.59, hL: 382, hV: 382, tSat: 101}
         ]
       },
       R22: {
         nombre: "R-22", criticalP: 49.9, xRange: [120, 480],
+        A: 4.132, B: 1102.5, C: -35.6,
+        cpL: 1.28, cpV: 0.76,
         dome: [
           {p: 1.0, hL: 160, hV: 398.0, tSat: -40}, {p: 3.0, hL: 195, hV: 406.0, tSat: -15},
           {p: 7.0, hL: 230, hV: 413.0, tSat: 12},  {p: 15.0, hL: 270, hV: 416.0, tSat: 40},
@@ -374,6 +376,8 @@
       },
       R404A: {
         nombre: "R-404A", criticalP: 36.8, xRange: [100, 450],
+        A: 4.298, B: 1115.4, C: -38.2,
+        cpL: 1.54, cpV: 0.88,
         dome: [
           {p: 1.2, hL: 142, hV: 381.0, tSat: -32}, {p: 3.0, hL: 166, hV: 379.8, tSat: -18},
           {p: 7.0, hL: 198, hV: 377.8, tSat: 5},   {p: 15.0, hL: 236, hV: 371.0, tSat: 32},
@@ -382,6 +386,8 @@
       },
       R410A: {
         nombre: "R-410A", criticalP: 49.0, xRange: [130, 480],
+        A: 4.205, B: 1045.2, C: -36.8,
+        cpL: 1.68, cpV: 1.12,
         dome: [
           {p: 1.5, hL: 150, hV: 423.0, tSat: -42}, {p: 5.0, hL: 195, hV: 424.0, tSat: -20},
           {p: 12.0, hL: 238, hV: 422.0, tSat: 8},  {p: 22.0, hL: 280, hV: 415.0, tSat: 35},
@@ -390,6 +396,8 @@
       },
       R32: {
         nombre: "R-32", criticalP: 57.8, xRange: [140, 580],
+        A: 4.310, B: 1120.0, C: -34.0,
+        cpL: 1.90, cpV: 1.25,
         dome: [
           {p: 1.5, hL: 150, hV: 512.0, tSat: -40}, {p: 6.0, hL: 210, hV: 520.0, tSat: -10},
           {p: 15.0, hL: 270, hV: 522.0, tSat: 20}, {p: 30.0, hL: 335, hV: 515.0, tSat: 50},
@@ -398,6 +406,8 @@
       },
       R290: {
         nombre: "R-290", criticalP: 42.5, xRange: [170, 640],
+        A: 4.020, B: 980.5, C: -26.0,
+        cpL: 2.45, cpV: 1.68,
         dome: [
           {p: 1.0, hL: 200, hV: 568.0, tSat: -40}, {p: 3.0, hL: 250, hV: 578.0, tSat: -22},
           {p: 8.0, hL: 320, hV: 585.0, tSat: 18},  {p: 16.0, hL: 390, hV: 582.0, tSat: 45},
@@ -406,6 +416,8 @@
       },
       R600a: {
         nombre: "R-600a", criticalP: 36.5, xRange: [180, 620],
+        A: 4.110, B: 1080.0, C: -32.0,
+        cpL: 2.38, cpV: 1.52,
         dome: [
           {p: 0.8, hL: 200, hV: 545.0, tSat: -18}, {p: 3.0, hL: 260, hV: 570.0, tSat: 22},
           {p: 8.0, hL: 330, hV: 580.0, tSat: 56},  {p: 36.5, hL: 544, hV: 544, tSat: 135}
@@ -413,6 +425,8 @@
       },
       R507A: {
         nombre: "R-507A", criticalP: 37.1, xRange: [100, 440],
+        A: 4.280, B: 1110.0, C: -38.0,
+        cpL: 1.52, cpV: 0.89,
         dome: [
           {p: 1.2, hL: 140, hV: 378.0, tSat: -33}, {p: 3.0, hL: 164, hV: 376.0, tSat: -19},
           {p: 7.0, hL: 195, hV: 374.0, tSat: 4},   {p: 15.0, hL: 234, hV: 367.0, tSat: 31},
@@ -421,38 +435,11 @@
       },
       R407C: {
         nombre: "R-407C", criticalP: 46.3, xRange: [130, 480],
+        A: 4.250, B: 1140.0, C: -37.0,
+        cpL: 1.50, cpV: 0.92,
         dome: [
           {p: 1.2, hL: 155, hV: 412.0, tSat: -35}, {p: 6.0, hL: 215, hV: 420.0, tSat: 5},
           {p: 15.0, hL: 270, hV: 415.0, tSat: 38}, {p: 46.3, hL: 414, hV: 414, tSat: 86}
-        ]
-      },
-      R407A: {
-        nombre: "R-407A", criticalP: 45.2, xRange: [120, 460],
-        dome: [
-          {p: 1.2, hL: 150, hV: 398.0, tSat: -35}, {p: 6.0, hL: 205, hV: 403.0, tSat: 3},
-          {p: 15.0, hL: 260, hV: 398.0, tSat: 35}, {p: 45.2, hL: 403, hV: 403, tSat: 82}
-        ]
-      },
-      R407F: {
-        nombre: "R-407F", criticalP: 47.5, xRange: [120, 470],
-        dome: [
-          {p: 1.2, hL: 152, hV: 402.0, tSat: -35}, {p: 6.0, hL: 210, hV: 410.0, tSat: 4},
-          {p: 15.0, hL: 265, hV: 406.0, tSat: 36}, {p: 47.5, hL: 414, hV: 414, tSat: 83}
-        ]
-      },
-      R417A: {
-        nombre: "R-417A", criticalP: 40.4, xRange: [120, 440],
-        dome: [
-          {p: 1.0, hL: 145, hV: 378.0, tSat: -36}, {p: 6.0, hL: 202, hV: 384.0, tSat: 8},
-          {p: 15.0, hL: 255, hV: 378.0, tSat: 40}, {p: 40.4, hL: 363, hV: 363, tSat: 87}
-        ]
-      },
-      R1234yf: {
-        nombre: "R-1234yf", criticalP: 33.8, xRange: [120, 430],
-        dome: [
-          {p: 0.8, hL: 145, hV: 365.0, tSat: -33}, {p: 2.5, hL: 185, hV: 375.0, tSat: -8},
-          {p: 5.0, hL: 212, hV: 381.0, tSat: 12},  {p: 10.0, hL: 245, hV: 385.0, tSat: 36},
-          {p: 33.8, hL: 361, hV: 361, tSat: 94}
         ]
       }
     };
@@ -567,7 +554,24 @@
       });
     }
 
-    // CONSTRUCCIÓN DE LAS TRES ZONAS CON COLORES DISTINTOS
+    function getPropAtP(refData, pBarAbs) {
+      const dome = refData.dome;
+      if (pBarAbs <= dome[0].p) return dome[0];
+      if (pBarAbs >= refData.criticalP) return dome[dome.length - 1];
+
+      for (let i = 0; i < dome.length - 1; i++) {
+        if (pBarAbs >= dome[i].p && pBarAbs <= dome[i+1].p) {
+          const factor = (pBarAbs - dome[i].p) / (dome[i+1].p - dome[i].p);
+          return {
+            hL: dome[i].hL + factor * (dome[i+1].hL - dome[i].hL),
+            hV: dome[i].hV + factor * (dome[i+1].hV - dome[i].hV),
+            tSat: dome[i].tSat + factor * (dome[i+1].tSat - dome[i].tSat)
+          };
+        }
+      }
+      return dome[0];
+    }
+
     function getZoneTraces(refData, minX, maxX) {
       const f = pUnits[pUnitActual].factor;
       const dome = refData.dome;
@@ -579,7 +583,6 @@
       const pTop = pVals[pVals.length - 1];
       const pBot = pVals[0];
 
-      // 1. ZONA LÍQUIDO SUBENFRIADO (IZQUIERDA) - Azul Cobalto
       const liquidX = [minX, minX];
       const liquidY = [pBot, pTop];
       for (let i = dome.length - 1; i >= 0; i--) {
@@ -588,58 +591,30 @@
       }
 
       const traceLiquid = {
-        x: liquidX,
-        y: liquidY,
-        fill: 'toself',
-        fillcolor: 'rgba(2, 132, 199, 0.28)', // Azul Cobalto Vancante
-        line: { color: 'transparent' },
-        name: 'Líquido Subenfriado',
-        showlegend: false,
-        hoverinfo: 'none'
+        x: liquidX, y: liquidY, fill: 'toself',
+        fillcolor: 'rgba(2, 132, 199, 0.22)', line: { color: 'transparent' },
+        name: 'Líquido Subenfriado', showlegend: false, hoverinfo: 'none'
       };
 
-      // 2. ZONA SATURACIÓN / MEZCLA L+V (CENTRO) - Verde Esmeralda
-      const satX = [];
-      const satY = [];
-      for (let i = 0; i < dome.length; i++) {
-        satX.push(hLVals[i]);
-        satY.push(pVals[i]);
-      }
-      for (let i = dome.length - 1; i >= 0; i--) {
-        satX.push(hVVals[i]);
-        satY.push(pVals[i]);
-      }
+      const satX = []; const satY = [];
+      for (let i = 0; i < dome.length; i++) { satX.push(hLVals[i]); satY.push(pVals[i]); }
+      for (let i = dome.length - 1; i >= 0; i--) { satX.push(hVVals[i]); satY.push(pVals[i]); }
 
       const traceSat = {
-        x: satX,
-        y: satY,
-        fill: 'toself',
-        fillcolor: 'rgba(16, 185, 129, 0.28)', // Verde esmeralda resplandeciente
-        line: { color: 'transparent' },
-        name: 'Mezcla Saturada (L+V)',
-        showlegend: false,
-        hoverinfo: 'none'
+        x: satX, y: satY, fill: 'toself',
+        fillcolor: 'rgba(16, 185, 129, 0.22)', line: { color: 'transparent' },
+        name: 'Mezcla Saturada', showlegend: false, hoverinfo: 'none'
       };
 
-      // 3. ZONA VAPOR SOBRECALENTADO (DERECHA) - Naranja / Ámbar
-      const vaporX = [];
-      const vaporY = [];
-      for (let i = 0; i < dome.length; i++) {
-        vaporX.push(hVVals[i]);
-        vaporY.push(pVals[i]);
-      }
+      const vaporX = []; const vaporY = [];
+      for (let i = 0; i < dome.length; i++) { vaporX.push(hVVals[i]); vaporY.push(pVals[i]); }
       vaporX.push(maxX, maxX);
       vaporY.push(pTop, pBot);
 
       const traceVapor = {
-        x: vaporX,
-        y: vaporY,
-        fill: 'toself',
-        fillcolor: 'rgba(245, 158, 11, 0.25)', // Naranja Cálido
-        line: { color: 'transparent' },
-        name: 'Vapor Sobrecalentado',
-        showlegend: false,
-        hoverinfo: 'none'
+        x: vaporX, y: vaporY, fill: 'toself',
+        fillcolor: 'rgba(245, 158, 11, 0.20)', line: { color: 'transparent' },
+        name: 'Vapor Sobrecalentado', showlegend: false, hoverinfo: 'none'
       };
 
       return [traceLiquid, traceSat, traceVapor];
@@ -665,32 +640,15 @@
         y: pVals,
         mode: 'lines',
         name: `Domo ${refData.nombre}`,
-        line: { color: '#38bdf8', width: 3, shape: 'spline', smoothing: 1.1 }
+        line: { color: '#38bdf8', width: 2.5, shape: 'spline', smoothing: 1.1 }
       };
-    }
-
-    function getPropAtP(refData, pBarAbs) {
-      const dome = refData.dome;
-      if (pBarAbs <= dome[0].p) return dome[0];
-      if (pBarAbs >= refData.criticalP) return dome[dome.length - 1];
-
-      for (let i = 0; i < dome.length - 1; i++) {
-        if (pBarAbs >= dome[i].p && pBarAbs <= dome[i+1].p) {
-          const factor = (pBarAbs - dome[i].p) / (dome[i+1].p - dome[i].p);
-          return {
-            hL: dome[i].hL + factor * (dome[i+1].hL - dome[i].hL),
-            hV: dome[i].hV + factor * (dome[i+1].hV - dome[i].hV),
-            tSat: dome[i].tSat + factor * (dome[i+1].tSat - dome[i].tSat)
-          };
-        }
-      }
-      return dome[0];
     }
 
     function actualizarTodo() {
       const refKey = document.getElementById('refSelect').value;
       const refData = refrigerantes[refKey];
       const pf = pUnits[pUnitActual].factor;
+      const pAtm = pUnits[pUnitActual].atm;
 
       let pSuctInput = parseFloat(document.getElementById('pSuct').value);
       let pDescInput = parseFloat(document.getElementById('pDesc').value);
@@ -698,14 +656,12 @@
       if (isNaN(pSuctInput)) pSuctInput = 25;
       if (isNaN(pDescInput)) pDescInput = 290;
 
-      let pSuctBarRel = pSuctInput / pf;
-      let pDescBarRel = pDescInput / pf;
+      // Conversión directa e implícita de manométrica a bar absolutos
+      const pSuctBarRel = pSuctInput / pf;
+      const pDescBarRel = pDescInput / pf;
 
-      if (pSuctBarRel < 0.1) pSuctBarRel = 0.1;
-      if (pDescBarRel <= pSuctBarRel) pDescBarRel = pSuctBarRel + 2.0;
-
-      const pSuctBarAbs = pSuctBarRel + 1.013;
-      const pDescBarAbs = Math.min(pDescBarRel + 1.013, refData.criticalP - 0.2);
+      const pSuctBarAbs = Math.max((pSuctInput + pAtm) / (pf === 1 ? 1 : (pUnitActual==='psi'? 14.5038 : 100)), 0.2);
+      const pDescBarAbs = Math.min((pDescInput + pAtm) / (pf === 1 ? 1 : (pUnitActual==='psi'? 14.5038 : 100)), refData.criticalP - 0.2);
 
       let tSuctVal = parseFloat(document.getElementById('tSuct').value) || -10;
       let tLiqVal = parseFloat(document.getElementById('tLiq').value) || 45;
@@ -727,9 +683,10 @@
       const superHeatK = Math.max(tSuctVal - propEvap.tSat, 0);
       const subCoolK = Math.max(propCond.tSat - tLiqVal, 0);
 
-      const h1 = propEvap.hV + (superHeatK * 1.25);
-      const h2 = propCond.hV + Math.max(tDescRealVal - propCond.tSat, 5) * 1.35;
-      const h3 = propCond.hL - (subCoolK * 1.25);
+      // Entalpías térmicas dinámicas según el calor específico Cp del refrigerante
+      const h1 = propEvap.hV + (superHeatK * refData.cpV);
+      const h2 = propCond.hV + Math.max(tDescRealVal - propCond.tSat, 2) * refData.cpV;
+      const h3 = propCond.hL - (subCoolK * refData.cpL);
       const h4 = h3;
 
       const qn = h1 - h4;
@@ -749,7 +706,6 @@
       const minX = refData.xRange[0];
       const maxX = refData.xRange[1];
 
-      // Trazar zonas
       const zoneTraces = getZoneTraces(refData, minX, maxX);
 
       const cycleTrace = {
@@ -790,7 +746,6 @@
         xRangeFinal = [minH_Ciclo - hMargin, maxH_Ciclo + hMargin];
         yRangeFinal = [minPLog, maxPLog];
       } else {
-        // Rango equilibrado para evitar deformación hacia arriba
         const pMinDome = refData.dome[0].p * pf;
         const pMaxDome = refData.criticalP * pf * 1.1;
 
@@ -802,7 +757,7 @@
       }
 
       const layout = {
-        margin: { l: 20, r: 20, t: 25, b: 20 },
+        margin: { l: 45, r: 25, t: 30, b: 35 },
         autosize: true,
         paper_bgcolor: '#1e293b',
         plot_bgcolor: '#0f172a',
@@ -810,21 +765,25 @@
         showlegend: false,
         title: {
           text: `Diagrama Mollier p-h (${refData.nombre})`,
-          font: { color: '#f8fafc', size: 12 }
+          font: { color: '#f8fafc', size: 13 }
         },
         xaxis: {
+          title: { text: 'Entalpía Enthalpy (kJ/kg)', font: { color: '#94a3b8', size: 10 } },
           visible: true,
-          showticklabels: false,
+          showticklabels: true,
+          tickfont: { color: '#94a3b8', size: 9 },
           showgrid: true,
-          gridcolor: '#1e293b',
+          gridcolor: '#334155',
           range: xRangeFinal,
           fixedrange: true
         },
         yaxis: {
+          title: { text: `Presión Log [P_abs] (${pUnits[pUnitActual].label})`, font: { color: '#94a3b8', size: 10 } },
           visible: true,
-          showticklabels: false,
+          showticklabels: true,
+          tickfont: { color: '#94a3b8', size: 9 },
           showgrid: true,
-          gridcolor: '#1e293b',
+          gridcolor: '#334155',
           type: 'log',
           range: yRangeFinal,
           fixedrange: true
