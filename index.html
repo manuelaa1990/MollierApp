@@ -22,10 +22,10 @@
       padding: 15px;
     }
     .container {
-      max-width: 1200px;
+      max-width: 1250px;
       margin: 0 auto;
       display: grid;
-      grid-template-columns: 340px 1fr;
+      grid-template-columns: 360px 1fr;
       gap: 15px;
     }
     @media (max-width: 850px) {
@@ -48,12 +48,71 @@
       margin-bottom: 15px;
     }
     .input-group { margin-bottom: 12px; }
-    label {
-      display: block;
-      font-size: 0.85rem;
-      color: var(--text-dim);
+    
+    /* ESTILOS DE ETIQUETAS E ICONO INFO */
+    .label-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 6px;
       margin-bottom: 4px;
     }
+    label {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+    }
+    .info-icon {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background-color: #333;
+      color: var(--accent);
+      font-size: 0.7rem;
+      font-weight: bold;
+      font-family: monospace;
+      cursor: pointer;
+      border: 1px solid var(--accent);
+    }
+    /* TOOLTIP INTERACTIVO */
+    .info-icon .tooltip {
+      visibility: hidden;
+      opacity: 0;
+      width: 210px;
+      background-color: #2b2b2b;
+      color: #fff;
+      text-align: left;
+      border-radius: 6px;
+      padding: 8px 10px;
+      position: absolute;
+      z-index: 100;
+      bottom: 125%;
+      left: 50%;
+      transform: translateX(-50%);
+      box-shadow: 0px 4px 10px rgba(0,0,0,0.5);
+      border: 1px solid var(--border);
+      font-size: 0.75rem;
+      line-height: 1.3;
+      font-weight: normal;
+      transition: opacity 0.2s, visibility 0.2s;
+    }
+    .info-icon .tooltip::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      margin-left: -5px;
+      border-width: 5px;
+      border-style: solid;
+      border-color: #2b2b2b transparent transparent transparent;
+    }
+    .info-icon:hover .tooltip {
+      visibility: visible;
+      opacity: 1;
+    }
+
     input, select {
       width: 100%;
       padding: 8px 10px;
@@ -65,9 +124,10 @@
       box-sizing: border-box;
     }
     input:focus, select:focus { outline: none; border-color: var(--accent); }
+    
     .metrics-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
       gap: 10px;
       margin-top: 15px;
     }
@@ -77,8 +137,13 @@
       border-radius: 6px;
       border-left: 3px solid var(--accent);
     }
+    .metric-card .title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
     .metric-card .title { font-size: 0.75rem; color: var(--text-dim); }
-    .metric-card .value { font-size: 1.1rem; font-weight: bold; margin-top: 2px; }
+    .metric-card .value { font-size: 1.1rem; font-weight: bold; margin-top: 4px; }
     #mollierChart { width: 100%; height: 580px; }
   </style>
 </head>
@@ -92,7 +157,12 @@
       <!-- SELECCIÓN DE UNIDADES -->
       <div class="units-row">
         <div>
-          <label for="unitPress">Unidad Presión</label>
+          <div class="label-wrapper">
+            <label for="unitPress">Unidad Presión</label>
+            <span class="info-icon">i
+              <span class="tooltip">Selecciona entre PSIG (manométrica), PSIA (absoluta) o Bar abs.</span>
+            </span>
+          </div>
           <select id="unitPress" onchange="changeUnits()">
             <option value="PSI_g">PSIG (Manométrica)</option>
             <option value="PSI_a">PSIA (Absoluta)</option>
@@ -100,7 +170,12 @@
           </select>
         </div>
         <div>
-          <label for="unitTemp">Unidad Temp.</label>
+          <div class="label-wrapper">
+            <label for="unitTemp">Unidad Temp.</label>
+            <span class="info-icon">i
+              <span class="tooltip">Unidad de escala térmica (°C o °F) para lecturas de campo.</span>
+            </span>
+          </div>
           <select id="unitTemp" onchange="changeUnits()">
             <option value="C" selected>°C</option>
             <option value="F">°F</option>
@@ -109,7 +184,12 @@
       </div>
 
       <div class="input-group">
-        <label for="refrigerant">Refrigerante</label>
+        <div class="label-wrapper">
+          <label for="refrigerant">Refrigerante</label>
+          <span class="info-icon">i
+            <span class="tooltip">Refrigerante activo. Genera la campana de saturación específica en el gráfico.</span>
+          </span>
+        </div>
         <select id="refrigerant" onchange="updateAll()">
           <option value="R404A" selected>R-404A</option>
           <option value="R134a">R-134a</option>
@@ -118,27 +198,52 @@
       </div>
 
       <div class="input-group">
-        <label for="pBaja">Presión Succión / Baja (<span class="lblP">Bar abs</span>)</label>
+        <div class="label-wrapper">
+          <label for="pBaja">Presión Succión / Baja (<span class="lblP">Bar abs</span>)</label>
+          <span class="info-icon">i
+            <span class="tooltip">Presión tomada en la válvula de servicio de succión (línea de baja).</span>
+          </span>
+        </div>
         <input type="number" id="pBaja" value="4.0" step="0.1" oninput="updateAll()">
       </div>
 
       <div class="input-group">
-        <label for="tSuccion">Temp. Succión (<span class="lblT">°C</span>)</label>
+        <div class="label-wrapper">
+          <label for="tSuccion">Temp. Succión (<span class="lblT">°C</span>)</label>
+          <span class="info-icon">i
+            <span class="tooltip">Temperatura real medida sobre el caño de succión antes de entrar al compresor.</span>
+          </span>
+        </div>
         <input type="number" id="tSuccion" value="-5.0" step="0.5" oninput="updateAll()">
       </div>
 
       <div class="input-group">
-        <label for="pAlta">Presión Descarga / Alta (<span class="lblP">Bar abs</span>)</label>
+        <div class="label-wrapper">
+          <label for="pAlta">Presión Descarga / Alta (<span class="lblP">Bar abs</span>)</label>
+          <span class="info-icon">i
+            <span class="tooltip">Presión en el lado de alta (salida de compresor o línea de líquido).</span>
+          </span>
+        </div>
         <input type="number" id="pAlta" value="17.0" step="0.1" oninput="updateAll()">
       </div>
 
       <div class="input-group">
-        <label for="tLiquido">Temp. Líquido / Salida Cond. (<span class="lblT">°C</span>)</label>
+        <div class="label-wrapper">
+          <label for="tLiquido">Temp. Líquido / Salida Cond. (<span class="lblT">°C</span>)</label>
+          <span class="info-icon">i
+            <span class="tooltip">Temperatura medida en el tubo de líquido antes de la válvula de expansión.</span>
+          </span>
+        </div>
         <input type="number" id="tLiquido" value="33.0" step="0.5" oninput="updateAll()">
       </div>
 
       <div class="input-group">
-        <label for="tDescarga">Temp. Descarga Real (<span class="lblT">°C</span>)</label>
+        <div class="label-wrapper">
+          <label for="tDescarga">Temp. Descarga Real (<span class="lblT">°C</span>)</label>
+          <span class="info-icon">i
+            <span class="tooltip">Temperatura medida a 5–10 cm de la salida del compresor en la tubería de descarga.</span>
+          </span>
+        </div>
         <input type="number" id="tDescarga" value="85.0" step="0.5" oninput="updateAll()">
       </div>
 
@@ -146,27 +251,57 @@
       <h3>Cálculos en Tiempo Real</h3>
       <div class="metrics-grid">
         <div class="metric-card">
-          <div class="title">Sobrecalentamiento</div>
+          <div class="title-row">
+            <span class="title">Sobrecalentamiento</span>
+            <span class="info-icon">i
+              <span class="tooltip">Garantiza que no regrese líquido al compresor (Gota líquida). Ideal: 5 a 8 K.</span>
+            </span>
+          </div>
           <div class="value" id="valSH">0.0 K</div>
         </div>
         <div class="metric-card">
-          <div class="title">Subenfriamiento</div>
+          <div class="title-row">
+            <span class="title">Subenfriamiento</span>
+            <span class="info-icon">i
+              <span class="tooltip">Asegura 100% líquido a la VET. Evita burbujas de vapor. Ideal: 4 a 7 K.</span>
+            </span>
+          </div>
           <div class="value" id="valSC">0.0 K</div>
         </div>
         <div class="metric-card">
-          <div class="title">Efecto Ref. (Qe)</div>
+          <div class="title-row">
+            <span class="title">Efecto Ref. (Qe)</span>
+            <span class="info-icon">i
+              <span class="tooltip">Calor absorbido por cada kg de refrigerante en el evaporador (h1 - h4).</span>
+            </span>
+          </div>
           <div class="value" id="valQe">0 kJ/kg</div>
         </div>
         <div class="metric-card">
-          <div class="title">Trabajo Comp. (W)</div>
+          <div class="title-row">
+            <span class="title">Trabajo Comp. (W)</span>
+            <span class="info-icon">i
+              <span class="tooltip">Energía mecánica aportada por el compresor al refrigerante (h2 - h1).</span>
+            </span>
+          </div>
           <div class="value" id="valW">0 kJ/kg</div>
         </div>
         <div class="metric-card">
-          <div class="title">COP Real</div>
+          <div class="title-row">
+            <span class="title">COP Real</span>
+            <span class="info-icon">i
+              <span class="tooltip">Coeficiente de Rendimiento. Eficiencia térmica global del sistema (Qe / W).</span>
+            </span>
+          </div>
           <div class="value" id="valCOP">0.00</div>
         </div>
         <div class="metric-card">
-          <div class="title">Flash Gas (x4)</div>
+          <div class="title-row">
+            <span class="title">Flash Gas (x4)</span>
+            <span class="info-icon">i
+              <span class="tooltip">Porcentaje de líquido que se evapora instantáneamente tras la expansión.</span>
+            </span>
+          </div>
           <div class="value" id="valFlash">0%</div>
         </div>
       </div>
@@ -179,7 +314,6 @@
   </div>
 
   <script>
-    // MODELOS PROPIEDADES TERMODINÁMICAS BASE (SE EVALÚAN EN BAR ABS Y °C)
     const refData = {
       "R404A": {
         pCrit: 37.3, hCrit: 280,
@@ -209,17 +343,16 @@
 
     let currentUnits = { press: 'BAR_a', temp: 'C' };
 
-    // FUNCIONES DE CONVERSIÓN
     function pressToBarAbs(val, unit) {
       if (unit === 'PSI_g') return (val + 14.696) * 0.0689476;
       if (unit === 'PSI_a') return val * 0.0689476;
-      return val; // BAR_a
+      return val;
     }
 
     function barAbsToDisplay(bar, unit) {
       if (unit === 'PSI_g') return (bar / 0.0689476) - 14.696;
       if (unit === 'PSI_a') return bar / 0.0689476;
-      return bar; // BAR_a
+      return bar;
     }
 
     function tempToC(val, unit) {
@@ -230,12 +363,10 @@
       return unit === 'F' ? (c * 9/5) + 32 : c;
     }
 
-    // MANEJO DE CAMBIO DE UNIDADES
     function changeUnits() {
       const newPress = document.getElementById('unitPress').value;
       const newTemp = document.getElementById('unitTemp').value;
 
-      // Convertir valores actuales en los inputs
       ['pBaja', 'pAlta'].forEach(id => {
         const elem = document.getElementById(id);
         const oldBar = pressToBarAbs(parseFloat(elem.value), currentUnits.press);
@@ -251,7 +382,6 @@
       currentUnits.press = newPress;
       currentUnits.temp = newTemp;
 
-      // Actualizar etiquetas UI
       const labelP = newPress === 'PSI_g' ? 'PSIG' : (newPress === 'PSI_a' ? 'PSIA' : 'Bar abs');
       const labelT = '°' + newTemp;
       document.querySelectorAll('.lblP').forEach(e => e.innerText = labelP);
@@ -285,7 +415,6 @@
       const pUnit = currentUnits.press;
       const tUnit = currentUnits.temp;
 
-      // Convertir lecturas a unidades base (Bar abs y °C)
       const pBaja = pressToBarAbs(parseFloat(document.getElementById('pBaja').value) || 0, pUnit);
       const tSuccion = tempToC(parseFloat(document.getElementById('tSuccion').value) || 0, tUnit);
       const pAlta = pressToBarAbs(parseFloat(document.getElementById('pAlta').value) || 0, pUnit);
@@ -297,13 +426,11 @@
       const tSatBaja = model.tsat(pBaja);
       const tSatAlta = model.tsat(pAlta);
 
-      // Puntos termodinámicos
       const h1 = model.hSucc(pBaja, tSuccion);
       const h2 = model.hDesc(pAlta, tDescarga);
       const h3 = model.hLiq(pAlta) - 1.2 * (tSatAlta - tLiquido);
       const h4 = h3;
 
-      // Métricas
       const shC = tSuccion - tSatBaja;
       const scC = tSatAlta - tLiquido;
       const qe = h1 - h4;
@@ -314,7 +441,6 @@
       const hg = model.hVap(pBaja);
       const flashGas = Math.max(0, Math.min(100, ((h4 - hf) / (hg - hf)) * 100));
 
-      // Mostrar diferencias térmicas (°C / °F)
       const deltaFactor = tUnit === 'F' ? 1.8 : 1.0;
       const unitDelta = tUnit === 'F' ? '°R / °F' : 'K / °C';
 
@@ -325,7 +451,6 @@
       document.getElementById('valCOP').innerText = cop.toFixed(2);
       document.getElementById('valFlash').innerText = flashGas.toFixed(1) + "%";
 
-      // Renderizar Gráfico
       const dome = getDome(refKey, pUnit);
       const pBajaDisp = barAbsToDisplay(pBaja, pUnit);
       const pAltaDisp = barAbsToDisplay(pAlta, pUnit);
