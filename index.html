@@ -367,7 +367,6 @@
       kpa: { factor: 100.0, label: 'kPa' }
     };
 
-    // Ajuste de rangos ajustados estrechamente al domo para evitar distorsión
     const refrigerantes = {
       R134a: {
         nombre: "R-134a", criticalP: 40.6, xRange: [120, 460], pRange: [0.8, 42],
@@ -581,6 +580,84 @@
       });
     }
 
+    // SOMBREADO DE ZONAS (LÍQUIDO, MEZCLA/SATURACIÓN Y VAPOR)
+    function getZoneTraces(refData, minX, maxX) {
+      const f = pUnits[pUnitActual].factor;
+      const dome = refData.dome;
+
+      const pVals = dome.map(pt => pt.p * f);
+      const hLVals = dome.map(pt => pt.hL);
+      const hVVals = dome.map(pt => pt.hV);
+
+      const pTop = pVals[pVals.length - 1];
+      const pBot = pVals[0];
+
+      // 1. Zona Líquido Subenfriado (Izquierda)
+      const liquidX = [minX, minX];
+      const liquidY = [pBot, pTop];
+      for (let i = dome.length - 1; i >= 0; i--) {
+        liquidX.push(hLVals[i]);
+        liquidY.push(pVals[i]);
+      }
+
+      const traceLiquid = {
+        x: liquidX,
+        y: liquidY,
+        fill: 'toself',
+        fillcolor: 'rgba(56, 189, 248, 0.12)', // Azul/Cian claro
+        line: { color: 'transparent' },
+        name: 'Zona Líquido',
+        showlegend: false,
+        hoverinfo: 'none'
+      };
+
+      // 2. Zona Saturación / Mezcla L+V (Dentro del Domo)
+      const satX = [];
+      const satY = [];
+      for (let i = 0; i < dome.length; i++) {
+        satX.push(hLVals[i]);
+        satY.push(pVals[i]);
+      }
+      for (let i = dome.length - 1; i >= 0; i--) {
+        satX.push(hVVals[i]);
+        satY.push(pVals[i]);
+      }
+
+      const traceSat = {
+        x: satX,
+        y: satY,
+        fill: 'toself',
+        fillcolor: 'rgba(16, 185, 129, 0.15)', // Verde/Teal
+        line: { color: 'transparent' },
+        name: 'Zona Mezcla (L+V)',
+        showlegend: false,
+        hoverinfo: 'none'
+      };
+
+      // 3. Zona Vapor Sobrecalentado (Derecha)
+      const vaporX = [];
+      const vaporY = [];
+      for (let i = 0; i < dome.length; i++) {
+        vaporX.push(hVVals[i]);
+        vaporY.push(pVals[i]);
+      }
+      vaporX.push(maxX, maxX);
+      vaporY.push(pTop, pBot);
+
+      const traceVapor = {
+        x: vaporX,
+        y: vaporY,
+        fill: 'toself',
+        fillcolor: 'rgba(245, 158, 11, 0.12)', // Naranja/Ámbar claro
+        line: { color: 'transparent' },
+        name: 'Zona Vapor',
+        showlegend: false,
+        hoverinfo: 'none'
+      };
+
+      return [traceLiquid, traceSat, traceVapor];
+    }
+
     function getDomeTrace(refData) {
       const hVals = [];
       const pVals = [];
@@ -682,6 +759,12 @@
       const pSuctPlot = pSuctBarAbs * pf;
       const pDescPlot = pDescBarAbs * pf;
 
+      const minX = refData.xRange[0];
+      const maxX = refData.xRange[1];
+
+      // Obtener zonas sombreadas
+      const zoneTraces = getZoneTraces(refData, minX, maxX);
+
       const cycleTrace = {
         x: [h1, h2, h3, h4, h1],
         y: [pSuctPlot, pDescPlot, pDescPlot, pSuctPlot, pSuctPlot],
@@ -694,17 +777,18 @@
         marker: { size: 6, color: '#f59e0b' }
       };
 
-      const traces = [getDomeTrace(refData), cycleTrace];
-
-      traces.unshift({
+      const cycleFillTrace = {
         x: [h1, h2, h3, h4],
         y: [pSuctPlot, pDescPlot, pDescPlot, pSuctPlot],
         fill: 'toself',
-        fillcolor: 'rgba(56, 189, 248, 0.15)',
+        fillcolor: 'rgba(239, 68, 68, 0.18)', // Sombra interna del ciclo
         line: { color: 'transparent' },
-        name: 'Zona Operativa',
-        showlegend: false
-      });
+        name: 'Área del Ciclo',
+        showlegend: false,
+        hoverinfo: 'none'
+      };
+
+      const traces = [...zoneTraces, getDomeTrace(refData), cycleFillTrace, cycleTrace];
 
       let xRangeFinal, yRangeFinal;
 
@@ -719,12 +803,10 @@
         xRangeFinal = [minH_Ciclo - hMargin, maxH_Ciclo + hMargin];
         yRangeFinal = [minPLog, maxPLog];
       } else {
-        // AJUSTE CLAVE: Ajustar eje Y estrictamente alrededor del ciclo para evitar que la gráfica se estire verticalmente
         const pMinUtil = Math.max(pSuctPlot * 0.7, refData.dome[0].p * pf);
         const pMaxUtil = Math.min(pDescPlot * 1.35, refData.criticalP * pf);
 
-        // Ajustar X ajustado al domo específico
-        xRangeFinal = [refData.xRange[0], refData.xRange[1]];
+        xRangeFinal = [minX, maxX];
         yRangeFinal = [
           Math.log10(pMinUtil),
           Math.log10(pMaxUtil)
