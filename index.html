@@ -61,9 +61,28 @@
       align-items: center;
     }
 
+    /* Fila superior de configuración general */
+    .config-row {
+      display: flex;
+      gap: 5px;
+      margin-bottom: 5px;
+      width: 100%;
+    }
+
+    .config-row .input-group-ref {
+      flex: 2;
+      min-width: 0;
+    }
+
+    .config-row .input-group-unit {
+      flex: 1;
+      min-width: 0;
+    }
+
+    /* Grilla para las mediciones de campo */
     .controls-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(2, 1fr);
       gap: 5px;
     }
 
@@ -82,6 +101,8 @@
       margin-bottom: 2px;
       color: #94a3b8;
       white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .input-group input, .input-group select {
@@ -213,35 +234,9 @@
       .top-panel {
         grid-template-columns: 1fr;
       }
-      
-      .controls-grid { 
-        grid-template-columns: repeat(2, 1fr); 
+
+      .config-row {
         gap: 4px;
-      }
-
-      /* Primera fila en celular: Refrigerante + U.Presión + U.Temp en 1 sola línea */
-      .input-group.col-2 { 
-        grid-column: span 2; 
-      }
-
-      .controls-grid > .input-group:nth-child(1) {
-        grid-column: span 2;
-      }
-
-      /* Ajuste dinámico de fila única para los selectores de encabezado */
-      .controls-grid {
-        display: grid;
-        grid-template-columns: 2.2fr 1.1fr 1.1fr;
-      }
-
-      /* Del 4to elemento en adelante vuelven a grilla de 2 columnas para mediciones */
-      .controls-grid > .input-group:nth-child(n+4) {
-        grid-column: span 1;
-      }
-
-      /* Excepción para T. Descarga Compresor que abarca ambas columnas en móvil */
-      .controls-grid > .input-group.col-2:nth-child(n+4) {
-        grid-column: span 2;
       }
 
       .input-group label {
@@ -274,10 +269,9 @@
           <span>Datos de Campo</span>
         </h2>
         
-        <div class="controls-grid">
-          
-          <!-- Selector Refrigerante + Unidades -->
-          <div class="input-group col-2">
+        <!-- Fila Única Superior: Refrigerante + Unidades -->
+        <div class="config-row">
+          <div class="input-group input-group-ref">
             <label for="refSelect">Refrigerante</label>
             <select id="refSelect" onchange="guardarYActualizar()">
               <optgroup label="Puros y Tradicionales">
@@ -304,7 +298,7 @@
             </select>
           </div>
 
-          <div class="input-group">
+          <div class="input-group input-group-unit">
             <label for="pUnitSelect">U. Presión</label>
             <select id="pUnitSelect" onchange="cambiarUnidades()">
               <option value="psi">PSI</option>
@@ -313,15 +307,18 @@
             </select>
           </div>
 
-          <div class="input-group">
+          <div class="input-group input-group-unit">
             <label for="tUnitSelect">U. Temp</label>
             <select id="tUnitSelect" onchange="cambiarUnidades()">
               <option value="C" selected>°C</option>
               <option value="F">°F</option>
             </select>
           </div>
+        </div>
 
-          <!-- Mediciones Presión de Campo (Etiquetas Dinámicas) -->
+        <!-- Grilla de Mediciones en 2 Columnas Parejas -->
+        <div class="controls-grid">
+          
           <div class="input-group">
             <label for="pSuct" id="lblPSuct">P. Succión</label>
             <input type="number" id="pSuct" value="3.5" step="0.1" oninput="guardarYActualizar()">
@@ -332,7 +329,6 @@
             <input type="number" id="pDesc" value="18.0" step="0.5" oninput="guardarYActualizar()">
           </div>
 
-          <!-- Mediciones Temperatura de Campo (Etiquetas Dinámicas) -->
           <div class="input-group">
             <label for="tSuct" id="lblTSuct">T. Tubería Succ</label>
             <input type="number" id="tSuct" value="10" step="0.5" oninput="guardarYActualizar()">
@@ -348,7 +344,6 @@
             <input type="number" id="tDescReal" value="75" step="1" oninput="guardarYActualizar()">
           </div>
 
-          <!-- Mediciones Eléctricas -->
           <div class="input-group">
             <label for="vVolt">Voltaje (V)</label>
             <input type="number" id="vVolt" value="220" step="1" oninput="guardarYActualizar()">
@@ -398,7 +393,6 @@
 
     <!-- PANEL INFERIOR: GRÁFICO MOLLIER -->
     <main class="card chart-card">
-      <!-- Barra de Botones ubicada justo encima del contenedor del gráfico -->
       <div class="action-bar">
         <button class="btn btn-toggle" id="btnZonaActiva" onclick="toggleZonaActiva()">
           🔍 Zoom Zona Activa: OFF
@@ -829,7 +823,7 @@
         paper_bgcolor: '#1e293b',
         plot_bgcolor: '#0f172a',
         dragmode: false,
-        showlegend: false, // Oculta la leyenda para no obstaculizar la vista
+        showlegend: false,
         title: {
           text: `Diagrama Mollier p-h (${refData.nombre}) - Operación Real`,
           font: { color: '#f8fafc', size: 13 }
