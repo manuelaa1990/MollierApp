@@ -127,7 +127,7 @@
     .action-bar {
       display: flex;
       gap: 8px;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       width: 100%;
     }
 
@@ -213,13 +213,23 @@
       display: flex;
       flex-direction: column;
       width: 100%;
-      padding: 8px;
+      padding: 6px 8px;
     }
 
+    /* --- OPTIMIZACIÓN DE ALTURA PARA DISPOSITIVOS MÓVILES --- */
     .chart-container {
       width: 100%;
-      height: 400px;
-      min-height: 340px;
+      height: 380px;
+      min-height: 260px;
+    }
+
+    @media (max-width: 680px) {
+      .chart-container {
+        height: 280px; /* Reducido para encuadrar en teléfono */
+      }
+      .card {
+        padding: 6px 8px;
+      }
     }
 
     /* --- ESTILOS DE ALARMA INTERMITENTE POR CAMPO ESPECÍFICO --- */
@@ -249,12 +259,6 @@
       100% {
         background-color: rgba(127, 29, 29, 0.3);
         box-shadow: 0 0 2px rgba(239, 68, 68, 0.2);
-      }
-    }
-
-    @media (max-width: 680px) {
-      .chart-container {
-        height: 340px;
       }
     }
   </style>
@@ -376,7 +380,7 @@
         </div>
 
         <div class="diag-container" id="panelAlertas">
-          <!-- Alertas técnicas adaptativas dinámicas -->
+          <!-- Alertas técnicas dinámicas -->
         </div>
       </div>
 
@@ -385,7 +389,7 @@
     <main class="card chart-card">
       <div class="action-bar">
         <button class="btn btn-toggle" id="btnZonaActiva" onclick="toggleZonaActiva()">
-          🔍 Zoom Zona Activa: OFF
+          🔍 Zoom Zona Activa: ON
         </button>
         <button class="btn btn-primary" onclick="descargarGrafica()">
           📷 Descargar PNG
@@ -398,7 +402,8 @@
   </div>
 
   <script>
-    let zonaActivaHabilitada = false;
+    // Zoom a zona activa por defecto para visualización limpia en móviles
+    let zonaActivaHabilitada = true;
     let pUnitActual = 'psi';
     let tUnitActual = 'C';
 
@@ -695,48 +700,47 @@
       };
     }
 
-    // --- EVALUACIÓN DE DIAGNÓSTICO CON ALERTAS LOCALIZADAS POR VARIABLE ---
     function evaluarDiagnostico(refData, rP, tDescRealC, tLiqC, tSatCondC, SH, SC) {
       const alertas = [];
       let alarmaTDesc = false;
       let alarmaTLiq = false;
 
-      // 1. Alarma Puntual: Temperatura de Descarga por Refrigerante
+      // Alarma Puntual: Temperatura de Descarga por Refrigerante
       if (tDescRealC > refData.tDescMax) {
         alarmaTDesc = true;
         alertas.push(`🔴 <b>CRÍTICO (T. Descarga ${tDescRealC.toFixed(0)}°C):</b> Supera el límite de ${refData.tDescMax}°C para ${refData.nombre}. Riesgo de degradar aceite.`);
       }
 
-      // 2. Alarma Puntual: Temperatura de Líquido según Tabla P/T (T. Sat Condensación)
+      // Alarma Puntual: Temperatura de Líquido según Tabla P/T (T. Sat Condensación)
       if (tLiqC >= tSatCondC) {
         alarmaTLiq = true;
         alertas.push(`🔴 <b>ALERTA (T. Líquido ${tLiqC.toFixed(1)}°C):</b> Igual o superior a T. Sat (${tSatCondC.toFixed(1)}°C). Pérdida de subenfriamiento / Flash Gas.`);
       }
 
-      // 3. Relación de Compresión
+      // Relación de Compresión
       if (rP > refData.rPMax) {
         alertas.push(`🔴 <b>Relación de Presión Excesiva (rP = ${rP.toFixed(1)} > ${refData.rPMax}):</b> Compresor fuera de envolvente. Condensador sucio o restricción.`);
       } else if (rP < 1.8 && rP > 1.0) {
         alertas.push(`🟡 <b>Relación de Presión Muy Baja (rP = ${rP.toFixed(1)}):</b> Ineficiencia por desgaste en válvulas o bypass interno.`);
       }
 
-      // 4. Recalentamiento (Elemento de Expansión)
+      // Recalentamiento
       if (SH < refData.shOptimo[0]) {
         alertas.push(`🔴 <b>Recalentamiento Crítico (< ${refData.shOptimo[0]} K):</b> Riesgo de retorno de líquido al compresor.`);
       } else if (SH > refData.shOptimo[1]) {
         alertas.push(`🟡 <b>Recalentamiento Alto (> ${refData.shOptimo[1]} K):</b> Evaporador subalimentado o falta de carga.`);
       }
 
-      // 5. Subenfriamiento (Carga / Condensador)
+      // Subenfriamiento
       if (SC < refData.scOptimo[0] && !alarmaTLiq) {
         alertas.push(`🟡 <b>Subenfriamiento Bajo (< ${refData.scOptimo[0]} K):</b> Falta de refrigerante o baja transferencia en condensador.`);
       } else if (SC > refData.scOptimo[1]) {
         alertas.push(`🔵 <b>Subenfriamiento Alto (> ${refData.scOptimo[1]} K):</b> Exceso de carga o líquido retenido en condensador.`);
       }
 
-      // 6. Mezclas Zeotrópicas
+      // Mezclas Zeotrópicas
       if (refData.esZeotropico && refData.glide > 0.5) {
-        alertas.push(`ℹ️ <b>Mezcla Zeotrópica (Glide ${refData.glide} K):</b> Considere la diferencia de temperatura entre roció y burbuja.`);
+        alertas.push(`ℹ️ <b>Mezcla Zeotrópica (Glide ${refData.glide} K):</b> Considere la diferencia de temperatura entre rocío y burbuja.`);
       }
 
       return { alertas, alarmaTDesc, alarmaTLiq };
@@ -821,14 +825,12 @@
       const grpLiq = document.getElementById('grpTLiq');
       const panelAlertas = document.getElementById('panelAlertas');
 
-      // Parpadeo aislado para T. Descarga
       if (alarmaTDesc) {
         grpDesc.classList.add('alarm-field-active');
       } else {
         grpDesc.classList.remove('alarm-field-active');
       }
 
-      // Parpadeo aislado para T. Líquido
       if (alarmaTLiq) {
         grpLiq.classList.add('alarm-field-active');
       } else {
@@ -856,9 +858,9 @@
         name: 'Ciclo Operativo Real',
         text: ['1 (Succ)', '2 (Desc)', '3 (Liq)', '4 (Evap)', ''],
         textposition: ['bottom right', 'top right', 'top left', 'bottom left', ''],
-        textfont: { color: '#ffffff', size: 11 },
+        textfont: { color: '#ffffff', size: 10 },
         line: { color: '#f43f5e', width: 3 },
-        marker: { size: 7, color: '#f59e0b' }
+        marker: { size: 6, color: '#f59e0b' }
       };
 
       const cycleFillTrace = {
@@ -879,10 +881,11 @@
       const maxH_Ciclo = Math.max(h1, h2, h3, h4);
       const minH_Ciclo = Math.min(h1, h2, h3, h4);
 
+      // LÓGICA DE CENTRADO DINÁMICO EN ZONA OPERATIVA
       if (zonaActivaHabilitada) {
-        const hMargin = (maxH_Ciclo - minH_Ciclo) * 0.2;
-        const minPLog = Math.log10(Math.min(pSuctPlot, pDescPlot)) - 0.12;
-        const maxPLog = Math.log10(Math.max(pSuctPlot, pDescPlot)) + 0.12;
+        const hMargin = (maxH_Ciclo - minH_Ciclo) * 0.15; // Margen optimizado del 15%
+        const minPLog = Math.log10(Math.min(pSuctPlot, pDescPlot)) - 0.10;
+        const maxPLog = Math.log10(Math.max(pSuctPlot, pDescPlot)) + 0.10;
 
         xRangeFinal = [minH_Ciclo - hMargin, maxH_Ciclo + hMargin];
         yRangeFinal = [minPLog, maxPLog];
@@ -898,7 +901,8 @@
       }
 
       const layout = {
-        margin: { l: 45, r: 25, t: 30, b: 35 },
+        /* Márgenes ultra reducidos para maximizar espacio útil en móviles */
+        margin: { l: 38, r: 15, t: 25, b: 30 },
         autosize: true,
         paper_bgcolor: '#1e293b',
         plot_bgcolor: '#0f172a',
@@ -906,23 +910,23 @@
         showlegend: false,
         title: {
           text: `Diagrama Mollier p-h (${refData.nombre})`,
-          font: { color: '#f8fafc', size: 13 }
+          font: { color: '#f8fafc', size: 11 }
         },
         xaxis: {
-          title: { text: 'Entalpía Enthalpy (kJ/kg)', font: { color: '#94a3b8', size: 10 } },
+          title: { text: 'Entalpía (kJ/kg)', font: { color: '#94a3b8', size: 9 } },
           visible: true,
           showticklabels: true,
-          tickfont: { color: '#94a3b8', size: 9 },
+          tickfont: { color: '#94a3b8', size: 8 },
           showgrid: true,
           gridcolor: '#334155',
           range: xRangeFinal,
           fixedrange: true
         },
         yaxis: {
-          title: { text: `Presión Log [P_abs] (${pUnits[pUnitActual].label})`, font: { color: '#94a3b8', size: 10 } },
+          title: { text: `P (${pUnits[pUnitActual].label})`, font: { color: '#94a3b8', size: 9 } },
           visible: true,
           showticklabels: true,
-          tickfont: { color: '#94a3b8', size: 9 },
+          tickfont: { color: '#94a3b8', size: 8 },
           showgrid: true,
           gridcolor: '#334155',
           type: 'log',
