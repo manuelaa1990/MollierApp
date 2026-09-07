@@ -216,16 +216,16 @@
       padding: 6px 8px;
     }
 
-    /* --- OPTIMIZACIÓN DE ALTURA PARA DISPOSITIVOS MÓVILES --- */
+    /* --- OPTIMIZACIÓN EXTREMA DE ALTURA PARA MÓVILES --- */
     .chart-container {
       width: 100%;
       height: 380px;
-      min-height: 260px;
+      min-height: 210px;
     }
 
     @media (max-width: 680px) {
       .chart-container {
-        height: 280px; /* Reducido para encuadrar en teléfono */
+        height: 210px !important; /* Altura compacta para evitar cortes y scroll */
       }
       .card {
         padding: 6px 8px;
@@ -402,7 +402,6 @@
   </div>
 
   <script>
-    // Zoom a zona activa por defecto para visualización limpia en móviles
     let zonaActivaHabilitada = true;
     let pUnitActual = 'psi';
     let tUnitActual = 'C';
@@ -705,40 +704,34 @@
       let alarmaTDesc = false;
       let alarmaTLiq = false;
 
-      // Alarma Puntual: Temperatura de Descarga por Refrigerante
       if (tDescRealC > refData.tDescMax) {
         alarmaTDesc = true;
         alertas.push(`🔴 <b>CRÍTICO (T. Descarga ${tDescRealC.toFixed(0)}°C):</b> Supera el límite de ${refData.tDescMax}°C para ${refData.nombre}. Riesgo de degradar aceite.`);
       }
 
-      // Alarma Puntual: Temperatura de Líquido según Tabla P/T (T. Sat Condensación)
       if (tLiqC >= tSatCondC) {
         alarmaTLiq = true;
         alertas.push(`🔴 <b>ALERTA (T. Líquido ${tLiqC.toFixed(1)}°C):</b> Igual o superior a T. Sat (${tSatCondC.toFixed(1)}°C). Pérdida de subenfriamiento / Flash Gas.`);
       }
 
-      // Relación de Compresión
       if (rP > refData.rPMax) {
         alertas.push(`🔴 <b>Relación de Presión Excesiva (rP = ${rP.toFixed(1)} > ${refData.rPMax}):</b> Compresor fuera de envolvente. Condensador sucio o restricción.`);
       } else if (rP < 1.8 && rP > 1.0) {
         alertas.push(`🟡 <b>Relación de Presión Muy Baja (rP = ${rP.toFixed(1)}):</b> Ineficiencia por desgaste en válvulas o bypass interno.`);
       }
 
-      // Recalentamiento
       if (SH < refData.shOptimo[0]) {
         alertas.push(`🔴 <b>Recalentamiento Crítico (< ${refData.shOptimo[0]} K):</b> Riesgo de retorno de líquido al compresor.`);
       } else if (SH > refData.shOptimo[1]) {
         alertas.push(`🟡 <b>Recalentamiento Alto (> ${refData.shOptimo[1]} K):</b> Evaporador subalimentado o falta de carga.`);
       }
 
-      // Subenfriamiento
       if (SC < refData.scOptimo[0] && !alarmaTLiq) {
         alertas.push(`🟡 <b>Subenfriamiento Bajo (< ${refData.scOptimo[0]} K):</b> Falta de refrigerante o baja transferencia en condensador.`);
       } else if (SC > refData.scOptimo[1]) {
         alertas.push(`🔵 <b>Subenfriamiento Alto (> ${refData.scOptimo[1]} K):</b> Exceso de carga o líquido retenido en condensador.`);
       }
 
-      // Mezclas Zeotrópicas
       if (refData.esZeotropico && refData.glide > 0.5) {
         alertas.push(`ℹ️ <b>Mezcla Zeotrópica (Glide ${refData.glide} K):</b> Considere la diferencia de temperatura entre rocío y burbuja.`);
       }
@@ -787,17 +780,12 @@
       const superHeatK = Math.max(tSuctC - propEvap.tSat, 0);
       const subCoolK = Math.max(propCond.tSat - tLiqC, 0);
 
-      // 1. Entalpía en Succión (h1)
       const h1 = propEvap.hV + (superHeatK * refData.cpV);
-
-      // 2. Entalpía en Líquido (h3) y Entrada al Evaporador (h4)
       const h3 = propCond.hL - (subCoolK * refData.cpL);
       const h4 = h3; 
 
-      // 3. Capacidad Frigorífica Útil (qn)
       const qn = h1 - h4;
 
-      // 4. Cálculo Físico del Trabajo de Compresión (h2)
       const rP = pDescBarAbs / pSuctBarAbs;
       const deltaH_isentropico = h1 * 0.18 * Math.log(rP); 
       const deltaT_superheat_desc = Math.max(tDescRealC - propCond.tSat, 0);
@@ -805,7 +793,6 @@
 
       const h2 = Math.max(h1 + deltaH_isentropico, h2_termico);
 
-      // 5. Indicadores de Rendimiento
       const w = h2 - h1;
       const cop = w > 0 ? (qn / w) : 0;
 
@@ -816,7 +803,6 @@
       document.getElementById('kpiw').innerText = `${w.toFixed(1)} kJ/kg`;
       document.getElementById('kpicop').innerText = cop.toFixed(2);
 
-      // 6. Diagnóstico Técnico y Control de Alarma Puntual por Campo
       const { alertas, alarmaTDesc, alarmaTLiq } = evaluarDiagnostico(
         refData, rP, tDescRealC, tLiqC, propCond.tSat, superHeatK, subCoolK
       );
@@ -858,9 +844,9 @@
         name: 'Ciclo Operativo Real',
         text: ['1 (Succ)', '2 (Desc)', '3 (Liq)', '4 (Evap)', ''],
         textposition: ['bottom right', 'top right', 'top left', 'bottom left', ''],
-        textfont: { color: '#ffffff', size: 10 },
-        line: { color: '#f43f5e', width: 3 },
-        marker: { size: 6, color: '#f59e0b' }
+        textfont: { color: '#ffffff', size: 9 },
+        line: { color: '#f43f5e', width: 2.5 },
+        marker: { size: 5, color: '#f59e0b' }
       };
 
       const cycleFillTrace = {
@@ -881,11 +867,11 @@
       const maxH_Ciclo = Math.max(h1, h2, h3, h4);
       const minH_Ciclo = Math.min(h1, h2, h3, h4);
 
-      // LÓGICA DE CENTRADO DINÁMICO EN ZONA OPERATIVA
+      // LÓGICA DE ZOOM ESTRICTO EN ZONA OPERATIVA PARA MÓVILES
       if (zonaActivaHabilitada) {
-        const hMargin = (maxH_Ciclo - minH_Ciclo) * 0.15; // Margen optimizado del 15%
-        const minPLog = Math.log10(Math.min(pSuctPlot, pDescPlot)) - 0.10;
-        const maxPLog = Math.log10(Math.max(pSuctPlot, pDescPlot)) + 0.10;
+        const hMargin = (maxH_Ciclo - minH_Ciclo) * 0.08; // Margen reducido al 8%
+        const minPLog = Math.log10(Math.min(pSuctPlot, pDescPlot)) - 0.05;
+        const maxPLog = Math.log10(Math.max(pSuctPlot, pDescPlot)) + 0.05;
 
         xRangeFinal = [minH_Ciclo - hMargin, maxH_Ciclo + hMargin];
         yRangeFinal = [minPLog, maxPLog];
@@ -901,8 +887,8 @@
       }
 
       const layout = {
-        /* Márgenes ultra reducidos para maximizar espacio útil en móviles */
-        margin: { l: 38, r: 15, t: 25, b: 30 },
+        /* Márgenes ultra reducidos para aprovechar el ancho total */
+        margin: { l: 30, r: 10, t: 20, b: 25 },
         autosize: true,
         paper_bgcolor: '#1e293b',
         plot_bgcolor: '#0f172a',
@@ -910,23 +896,23 @@
         showlegend: false,
         title: {
           text: `Diagrama Mollier p-h (${refData.nombre})`,
-          font: { color: '#f8fafc', size: 11 }
+          font: { color: '#f8fafc', size: 10 }
         },
         xaxis: {
-          title: { text: 'Entalpía (kJ/kg)', font: { color: '#94a3b8', size: 9 } },
+          title: { text: 'Entalpía (kJ/kg)', font: { color: '#94a3b8', size: 8 } },
           visible: true,
           showticklabels: true,
-          tickfont: { color: '#94a3b8', size: 8 },
+          tickfont: { color: '#94a3b8', size: 7 },
           showgrid: true,
           gridcolor: '#334155',
           range: xRangeFinal,
           fixedrange: true
         },
         yaxis: {
-          title: { text: `P (${pUnits[pUnitActual].label})`, font: { color: '#94a3b8', size: 9 } },
+          title: { text: `P (${pUnits[pUnitActual].label})`, font: { color: '#94a3b8', size: 8 } },
           visible: true,
           showticklabels: true,
-          tickfont: { color: '#94a3b8', size: 8 },
+          tickfont: { color: '#94a3b8', size: 7 },
           showgrid: true,
           gridcolor: '#334155',
           type: 'log',
