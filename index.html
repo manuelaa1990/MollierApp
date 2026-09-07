@@ -30,15 +30,15 @@
       flex-direction: column;
       width: 100%;
       height: 100dvh;
-      padding: 8px;
-      gap: 8px;
+      padding: 6px;
+      gap: 6px;
     }
 
     /* --- PANEL SUPERIOR --- */
     .top-panel {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-      gap: 8px;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 6px;
       flex-shrink: 0;
     }
 
@@ -46,15 +46,15 @@
       background: #1e293b;
       border: 1px solid #334155;
       border-radius: 8px;
-      padding: 8px 12px;
+      padding: 6px 10px;
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
     }
 
     .card h2 {
-      font-size: 0.78rem;
+      font-size: 0.72rem;
       text-transform: uppercase;
       color: #38bdf8;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
       letter-spacing: 0.5px;
       display: flex;
       justify-content: space-between;
@@ -64,8 +64,8 @@
     /* Fila superior de configuración general */
     .config-row {
       display: flex;
-      gap: 5px;
-      margin-bottom: 5px;
+      gap: 4px;
+      margin-bottom: 4px;
       width: 100%;
     }
 
@@ -79,11 +79,11 @@
       min-width: 0;
     }
 
-    /* Grilla para las mediciones de campo */
+    /* Grilla ULTRA COMPACTA de 3 columnas para mediciones */
     .controls-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 5px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
     }
 
     .input-group {
@@ -91,14 +91,10 @@
       flex-direction: column;
     }
 
-    .input-group.col-2 {
-      grid-column: span 2;
-    }
-
     .input-group label {
-      font-size: 0.62rem;
+      font-size: 0.58rem;
       font-weight: 600;
-      margin-bottom: 2px;
+      margin-bottom: 1px;
       color: #94a3b8;
       white-space: nowrap;
       overflow: hidden;
@@ -106,14 +102,15 @@
     }
 
     .input-group input, .input-group select {
-      padding: 3px 5px;
+      padding: 2px 4px;
       border: 1px solid #475569;
       border-radius: 4px;
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       outline: none;
       background-color: #0f172a;
       color: #f8fafc;
       width: 100%;
+      height: 24px; /* Altura recortada */
     }
 
     .input-group select {
@@ -143,16 +140,16 @@
     .action-bar {
       display: flex;
       gap: 6px;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
       width: 100%;
     }
 
     .btn {
       flex: 1;
-      padding: 6px 10px;
+      padding: 4px 8px;
       border: none;
       border-radius: 4px;
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       font-weight: 700;
       cursor: pointer;
       transition: all 0.2s;
@@ -160,6 +157,7 @@
       align-items: center;
       justify-content: center;
       gap: 4px;
+      height: 26px;
     }
 
     .btn-primary {
@@ -182,27 +180,29 @@
     .results-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 5px;
-      height: calc(100% - 22px);
+      gap: 4px;
+      height: calc(100% - 18px);
       align-content: center;
     }
 
     .kpi-box {
       background-color: #0f172a;
       border-left: 3px solid #38bdf8;
-      padding: 4px 6px;
+      padding: 3px 5px;
       border-radius: 4px;
     }
 
     .kpi-box .label {
-      font-size: 0.58rem;
+      font-size: 0.55rem;
       color: #94a3b8;
       display: block;
       white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .kpi-box .value {
-      font-size: 0.82rem;
+      font-size: 0.78rem;
       font-weight: 700;
       color: #f8fafc;
     }
@@ -214,7 +214,7 @@
       flex-direction: column;
       min-height: 0;
       position: relative;
-      padding: 8px;
+      padding: 6px;
     }
 
     .chart-container {
@@ -224,7 +224,7 @@
       min-height: 0;
     }
 
-    /* --- AJUSTES OPTIMIZADOS PARA MÓVIL --- */
+    /* --- AJUSTES PARA MÓVIL --- */
     @media (max-width: 680px) {
       .app-container { 
         padding: 4px; 
@@ -235,23 +235,17 @@
         grid-template-columns: 1fr;
       }
 
-      .config-row {
-        gap: 4px;
-      }
-
       .input-group label {
-        font-size: 0.58rem;
-        letter-spacing: -0.2px;
+        font-size: 0.54rem;
       }
 
       .input-group input, 
       .input-group select {
-        font-size: 0.7rem;
-        padding: 3px 2px;
+        font-size: 0.68rem;
       }
 
       .results-grid { 
-        grid-template-columns: repeat(2, 1fr); 
+        grid-template-columns: repeat(3, 1fr); 
       }
     }
   </style>
@@ -263,7 +257,7 @@
     <!-- PANEL SUPERIOR: CONTROLES Y KPIS -->
     <header class="top-panel">
       
-      <!-- Panel de Controles -->
+      <!-- Panel de Controles Compacto -->
       <div class="card">
         <h2>
           <span>Datos de Campo</span>
@@ -316,7 +310,7 @@
           </div>
         </div>
 
-        <!-- Grilla de Mediciones en 2 Columnas Parejas -->
+        <!-- Grilla de Mediciones en 3 Columnas Recortadas -->
         <div class="controls-grid">
           
           <div class="input-group">
@@ -339,8 +333,8 @@
             <input type="number" id="tLiq" value="35" step="0.5" oninput="guardarYActualizar()">
           </div>
 
-          <div class="input-group col-2">
-            <label for="tDescReal" id="lblTDescReal">T. Descarga Compresor</label>
+          <div class="input-group">
+            <label for="tDescReal" id="lblTDescReal">T. Descarga</label>
             <input type="number" id="tDescReal" value="75" step="1" oninput="guardarYActualizar()">
           </div>
 
@@ -363,23 +357,23 @@
         <h2>Indicadores Calculados</h2>
         <div class="results-grid">
           <div class="kpi-box" style="border-left-color: #38bdf8;">
-            <span class="label">Recalentamiento</span>
+            <span class="label">Recalent.</span>
             <span class="value" id="kpiSH">0.0 K</span>
           </div>
           <div class="kpi-box" style="border-left-color: #10b981;">
-            <span class="label">Subenfriamiento</span>
+            <span class="label">Subenfriam.</span>
             <span class="value" id="kpiSC">0.0 K</span>
           </div>
           <div class="kpi-box" style="border-left-color: #f59e0b;">
-            <span class="label">Potencia Elect. (kW)</span>
+            <span class="label">Potencia Elec.</span>
             <span class="value" id="kpiKW">0.00 kW</span>
           </div>
           <div class="kpi-box" style="border-left-color: #a855f7;">
-            <span class="label">Cap. Frigorífica (qn)</span>
+            <span class="label">Cap. Frig. (qn)</span>
             <span class="value" id="kpiqn">0 kJ/kg</span>
           </div>
           <div class="kpi-box" style="border-left-color: #ef4444;">
-            <span class="label">Trabajo Compresor (w)</span>
+            <span class="label">Trabajo Comp (w)</span>
             <span class="value" id="kpiw">0 kJ/kg</span>
           </div>
           <div class="kpi-box" style="border-left-color: #ec4899;">
@@ -539,9 +533,9 @@
     function actualizarEtiquetas() {
       document.getElementById('lblPSuct').innerText = `P. Succión (${pUnits[pUnitActual].label})`;
       document.getElementById('lblPDesc').innerText = `P. Descarga (${pUnits[pUnitActual].label})`;
-      document.getElementById('lblTSuct').innerText = `T. Tubería Succ (°${tUnitActual})`;
-      document.getElementById('lblTLiq').innerText = `T. Tubería Liq (°${tUnitActual})`;
-      document.getElementById('lblTDescReal').innerText = `T. Descarga Compresor (°${tUnitActual})`;
+      document.getElementById('lblTSuct').innerText = `T. Succ (°${tUnitActual})`;
+      document.getElementById('lblTLiq').innerText = `T. Liq (°${tUnitActual})`;
+      document.getElementById('lblTDescReal').innerText = `T. Desc (°${tUnitActual})`;
     }
 
     // CONVERSIÓN DE UNIDADES
@@ -774,9 +768,9 @@
         name: 'Ciclo Operativo Real',
         text: ['1 (Succ)', '2 (Desc)', '3 (Liq)', '4 (Evap)', ''],
         textposition: ['bottom right', 'top right', 'top left', 'bottom left', ''],
-        textfont: { color: '#f8fafc', size: 11 },
+        textfont: { color: '#f8fafc', size: 10 },
         line: { color: '#ef4444', width: 2.5 },
-        marker: { size: 6, color: '#f59e0b' }
+        marker: { size: 5, color: '#f59e0b' }
       };
 
       const traces = [getDomeTrace(refData), cycleTrace];
@@ -816,9 +810,9 @@
         ];
       }
 
-      // CONFIGURACIÓN DEL LAYOUT (ESTÁTICO SIN MOVIMIENTO, SIN LEYENDA)
+      // CONFIGURACIÓN DEL LAYOUT
       const layout = {
-        margin: { l: 50, r: 20, t: 30, b: 40 },
+        margin: { l: 45, r: 15, t: 25, b: 35 },
         autosize: true,
         paper_bgcolor: '#1e293b',
         plot_bgcolor: '#0f172a',
@@ -826,22 +820,22 @@
         showlegend: false,
         title: {
           text: `Diagrama Mollier p-h (${refData.nombre}) - Operación Real`,
-          font: { color: '#f8fafc', size: 13 }
+          font: { color: '#f8fafc', size: 12 }
         },
         xaxis: {
-          title: { text: 'Entalpía h [kJ/kg]', font: { color: '#94a3b8', size: 11 } },
+          title: { text: 'Entalpía h [kJ/kg]', font: { color: '#94a3b8', size: 10 } },
           range: xRangeFinal,
           fixedrange: true,
           gridcolor: '#334155',
-          tickfont: { color: '#94a3b8' }
+          tickfont: { color: '#94a3b8', size: 9 }
         },
         yaxis: {
-          title: { text: `Presión P_abs [${pUnits[pUnitActual].label}]`, font: { color: '#94a3b8', size: 11 } },
+          title: { text: `Presión P_abs [${pUnits[pUnitActual].label}]`, font: { color: '#94a3b8', size: 10 } },
           type: 'log',
           range: yRangeFinal,
           fixedrange: true,
           gridcolor: '#334155',
-          tickfont: { color: '#94a3b8' }
+          tickfont: { color: '#94a3b8', size: 9 }
         }
       };
 
