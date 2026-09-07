@@ -34,20 +34,14 @@
       gap: 8px;
     }
 
-    /* --- PANEL SUPERIOR --- */
-    .top-panel {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-      gap: 8px;
-      flex-shrink: 0;
-    }
-
+    /* --- TARJETAS GENERALES --- */
     .card {
       background: #1e293b;
       border: 1px solid #334155;
       border-radius: 8px;
       padding: 8px 12px;
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+      flex-shrink: 0;
     }
 
     .card h2 {
@@ -61,19 +55,16 @@
       align-items: center;
     }
 
+    /* --- PANEL SUPERIOR: DATOS DE CAMPO EN ANCHO COMPLETO --- */
     .controls-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 5px;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 6px;
     }
 
     .input-group {
       display: flex;
       flex-direction: column;
-    }
-
-    .input-group.col-2 {
-      grid-column: span 2;
     }
 
     .input-group label {
@@ -85,13 +76,14 @@
     }
 
     .input-group input, .input-group select {
-      padding: 3px 5px;
+      padding: 4px 6px;
       border: 1px solid #475569;
       border-radius: 4px;
       font-size: 0.75rem;
       outline: none;
       background-color: #0f172a;
       color: #f8fafc;
+      width: 100%;
     }
 
     .input-group select {
@@ -116,16 +108,16 @@
       border-color: #38bdf8;
     }
 
-    /* Barra de Botones */
+    /* Barra de Botones integrada */
     .action-bar {
       display: flex;
-      gap: 6px;
+      gap: 8px;
       margin-top: 6px;
     }
 
     .btn {
       flex: 1;
-      padding: 5px 8px;
+      padding: 6px 10px;
       border: none;
       border-radius: 4px;
       font-size: 0.72rem;
@@ -154,36 +146,7 @@
       box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
     }
 
-    /* Resultados KPI */
-    .results-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 5px;
-      height: calc(100% - 22px);
-      align-content: center;
-    }
-
-    .kpi-box {
-      background-color: #0f172a;
-      border-left: 3px solid #38bdf8;
-      padding: 4px 6px;
-      border-radius: 4px;
-    }
-
-    .kpi-box .label {
-      font-size: 0.58rem;
-      color: #94a3b8;
-      display: block;
-      white-space: nowrap;
-    }
-
-    .kpi-box .value {
-      font-size: 0.82rem;
-      font-weight: 700;
-      color: #f8fafc;
-    }
-
-    /* --- PANEL INFERIOR: GRÁFICA --- */
+    /* --- PANEL CENTRAL: GRÁFICA MOLLIER --- */
     .chart-card {
       flex: 1;
       display: flex;
@@ -198,11 +161,41 @@
       height: 100%;
     }
 
-    @media (max-width: 680px) {
+    /* --- PANEL INFERIOR: INDICADORES CALCULADOS --- */
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px;
+    }
+
+    .kpi-box {
+      background-color: #0f172a;
+      border-left: 3px solid #38bdf8;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    .kpi-box .label {
+      font-size: 0.60rem;
+      color: #94a3b8;
+      display: block;
+      white-space: nowrap;
+    }
+
+    .kpi-box .value {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #f8fafc;
+    }
+
+    @media (max-width: 900px) {
+      .results-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    @media (max-width: 600px) {
       .app-container { padding: 4px; gap: 4px; }
-      .controls-grid { grid-template-columns: repeat(2, 1fr); }
-      .input-group.col-2 { grid-column: span 1; }
       .results-grid { grid-template-columns: repeat(2, 1fr); }
+      .action-bar { flex-direction: column; }
     }
   </style>
 </head>
@@ -210,151 +203,144 @@
 
   <div class="app-container">
     
-    <!-- PANEL SUPERIOR: CONTROLES Y KPIS -->
-    <header class="top-panel">
+    <!-- PANEL SUPERIOR: DATOS DE CAMPO -->
+    <header class="card">
+      <h2>Datos de Campo</h2>
       
-      <!-- Panel de Controles -->
-      <div class="card">
-        <h2>
-          <span>Datos de Campo</span>
-        </h2>
+      <div class="controls-grid">
         
-        <div class="controls-grid">
-          
-          <!-- Selector Refrigerante + Unidades -->
-          <div class="input-group col-2">
-            <label for="refSelect">Refrigerante</label>
-            <select id="refSelect" onchange="guardarYActualizar()">
-              <optgroup label="Puros y Tradicionales">
-                <option value="R134a">R-134a</option>
-                <option value="R22">R-22</option>
-                <option value="R410A">R-410A</option>
-                <option value="R32">R-32</option>
-              </optgroup>
-              <optgroup label="Hidrocarburos (HC)">
-                <option value="R290">R-290 (Propano)</option>
-                <option value="R600a">R-600a (Isobutano)</option>
-              </optgroup>
-              <optgroup label="Mezclas HFC (Serie 400 / 500)">
-                <option value="R404A" selected>R-404A</option>
-                <option value="R507A">R-507A</option>
-                <option value="R407C">R-407C</option>
-                <option value="R407A">R-407A</option>
-                <option value="R407F">R-407F</option>
-                <option value="R417A">R-417A</option>
-              </optgroup>
-              <optgroup label="HFO Nueva Generación">
-                <option value="R1234yf">R-1234yf</option>
-              </optgroup>
-            </select>
-          </div>
-
-          <div class="input-group">
-            <label for="pUnitSelect">U. Presión</label>
-            <select id="pUnitSelect" onchange="cambiarUnidades()">
-              <option value="psi">PSI</option>
-              <option value="bar" selected>Bar</option>
-              <option value="kpa">kPa</option>
-            </select>
-          </div>
-
-          <div class="input-group">
-            <label for="tUnitSelect">U. Temp</label>
-            <select id="tUnitSelect" onchange="cambiarUnidades()">
-              <option value="C" selected>°C</option>
-              <option value="F">°F</option>
-            </select>
-          </div>
-
-          <!-- Mediciones Presión de Campo (Etiquetas Dinámicas) -->
-          <div class="input-group">
-            <label for="pSuct" id="lblPSuct">P. Succión</label>
-            <input type="number" id="pSuct" value="3.5" step="0.1" oninput="guardarYActualizar()">
-          </div>
-
-          <div class="input-group">
-            <label for="pDesc" id="lblPDesc">P. Descarga</label>
-            <input type="number" id="pDesc" value="18.0" step="0.5" oninput="guardarYActualizar()">
-          </div>
-
-          <!-- Mediciones Temperatura de Campo (Etiquetas Dinámicas) -->
-          <div class="input-group">
-            <label for="tSuct" id="lblTSuct">T. Tubería Succ</label>
-            <input type="number" id="tSuct" value="10" step="0.5" oninput="guardarYActualizar()">
-          </div>
-
-          <div class="input-group">
-            <label for="tLiq" id="lblTLiq">T. Tubería Liq</label>
-            <input type="number" id="tLiq" value="35" step="0.5" oninput="guardarYActualizar()">
-          </div>
-
-          <div class="input-group col-2">
-            <label for="tDescReal" id="lblTDescReal">T. Descarga Compresor</label>
-            <input type="number" id="tDescReal" value="75" step="1" oninput="guardarYActualizar()">
-          </div>
-
-          <!-- Mediciones Eléctricas -->
-          <div class="input-group">
-            <label for="vVolt">Voltaje (V)</label>
-            <input type="number" id="vVolt" value="220" step="1" oninput="guardarYActualizar()">
-          </div>
-
-          <div class="input-group">
-            <label for="iAmp">Amperaje (A)</label>
-            <input type="number" id="iAmp" value="10.5" step="0.1" oninput="guardarYActualizar()">
-          </div>
-
+        <!-- Refrigerante y Unidades -->
+        <div class="input-group" style="grid-column: span 2;">
+          <label for="refSelect">Refrigerante</label>
+          <select id="refSelect" onchange="guardarYActualizar()">
+            <optgroup label="Puros y Tradicionales">
+              <option value="R134a">R-134a</option>
+              <option value="R22">R-22</option>
+              <option value="R410A">R-410A</option>
+              <option value="R32">R-32</option>
+            </optgroup>
+            <optgroup label="Hidrocarburos (HC)">
+              <option value="R290">R-290 (Propano)</option>
+              <option value="R600a">R-600a (Isobutano)</option>
+            </optgroup>
+            <optgroup label="Mezclas HFC (Serie 400 / 500)">
+              <option value="R404A" selected>R-404A</option>
+              <option value="R507A">R-507A</option>
+              <option value="R407C">R-407C</option>
+              <option value="R407A">R-407A</option>
+              <option value="R407F">R-407F</option>
+              <option value="R417A">R-417A</option>
+            </optgroup>
+            <optgroup label="HFO Nueva Generación">
+              <option value="R1234yf">R-1234yf</option>
+            </optgroup>
+          </select>
         </div>
 
-        <!-- Barra de Botones -->
-        <div class="action-bar">
-          <button class="btn btn-toggle" id="btnZonaActiva" onclick="toggleZonaActiva()">
-            🔍 Zoom Zona Activa: OFF
-          </button>
-          <button class="btn btn-primary" onclick="descargarGrafica()">
-            📷 Descargar PNG
-          </button>
+        <div class="input-group">
+          <label for="pUnitSelect">U. Presión</label>
+          <select id="pUnitSelect" onchange="cambiarUnidades()">
+            <option value="psi">PSI</option>
+            <option value="bar" selected>Bar</option>
+            <option value="kpa">kPa</option>
+          </select>
+        </div>
+
+        <div class="input-group">
+          <label for="tUnitSelect">U. Temp</label>
+          <select id="tUnitSelect" onchange="cambiarUnidades()">
+            <option value="C" selected>°C</option>
+            <option value="F">°F</option>
+          </select>
+        </div>
+
+        <!-- Mediciones Presión -->
+        <div class="input-group">
+          <label for="pSuct" id="lblPSuct">P. Succión</label>
+          <input type="number" id="pSuct" value="3.5" step="0.1" oninput="guardarYActualizar()">
+        </div>
+
+        <div class="input-group">
+          <label for="pDesc" id="lblPDesc">P. Descarga</label>
+          <input type="number" id="pDesc" value="18.0" step="0.5" oninput="guardarYActualizar()">
+        </div>
+
+        <!-- Mediciones Temperatura -->
+        <div class="input-group">
+          <label for="tSuct" id="lblTSuct">T. Tubería Succ</label>
+          <input type="number" id="tSuct" value="10" step="0.5" oninput="guardarYActualizar()">
+        </div>
+
+        <div class="input-group">
+          <label for="tLiq" id="lblTLiq">T. Tubería Liq</label>
+          <input type="number" id="tLiq" value="35" step="0.5" oninput="guardarYActualizar()">
+        </div>
+
+        <div class="input-group">
+          <label for="tDescReal" id="lblTDescReal">T. Descarga Compresor</label>
+          <input type="number" id="tDescReal" value="75" step="1" oninput="guardarYActualizar()">
+        </div>
+
+        <!-- Mediciones Eléctricas -->
+        <div class="input-group">
+          <label for="vVolt">Voltaje (V)</label>
+          <input type="number" id="vVolt" value="220" step="1" oninput="guardarYActualizar()">
+        </div>
+
+        <div class="input-group">
+          <label for="iAmp">Amperaje (A)</label>
+          <input type="number" id="iAmp" value="10.5" step="0.1" oninput="guardarYActualizar()">
         </div>
 
       </div>
 
-      <!-- Panel de Resultados KPI -->
-      <div class="card">
-        <h2>Indicadores Calculados</h2>
-        <div class="results-grid">
-          <div class="kpi-box" style="border-left-color: #38bdf8;">
-            <span class="label">Recalentamiento</span>
-            <span class="value" id="kpiSH">0.0 K</span>
-          </div>
-          <div class="kpi-box" style="border-left-color: #10b981;">
-            <span class="label">Subenfriamiento</span>
-            <span class="value" id="kpiSC">0.0 K</span>
-          </div>
-          <div class="kpi-box" style="border-left-color: #f59e0b;">
-            <span class="label">Potencia Elect. (kW)</span>
-            <span class="value" id="kpiKW">0.00 kW</span>
-          </div>
-          <div class="kpi-box" style="border-left-color: #a855f7;">
-            <span class="label">Cap. Frigorífica (qn)</span>
-            <span class="value" id="kpiqn">0 kJ/kg</span>
-          </div>
-          <div class="kpi-box" style="border-left-color: #ef4444;">
-            <span class="label">Trabajo Compresor (w)</span>
-            <span class="value" id="kpiw">0 kJ/kg</span>
-          </div>
-          <div class="kpi-box" style="border-left-color: #ec4899;">
-            <span class="label">COP Estimado</span>
-            <span class="value" id="kpicop">0.0</span>
-          </div>
-        </div>
+      <!-- Botones de Acción -->
+      <div class="action-bar">
+        <button class="btn btn-toggle" id="btnZonaActiva" onclick="toggleZonaActiva()">
+          🔍 Zoom Zona Activa: OFF
+        </button>
+        <button class="btn btn-primary" onclick="descargarGrafica()">
+          📷 Descargar PNG
+        </button>
       </div>
 
     </header>
 
-    <!-- PANEL INFERIOR: GRÁFICO MOLLIER -->
+    <!-- PANEL CENTRAL: GRÁFICO MOLLIER -->
     <main class="card chart-card">
       <div id="mollierPlot" class="chart-container"></div>
     </main>
+
+    <!-- PANEL INFERIOR: INDICADORES CALCULADOS -->
+    <footer class="card">
+      <h2>Indicadores Calculados</h2>
+      <div class="results-grid">
+        <div class="kpi-box" style="border-left-color: #38bdf8;">
+          <span class="label">Recalentamiento</span>
+          <span class="value" id="kpiSH">0.0 K</span>
+        </div>
+        <div class="kpi-box" style="border-left-color: #10b981;">
+          <span class="label">Subenfriamiento</span>
+          <span class="value" id="kpiSC">0.0 K</span>
+        </div>
+        <div class="kpi-box" style="border-left-color: #f59e0b;">
+          <span class="label">Potencia Elect. (kW)</span>
+          <span class="value" id="kpiKW">0.00 kW</span>
+        </div>
+        <div class="kpi-box" style="border-left-color: #a855f7;">
+          <span class="label">Cap. Frigorífica (qn)</span>
+          <span class="value" id="kpiqn">0 kJ/kg</span>
+        </div>
+        <div class="kpi-box" style="border-left-color: #ef4444;">
+          <span class="label">Trabajo Compresor (w)</span>
+          <span class="value" id="kpiw">0 kJ/kg</span>
+        </div>
+        <div class="kpi-box" style="border-left-color: #ec4899;">
+          <span class="label">COP Estimado</span>
+          <span class="value" id="kpicop">0.0</span>
+        </div>
+      </div>
+    </footer>
 
   </div>
 
@@ -503,14 +489,14 @@
       const pFactorViejo = pUnits[pUnitActual].factor;
       const pFactorNuevo = pUnits[nuevaPUnit].factor;
 
-      // Convertir Presiones en los Inputs
+      // Convertir Presiones
       ['pSuct', 'pDesc'].forEach(id => {
         const elem = document.getElementById(id);
         const valBar = parseFloat(elem.value) / pFactorViejo;
         elem.value = (valBar * pFactorNuevo).toFixed(nuevaPUnit === 'psi' ? 0 : 1);
       });
 
-      // Convertir Temperaturas en los Inputs
+      // Convertir Temperaturas
       if (tUnitActual !== nuevaTUnit) {
         ['tSuct', 'tLiq', 'tDescReal'].forEach(id => {
           const elem = document.getElementById(id);
@@ -543,7 +529,7 @@
       btn.classList.toggle('active', zonaActivaHabilitada);
     }
 
-    // PERSISTENCIA EN LOCALSTORAGE (Guardar Datos)
+    // PERSISTENCIA EN LOCALSTORAGE
     function guardarConfiguracion() {
       const data = {
         refSelect: document.getElementById('refSelect').value,
@@ -561,7 +547,6 @@
       localStorage.setItem('mollier_app_data', JSON.stringify(data));
     }
 
-    // PERSISTENCIA EN LOCALSTORAGE (Cargar Datos)
     function cargarConfiguracion() {
       const saved = localStorage.getItem('mollier_app_data');
       if (saved) {
@@ -583,7 +568,7 @@
           tUnitActual = document.getElementById('tUnitSelect').value;
           actualizarEstadoBotonZoom();
         } catch (e) {
-          console.error("Error al cargar configuración guardada", e);
+          console.error("Error al cargar datos guardados", e);
         }
       }
     }
@@ -593,7 +578,6 @@
       actualizarTodo();
     }
 
-    // DESCARGAR GRÁFICA EN PNG
     function descargarGrafica() {
       const refKey = document.getElementById('refSelect').value;
       Plotly.downloadImage('mollierPlot', {
@@ -654,7 +638,6 @@
       const refData = refrigerantes[refKey];
       const pf = pUnits[pUnitActual].factor;
 
-      // Lectura Inputs Presión
       let pSuctInput = parseFloat(document.getElementById('pSuct').value);
       let pDescInput = parseFloat(document.getElementById('pDesc').value);
 
@@ -667,11 +650,9 @@
       if (pSuctBarRel < 0.1) pSuctBarRel = 0.1;
       if (pDescBarRel <= pSuctBarRel) pDescBarRel = pSuctBarRel + 2.0;
 
-      // Presión Absoluta para el Diagrama de Mollier
       const pSuctBarAbs = pSuctBarRel + 1.013;
       const pDescBarAbs = Math.min(pDescBarRel + 1.013, refData.criticalP - 0.2);
 
-      // Lectura Inputs Temperatura
       let tSuctVal = parseFloat(document.getElementById('tSuct').value) || 10;
       let tLiqVal = parseFloat(document.getElementById('tLiq').value) || 35;
       let tDescRealVal = parseFloat(document.getElementById('tDescReal').value) || 75;
@@ -682,26 +663,21 @@
         tDescRealVal = (tDescRealVal - 32) * 5/9;
       }
 
-      // Lectura Mediciones Eléctricas
       const vVolt = parseFloat(document.getElementById('vVolt').value) || 220;
       const iAmp = parseFloat(document.getElementById('iAmp').value) || 0;
       const pKw = (vVolt * iAmp * 0.9) / 1000.0;
 
-      // Propiedades de Saturación
       const propEvap = getPropAtP(refData, pSuctBarAbs);
       const propCond = getPropAtP(refData, pDescBarAbs);
 
-      // Cálculos Recalentamiento y Subenfriamiento
       const superHeatK = Math.max(tSuctVal - propEvap.tSat, 0);
       const subCoolK = Math.max(propCond.tSat - tLiqVal, 0);
 
-      // Entalpías del ciclo (kJ/kg)
       const h1 = propEvap.hV + (superHeatK * 1.25);
       const h2 = propCond.hV + Math.max(tDescRealVal - propCond.tSat, 5) * 1.35;
       const h3 = propCond.hL - (subCoolK * 1.25);
       const h4 = h3;
 
-      // KPIs
       const qn = h1 - h4;
       const w = h2 - h1;
       const cop = w > 0 ? (qn / w) : 0;
@@ -713,11 +689,9 @@
       document.getElementById('kpiw').innerText = `${w.toFixed(1)} kJ/kg`;
       document.getElementById('kpicop').innerText = cop.toFixed(2);
 
-      // Trazos en la unidad seleccionada
       const pSuctPlot = pSuctBarAbs * pf;
       const pDescPlot = pDescBarAbs * pf;
 
-      // Trazado del Ciclo Operativo Real
       const cycleTrace = {
         x: [h1, h2, h3, h4, h1],
         y: [pSuctPlot, pDescPlot, pDescPlot, pSuctPlot, pSuctPlot],
@@ -732,7 +706,6 @@
 
       const traces = [getDomeTrace(refData), cycleTrace];
 
-      // Sombra interna del área de trabajo
       traces.unshift({
         x: [h1, h2, h3, h4],
         y: [pSuctPlot, pDescPlot, pDescPlot, pSuctPlot],
@@ -743,14 +716,12 @@
         showlegend: false
       });
 
-      // DEFINICIÓN DE LÍMITES FIJOS (DOMO COMPLETO vs ZONA ACTIVA)
       let xRangeFinal, yRangeFinal;
 
       const maxH_Ciclo = Math.max(h1, h2, h3, h4);
       const minH_Ciclo = Math.min(h1, h2, h3, h4);
 
       if (zonaActivaHabilitada) {
-        // MODO ZONA ACTIVA: Zoom enfocado en el ciclo
         const hMargin = (maxH_Ciclo - minH_Ciclo) * 0.25;
         const minPLog = Math.log10(Math.min(pSuctPlot, pDescPlot)) - 0.15;
         const maxPLog = Math.log10(Math.max(pSuctPlot, pDescPlot)) + 0.15;
@@ -758,7 +729,6 @@
         xRangeFinal = [minH_Ciclo - hMargin, maxH_Ciclo + hMargin];
         yRangeFinal = [minPLog, maxPLog];
       } else {
-        // MODO NORMAL (OFF): Domo Completo
         const xLimitMax = Math.max(refData.xRange[1], maxH_Ciclo + 30);
         xRangeFinal = [refData.xRange[0], xLimitMax];
         yRangeFinal = [
@@ -767,7 +737,6 @@
         ];
       }
 
-      // CONFIGURACIÓN DEL LAYOUT (ESTÁTICO SIN MOVIMIENTO)
       const layout = {
         margin: { l: 50, r: 20, t: 30, b: 40 },
         autosize: true,
@@ -809,7 +778,7 @@
       Plotly.react('mollierPlot', traces, layout, config);
     }
 
-    // INICIALIZACIÓN CON RESTAURACIÓN DE DATOS
+    // INICIALIZACIÓN
     window.addEventListener('DOMContentLoaded', () => {
       cargarConfiguracion();
       actualizarEtiquetas();
