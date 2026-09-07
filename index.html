@@ -189,7 +189,7 @@
         </div>
       </div>
 
-      <!-- UNIDADES -->
+      <!-- UNIDADES DIVERSIFICADAS -->
       <div class="units-row">
         <div>
           <div class="label-wrapper">
@@ -232,7 +232,7 @@
         </select>
       </div>
 
-      <!-- ENTRADAS TÉCNICAS -->
+      <!-- ENTRADAS TÉCNICAS CON UNIDADES DINÁMICAS -->
       <div class="input-group">
         <div class="label-wrapper">
           <label for="pBaja">Presión Succión / Baja (<span class="lblP">PSIG</span>)</label>
@@ -343,19 +343,13 @@
   </div>
 
   <script>
-    // MODELOS TERMODINÁMICOS RECTIFICADOS (Ajustados a datos reales de RefProp / CoolProp)
     const refData = {
       "R404A": {
         pMinBar: 0.8, pCritBar: 37.3, hCrit: 300,
-        // Sat T (°C) dada presión P (bar abs)
         tsat: p => -45.5 + 28.1 * Math.log(p) + 0.45 * p,
-        // Entalpía líquido saturado
         hLiq: p => 150 + 42 * Math.pow(p, 0.55),
-        // Entalpía vapor saturado
         hVap: p => 365 + 12 * Math.log(p) - 0.25 * p,
-        // Cp vapor sobrecalentado (kJ/kg·K)
         cpVap: 0.95,
-        // Cp líquido subenfriado (kJ/kg·K)
         cpLiq: 1.55
       },
       "R134a": {
@@ -430,7 +424,6 @@
       updateAll();
     }
 
-    // GENERACIÓN DE LA CAMPANA AMPLIADA Y RECTIFICADA
     function getDome(refKey, unitPress) {
       const model = refData[refKey];
       let hDomeLiq = [], hDomeVap = [], pDome = [];
@@ -447,7 +440,6 @@
         hDomeVap.push(model.hVap(p));
       }
       
-      // Cúpula crítica
       pDome.push(barAbsToDisplay(model.pCritBar, unitPress));
       hDomeLiq.push(model.hCrit);
       hDomeVap.push(model.hCrit);
@@ -474,34 +466,26 @@
 
       const model = refData[refKey];
 
-      // Temperaturas de saturación reales
       const tSatBaja = model.tsat(pBajaBar);
       const tSatAlta = model.tsat(pAltaBar);
 
-      // Entalpías en los 4 puntos del ciclo
-      // P1: Entrada compresor (Succión sobrecalentada)
       const hVapSatBaja = model.hVap(pBajaBar);
       const h1 = hVapSatBaja + model.cpVap * Math.max(0, tSuccionC - tSatBaja);
 
-      // P2: Salida compresor (Descarga sobrecalentada)
       const hVapSatAlta = model.hVap(pAltaBar);
       const h2 = hVapSatAlta + model.cpVap * Math.max(0, tDescargaC - tSatAlta);
 
-      // P3: Entrada a la VET (Líquido subenfriado)
       const hLiqSatAlta = model.hLiq(pAltaBar);
       const h3 = hLiqSatAlta - model.cpLiq * Math.max(0, tSatAlta - tLiquidoC);
 
-      // P4: Salida VET (Expansión isoentálpica h4 = h3)
       const h4 = h3;
 
-      // Cálculos térmicos y eléctricos
       const shC = tSuccionC - tSatBaja;
       const scC = tSatAlta - tLiquidoC;
       const qe = h1 - h4;
       const w = h2 - h1;
       const cop = w > 0 ? (qe / w) : 0;
       
-      // Cálculo de Potencia Eléctrica en kW (Trifásico PF ~ 0.85 estimado)
       const powerKW = (volts * amps * 1.732 * 0.85) / 1000;
 
       const deltaFactor = tUnit === 'F' ? 1.8 : 1.0;
@@ -554,7 +538,6 @@
         showlegend: false
       };
 
-      // SOLO BOTÓN DE DESCARGA HD EN LA BARRA DE PLOTLY
       const config = {
         responsive: true,
         displayModeBar: true,
@@ -572,7 +555,6 @@
       Plotly.react('mollierChart', [dataDome, cyclePoints], layout, config);
     }
 
-    // IMPRESIÓN DEL REPORTES PDF
     async function generatePDF() {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF('p', 'mm', 'a4');
@@ -582,7 +564,6 @@
       const refKey = document.getElementById('refrigerant').value;
       const dateTime = getDateTimeString();
 
-      // Encabezado
       doc.setFillColor(30, 30, 30);
       doc.rect(0, 0, 210, 35, 'F');
       
@@ -597,7 +578,6 @@
       doc.text(`Fecha y Hora: ${dateTime}`, 120, 22);
       doc.text(`Refrigerante: ${refKey}`, 120, 28);
 
-      // Variables de campo
       doc.setTextColor(0, 0, 0);
       doc.setFontSize(11);
       doc.text("1. Mediciones en Campo", 10, 43);
@@ -621,7 +601,6 @@
       doc.text(`• Temp. Descarga Real: ${tDesc} ${tUnitLbl}`, 105, 56);
       doc.text(`• Amperaje: ${amps} A | Voltaje: ${volts} V`, 105, 62);
 
-      // Resultados
       doc.setFontSize(11);
       doc.text("2. Resultados Termodinámicos y Consumo", 10, 72);
 
@@ -633,7 +612,6 @@
       doc.text(`• Trabajo Compresor (W): ${document.getElementById('valW').innerText}`, 105, 85);
       doc.text(`• Potencia Eléctrica Est.: ${document.getElementById('valPower').innerText}`, 105, 91);
 
-      // Imagen del gráfico
       doc.setFontSize(11);
       doc.text("3. Diagrama Presión - Entalpía (Mollier)", 10, 103);
 
@@ -643,7 +621,6 @@
 
       doc.addImage(imgData, 'PNG', 10, 108, 190, 110);
 
-      // Pie de Página
       doc.setFontSize(8);
       doc.setTextColor(120, 120, 120);
       doc.text("Generado por Mollier HVAC Analyzer - Arga Refrigeración", 10, 285);
@@ -651,7 +628,9 @@
       doc.save(`Reporte_HVAC_${projName.replace(/\s+/g, '_')}.pdf`);
     }
 
-    window.onload = updateAll;
+    window.onload = () => {
+      changeUnits();
+    };
   </script>
 </body>
 </html>
