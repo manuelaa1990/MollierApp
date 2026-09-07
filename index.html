@@ -3,35 +3,34 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Analizador de Ciclo de Refrigeración - Diagrama Mollier</title>
-  <!-- Plotly.js para la representación del diagrama Ph -->
-  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <title>Mollier HVAC Analyzer - Arga Refrigeración</title>
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  
   <style>
     :root {
       --bg-color: #121212;
       --card-bg: #1e1e1e;
-      --text-color: #e0e0e0;
-      --accent: #00bcd4;
-      --border-color: #333;
+      --accent: #00adb5;
+      --text: #eeeeee;
+      --text-dim: #b0b0b0;
+      --border: #333333;
     }
 
     * {
       box-sizing: border-box;
-      margin: 0;
-      padding: 0;
     }
 
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background-color: var(--bg-color);
-      color: var(--text-color);
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      overflow: hidden;
+      color: var(--text);
+      margin: 0;
+      padding: 15px;
     }
 
-    /* --- OVERLAY DE ORIENTACIÓN PARA MÓVILES --- */
+    /* OVERLAY DE ORIENTACIÓN PARA MÓVILES */
     .orientation-overlay {
       display: none;
       position: fixed;
@@ -56,9 +55,9 @@
 
     .orientation-overlay p {
       color: var(--accent);
-      font-size: 1.2rem;
-      font-weight: 600;
-      max-width: 320px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      max-width: 300px;
       line-height: 1.4;
     }
 
@@ -68,223 +67,728 @@
       100% { transform: rotate(0deg); }
     }
 
-    /* Activación del overlay en modo Portrait */
     @media screen and (max-width: 850px) and (orientation: portrait) {
       .orientation-overlay {
         display: flex;
       }
     }
 
-    /* --- LAYOUT DE LA APLICACIÓN --- */
-    header {
-      background-color: var(--card-bg);
-      padding: 10px 20px;
-      border-bottom: 1px solid var(--border-color);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    h1 {
-      font-size: 1.2rem;
-      color: var(--accent);
-    }
-
-    .main-container {
+    .container {
+      max-width: 1300px;
+      margin: 0 auto;
       display: grid;
-      grid-template-columns: 320px 1fr;
-      height: calc(100vh - 45px);
-      width: 100%;
+      grid-template-columns: 380px 1fr;
+      gap: 15px;
     }
 
-    .sidebar {
-      background-color: var(--card-bg);
-      border-right: 1px solid var(--border-color);
-      padding: 15px;
-      overflow-y: auto;
+    @media (max-width: 900px) {
+      .container { grid-template-columns: 1fr; }
     }
 
-    .plot-container {
-      width: 100%;
-      height: 100%;
-      background-color: var(--bg-color);
+    .panel {
+      background: var(--card-bg);
+      padding: 18px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      position: relative;
     }
 
-    .form-group {
-      margin-bottom: 12px;
+    h2, h3 { margin-top: 0; color: var(--accent); }
+    
+    .project-info {
+      background: #252525;
+      padding: 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      margin-bottom: 15px;
+    }
+
+    .units-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      background: #2a2a2a;
+      padding: 10px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+    }
+
+    .input-group { margin-bottom: 12px; }
+    
+    .label-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
     }
 
     label {
-      display: block;
       font-size: 0.85rem;
-      margin-bottom: 4px;
-      color: #aaa;
+      color: var(--text-dim);
     }
 
-    select, input {
-      width: 100%;
-      padding: 8px;
-      background-color: #2a2a2a;
-      border: 1px solid var(--border-color);
+    .info-icon {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background-color: #333;
+      color: var(--accent);
+      font-size: 0.7rem;
+      font-weight: bold;
+      font-family: monospace;
+      cursor: pointer;
+      border: 1px solid var(--accent);
+    }
+
+    .info-icon .tooltip {
+      visibility: hidden;
+      opacity: 0;
+      width: 220px;
+      background-color: #2b2b2b;
       color: #fff;
-      border-radius: 4px;
-      font-size: 0.9rem;
+      text-align: left;
+      border-radius: 6px;
+      padding: 8px 10px;
+      position: absolute;
+      z-index: 100;
+      bottom: 125%;
+      left: 50%;
+      transform: translateX(-50%);
+      box-shadow: 0px 4px 10px rgba(0,0,0,0.5);
+      border: 1px solid var(--border);
+      font-size: 0.75rem;
+      line-height: 1.3;
+      font-weight: normal;
+      transition: opacity 0.2s, visibility 0.2s;
     }
 
-    .metrics-panel {
+    .info-icon .tooltip::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      margin-left: -5px;
+      border-width: 5px;
+      border-style: solid;
+      border-color: #2b2b2b transparent transparent transparent;
+    }
+
+    .info-icon:hover .tooltip {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 8px 10px;
+      background: #252525;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      color: #fff;
+      font-size: 0.95rem;
+    }
+
+    input:focus, select:focus { outline: none; border-color: var(--accent); }
+    
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 10px;
       margin-top: 15px;
-      padding-top: 15px;
-      border-top: 1px solid var(--border-color);
     }
 
     .metric-card {
-      background-color: #252525;
-      padding: 8px 12px;
-      border-radius: 4px;
-      margin-bottom: 8px;
-      display: flex;
-      justify-content: space-between;
+      background: #252525;
+      padding: 10px;
+      border-radius: 6px;
+      border-left: 3px solid var(--accent);
     }
 
-    .metric-value {
+    .metric-card .title { font-size: 0.75rem; color: var(--text-dim); }
+    .metric-card .value { font-size: 1.05rem; font-weight: bold; margin-top: 4px; }
+    
+    #mollierChart { 
+      width: 100%; 
+      height: 600px; 
+      min-height: 380px; 
+    }
+
+    .btn-action {
+      width: 100%;
+      padding: 10px;
+      background: var(--accent);
+      color: #121212;
+      border: none;
+      border-radius: 6px;
       font-weight: bold;
+      font-size: 0.95rem;
+      cursor: pointer;
+      margin-top: 15px;
+      transition: background 0.2s;
+    }
+
+    .btn-action:hover {
+      background: #008c93;
+      color: #ffffff;
+    }
+
+    .btn-download-chart {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 10;
+      background: #252525;
       color: var(--accent);
+      border: 1px solid var(--accent);
+      padding: 7px 12px;
+      border-radius: 5px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-download-chart:hover {
+      background: var(--accent);
+      color: #121212;
     }
   </style>
 </head>
 <body>
 
-  <!-- PANTALLA BLOQUEADORA CSS -->
+  <!-- MÁSCARA PARA FORZAR PANTALLA HORIZONTAL EN CELULARES -->
   <div class="orientation-overlay">
     <div class="icon">📱</div>
-    <p>Gira tu dispositivo horizontalmente para analizar el Diagrama Mollier y el panel de control.</p>
+    <p>Por favor, gira tu dispositivo a posición horizontal para utilizar el Analizador Mollier.</p>
   </div>
 
-  <header>
-    <h1>Analizador de Ciclo Termodinámico (Mollier P-h)</h1>
-    <span id="sys-status" style="font-size: 0.8rem; color: #4caf50;">● Sistema Listo</span>
-  </header>
+  <div class="container">
+    <!-- PANEL DE CONTROL -->
+    <div class="panel">
+      <h2>Mollier HVAC Analyzer</h2>
+      
+      <!-- DATOS DEL PROYECTO -->
+      <div class="project-info">
+        <div class="input-group">
+          <label for="projectName">Nombre del Proyecto / Cliente</label>
+          <input type="text" id="projectName" value="Cámara Frigorífica 01" placeholder="Ej: Chiller Planta A">
+        </div>
+        <div class="input-group" style="margin-bottom:0;">
+          <label for="techName">Técnico / Empresa</label>
+          <input type="text" id="techName" value="Arga Refrigeración" placeholder="Tu nombre">
+        </div>
+      </div>
 
-  <div class="main-container">
-    <!-- PANEL LATERAL DE PARÁMETROS -->
-    <div class="sidebar">
-      <div class="form-group">
-        <label for="refrigerant">Refrigerante</label>
-        <select id="refrigerant">
+      <!-- UNIDADES -->
+      <div class="units-row">
+        <div>
+          <div class="label-wrapper">
+            <label for="unitPress">Unidad Presión</label>
+            <span class="info-icon">i
+              <span class="tooltip">PSIG (manométrica), PSIA (absoluta) o Bar abs.</span>
+            </span>
+          </div>
+          <select id="unitPress" onchange="changeUnits()">
+            <option value="PSI_g" selected>PSIG (Manométrica)</option>
+            <option value="PSI_a">PSIA (Absoluta)</option>
+            <option value="BAR_a">Bar abs</option>
+          </select>
+        </div>
+        <div>
+          <div class="label-wrapper">
+            <label for="unitTemp">Unidad Temp.</label>
+            <span class="info-icon">i
+              <span class="tooltip">Escala térmica (°C o °F).</span>
+            </span>
+          </div>
+          <select id="unitTemp" onchange="changeUnits()">
+            <option value="C" selected>°C</option>
+            <option value="F">°F</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="input-group">
+        <div class="label-wrapper">
+          <label for="refrigerant">Refrigerante</label>
+          <span class="info-icon">i
+            <span class="tooltip">Determina la campana termodinámica corregida.</span>
+          </span>
+        </div>
+        <select id="refrigerant" onchange="updateAll()">
+          <option value="R404A" selected>R-404A</option>
           <option value="R134a">R-134a</option>
-          <option value="R404A">R-404A</option>
           <option value="R22">R-22</option>
         </select>
       </div>
 
-      <div class="form-group">
-        <label for="p-evap">Presión Evaporación (PSI)</label>
-        <input type="number" id="p-evap" value="18.5" step="0.1">
+      <!-- ENTRADAS TÉCNICAS -->
+      <div class="input-group">
+        <div class="label-wrapper">
+          <label for="pBaja">Presión Succión / Baja (<span class="lblP">PSIG</span>)</label>
+          <span class="info-icon">i
+            <span class="tooltip">Presión tomada en la válvula de servicio de succión.</span>
+          </span>
+        </div>
+        <input type="number" id="pBaja" value="30.0" step="0.5" oninput="updateAll()">
       </div>
 
-      <div class="form-group">
-        <label for="p-cond">Presión Condensación (PSI)</label>
-        <input type="number" id="p-cond" value="135.0" step="0.1">
+      <div class="input-group">
+        <div class="label-wrapper">
+          <label for="tSuccion">Temp. Tubería Succión (<span class="lblT">°C</span>)</label>
+          <span class="info-icon">i
+            <span class="tooltip">Temperatura real tomada con termocupla en la tubería de succión.</span>
+          </span>
+        </div>
+        <input type="number" id="tSuccion" value="-10.0" step="0.5" oninput="updateAll()">
       </div>
 
-      <div class="form-group">
-        <label for="subcooling">Subenfriamiento (°K)</label>
-        <input type="number" id="subcooling" value="5.0" step="0.5">
+      <div class="input-group">
+        <div class="label-wrapper">
+          <label for="pAlta">Presión Descarga / Alta (<span class="lblP">PSIG</span>)</label>
+          <span class="info-icon">i
+            <span class="tooltip">Presión en el lado de alta / línea de líquido.</span>
+          </span>
+        </div>
+        <input type="number" id="pAlta" value="230.0" step="1.0" oninput="updateAll()">
       </div>
 
-      <div class="form-group">
-        <label for="superheat">Recalentamiento (°K)</label>
-        <input type="number" id="superheat" value="7.0" step="0.5">
+      <div class="input-group">
+        <div class="label-wrapper">
+          <label for="tLiquido">Temp. Líquido / Salida Cond. (<span class="lblT">°C</span>)</label>
+          <span class="info-icon">i
+            <span class="tooltip">Temperatura medida sobre el caño de líquido antes de la VET.</span>
+          </span>
+        </div>
+        <input type="number" id="tLiquido" value="38.0" step="0.5" oninput="updateAll()">
       </div>
 
-      <!-- RESULTADOS Y MÉTRICAS CALCULADAS -->
-      <div class="metrics-panel">
+      <div class="input-group">
+        <div class="label-wrapper">
+          <label for="tDescarga">Temp. Tubería Descarga Real (<span class="lblT">°C</span>)</label>
+          <span class="info-icon">i
+            <span class="tooltip">Temperatura a 5-10 cm de la salida del compresor.</span>
+          </span>
+        </div>
+        <input type="number" id="tDescarga" value="80.0" step="0.5" oninput="updateAll()">
+      </div>
+
+      <!-- AMPERAJE Y VOLTAJE -->
+      <div class="input-group">
+        <div class="label-wrapper">
+          <label for="ampComp">Amperaje del Compresor (A)</label>
+          <span class="info-icon">i
+            <span class="tooltip">Corriente consumida medida con pinza amperimétrica.</span>
+          </span>
+        </div>
+        <input type="number" id="ampComp" value="12.5" step="0.1" oninput="updateAll()">
+      </div>
+
+      <div class="input-group">
+        <div class="label-wrapper">
+          <label for="voltsComp">Voltaje de Operación (V)</label>
+          <span class="info-icon">i
+            <span class="tooltip">Tensión de alimentación eléctrica del compresor.</span>
+          </span>
+        </div>
+        <input type="number" id="voltsComp" value="220" step="1.0" oninput="updateAll()">
+      </div>
+
+      <!-- RESULTADOS CALCULADOS -->
+      <h3>Métricas del Sistema</h3>
+      <div class="metrics-grid">
         <div class="metric-card">
-          <span>COP Teórico:</span>
-          <span class="metric-value" id="cop-val">3.82</span>
+          <div class="title">Sobrecalentamiento</div>
+          <div class="value" id="valSH">0.0 K</div>
         </div>
         <div class="metric-card">
-          <span>Efecto Refrig.:</span>
-          <span class="metric-value" id="er-val">142.5 kJ/kg</span>
+          <div class="title">Subenfriamiento</div>
+          <div class="value" id="valSC">0.0 K</div>
         </div>
         <div class="metric-card">
-          <span>Trabajo Comp.:</span>
-          <span class="metric-value" id="w-val">37.3 kJ/kg</span>
+          <div class="title">Efecto Ref. (Qe)</div>
+          <div class="value" id="valQe">0 kJ/kg</div>
+        </div>
+        <div class="metric-card">
+          <div class="title">Trabajo Comp. (W)</div>
+          <div class="value" id="valW">0 kJ/kg</div>
+        </div>
+        <div class="metric-card">
+          <div class="title">COP Real</div>
+          <div class="value" id="valCOP">0.00</div>
+        </div>
+        <div class="metric-card">
+          <div class="title">Potencia Elec. Est.</div>
+          <div class="value" id="valPower">0.0 kW</div>
         </div>
       </div>
+
+      <button class="btn-action" onclick="generatePDF()">📄 Descargar Reporte PDF</button>
     </div>
 
-    <!-- ÁREA DEL GRÁFICO MOLLIER -->
-    <div class="plot-container" id="mollier-chart"></div>
+    <!-- GRÁFICO MOLLIER -->
+    <div class="panel">
+      <button class="btn-download-chart" onclick="downloadChartPNG()">📷 Descargar Gráfica (PNG HD)</button>
+      <div id="mollierChart"></div>
+    </div>
   </div>
 
   <script>
-    // Inicialización del gráfico con Plotly
-    function drawMollierChart() {
-      // Curva de saturación simplificada (Presión vs Entalpía)
-      const enthalpySatLiq = [150, 170, 190, 210, 230, 250, 270, 290];
-      const enthalpySatVap = [390, 395, 400, 402, 403, 401, 395, 380];
-      const pressureDome   = [0.5, 1.0, 2.0, 4.0, 8.0, 12.0, 18.0, 26.0];
+    const refData = {
+      "R404A": {
+        pMinBar: 0.8, pCritBar: 37.3, hCrit: 300,
+        tsat: p => -45.5 + 28.1 * Math.log(p) + 0.45 * p,
+        hLiq: p => 150 + 42 * Math.pow(p, 0.55),
+        hVap: p => 365 + 12 * Math.log(p) - 0.25 * p,
+        cpVap: 0.95,
+        cpLiq: 1.55
+      },
+      "R134a": {
+        pMinBar: 0.5, pCritBar: 40.6, hCrit: 380,
+        tsat: p => -26.4 + 23.8 * Math.log(p) + 0.3 * p,
+        hLiq: p => 200 + 48 * Math.pow(p, 0.52),
+        hVap: p => 400 + 15 * Math.log(p) - 0.2 * p,
+        cpVap: 0.90,
+        cpLiq: 1.42
+      },
+      "R22": {
+        pMinBar: 0.8, pCritBar: 49.9, hCrit: 360,
+        tsat: p => -40.8 + 26.2 * Math.log(p) + 0.25 * p,
+        hLiq: p => 180 + 45 * Math.pow(p, 0.54),
+        hVap: p => 405 + 14 * Math.log(p) - 0.18 * p,
+        cpVap: 0.78,
+        cpLiq: 1.35
+      }
+    };
 
-      // Puntos del ciclo frigorífico (1: Succión, 2: Descarga, 3: Líquido, 4: Expansión)
-      const cycleEnthalpy = [410, 447.3, 267.5, 267.5, 410];
-      const cyclePressure = [1.2, 9.3, 9.3, 1.2, 1.2];
+    let currentUnits = { press: 'PSI_g', temp: 'C' };
 
-      const traceDomeLiq = {
-        x: enthalpySatLiq,
-        y: pressureDome,
-        mode: 'lines',
-        name: 'Líquido Saturado',
-        line: { color: '#2196F3', width: 2 }
-      };
-
-      const traceDomeVap = {
-        x: enthalpySatVap,
-        y: pressureDome,
-        mode: 'lines',
-        name: 'Vapor Saturado',
-        line: { color: '#f44336', width: 2 }
-      };
-
-      const traceCycle = {
-        x: cycleEnthalpy,
-        y: cyclePressure,
-        mode: 'lines+markers',
-        name: 'Ciclo Real',
-        line: { color: '#00bcd4', width: 3 },
-        marker: { size: 6, color: '#ffffff' }
-      };
-
-      const layout = {
-        title: { text: 'Diagrama Presión - Entalpía (P-h)', font: { color: '#e0e0e0' } },
-        paper_bgcolor: '#121212',
-        plot_bgcolor: '#121212',
-        margin: { l: 60, r: 30, t: 50, b: 50 },
-        xaxis: {
-          title: 'Entalpía Específica [kJ/kg]',
-          gridcolor: '#2a2a2a',
-          zerolinecolor: '#333',
-          tickfont: { color: '#aaa' },
-          titlefont: { color: '#aaa' }
-        },
-        yaxis: {
-          title: 'Presión Absoluta [Bar]',
-          type: 'log',
-          gridcolor: '#2a2a2a',
-          zerolinecolor: '#333',
-          tickfont: { color: '#aaa' },
-          titlefont: { color: '#aaa' }
-        },
-        legend: { font: { color: '#aaa' }, orientation: 'h', y: -0.15 }
-      };
-
-      const config = { responsive: true, displayModeBar: false };
-
-      Plotly.newPlot('mollier-chart', [traceDomeLiq, traceDomeVap, traceCycle], layout, config);
+    function pressToBarAbs(val, unit) {
+      if (unit === 'PSI_g') return (val + 14.696) * 0.0689476;
+      if (unit === 'PSI_a') return val * 0.0689476;
+      return val;
     }
 
-    // Dibujar el diagrama al cargar la página
-    document.addEventListener('DOMContentLoaded', drawMollierChart);
+    function barAbsToDisplay(bar, unit) {
+      if (unit === 'PSI_g') return (bar / 0.0689476) - 14.696;
+      if (unit === 'PSI_a') return bar / 0.0689476;
+      return bar;
+    }
+
+    function tempToC(val, unit) {
+      return unit === 'F' ? (val - 32) * (5/9) : val;
+    }
+
+    function cToDisplay(c, unit) {
+      return unit === 'F' ? (c * 9/5) + 32 : c;
+    }
+
+    function getDateTimeString() {
+      const now = new Date();
+      return `${now.toLocaleDateString('es-ES')} - ${now.toLocaleTimeString('es-ES')}`;
+    }
+
+    function changeUnits() {
+      const newPress = document.getElementById('unitPress').value;
+      const newTemp = document.getElementById('unitTemp').value;
+
+      ['pBaja', 'pAlta'].forEach(id => {
+        const elem = document.getElementById(id);
+        const oldBar = pressToBarAbs(parseFloat(elem.value), currentUnits.press);
+        elem.value = barAbsToDisplay(oldBar, newPress).toFixed(1);
+      });
+
+      ['tSuccion', 'tLiquido', 'tDescarga'].forEach(id => {
+        const elem = document.getElementById(id);
+        const oldC = tempToC(parseFloat(elem.value), currentUnits.temp);
+        elem.value = cToDisplay(oldC, newTemp).toFixed(1);
+      });
+
+      currentUnits.press = newPress;
+      currentUnits.temp = newTemp;
+
+      const labelP = newPress === 'PSI_g' ? 'PSIG' : (newPress === 'PSI_a' ? 'PSIA' : 'Bar abs');
+      const labelT = '°' + newTemp;
+      document.querySelectorAll('.lblP').forEach(e => e.innerText = labelP);
+      document.querySelectorAll('.lblT').forEach(e => e.innerText = labelT);
+
+      updateAll();
+    }
+
+    function getDome(refKey, unitPress) {
+      const model = refData[refKey];
+      let hDomeLiq = [], hDomeVap = [], pDome = [];
+      
+      const pStart = model.pMinBar;
+      const pEnd = model.pCritBar - 0.4;
+      const steps = 60;
+      const stepSize = (pEnd - pStart) / steps;
+
+      for (let i = 0; i <= steps; i++) {
+        let p = pStart + i * stepSize;
+        pDome.push(barAbsToDisplay(p, unitPress));
+        hDomeLiq.push(model.hLiq(p));
+        hDomeVap.push(model.hVap(p));
+      }
+      
+      pDome.push(barAbsToDisplay(model.pCritBar, unitPress));
+      hDomeLiq.push(model.hCrit);
+      hDomeVap.push(model.hCrit);
+
+      return {
+        hDome: hDomeLiq.concat(hDomeVap.reverse()),
+        pDome: pDome.concat(pDome.slice().reverse())
+      };
+    }
+
+    function updateAll() {
+      const refKey = document.getElementById('refrigerant').value;
+      const pUnit = currentUnits.press;
+      const tUnit = currentUnits.temp;
+
+      const pBajaBar = pressToBarAbs(parseFloat(document.getElementById('pBaja').value) || 0, pUnit);
+      const tSuccionC = tempToC(parseFloat(document.getElementById('tSuccion').value) || 0, tUnit);
+      const pAltaBar = pressToBarAbs(parseFloat(document.getElementById('pAlta').value) || 0, pUnit);
+      const tLiquidoC = tempToC(parseFloat(document.getElementById('tLiquido').value) || 0, tUnit);
+      const tDescargaC = tempToC(parseFloat(document.getElementById('tDescarga').value) || 0, tUnit);
+      
+      const amps = parseFloat(document.getElementById('ampComp').value) || 0;
+      const volts = parseFloat(document.getElementById('voltsComp').value) || 0;
+
+      const model = refData[refKey];
+
+      const tSatBaja = model.tsat(pBajaBar);
+      const tSatAlta = model.tsat(pAltaBar);
+
+      const hVapSatBaja = model.hVap(pBajaBar);
+      const h1 = hVapSatBaja + model.cpVap * Math.max(0, tSuccionC - tSatBaja);
+
+      const hVapSatAlta = model.hVap(pAltaBar);
+      const h2 = hVapSatAlta + model.cpVap * Math.max(0, tDescargaC - tSatAlta);
+
+      const hLiqSatAlta = model.hLiq(pAltaBar);
+      const h3 = hLiqSatAlta - model.cpLiq * Math.max(0, tSatAlta - tLiquidoC);
+
+      const h4 = h3;
+
+      const shC = tSuccionC - tSatBaja;
+      const scC = tSatAlta - tLiquidoC;
+      const qe = h1 - h4;
+      const w = h2 - h1;
+      const cop = w > 0 ? (qe / w) : 0;
+      
+      const powerKW = (volts * amps * 1.732 * 0.85) / 1000;
+
+      const deltaFactor = tUnit === 'F' ? 1.8 : 1.0;
+      const unitDelta = tUnit === 'F' ? '°R / °F' : 'K / °C';
+
+      document.getElementById('valSH').innerText = (shC * deltaFactor).toFixed(1) + " " + unitDelta;
+      document.getElementById('valSC').innerText = (scC * deltaFactor).toFixed(1) + " " + unitDelta;
+      document.getElementById('valQe').innerText = qe.toFixed(1) + " kJ/kg";
+      document.getElementById('valW').innerText = w.toFixed(1) + " kJ/kg";
+      document.getElementById('valCOP').innerText = cop.toFixed(2);
+      document.getElementById('valPower').innerText = powerKW.toFixed(2) + " kW";
+
+      const dome = getDome(refKey, pUnit);
+      const pBajaDisp = barAbsToDisplay(pBajaBar, pUnit);
+      const pAltaDisp = barAbsToDisplay(pAltaBar, pUnit);
+
+      // CÁLCULO DE AUTOENFOQUE DINÁMICO PARA PANTALLAS PEQUEÑAS / CELULARES
+      const minH = Math.min(h1, h2, h3, h4);
+      const maxH = Math.max(h1, h2, h3, h4);
+      const marginH = (maxH - minH) * 0.18; 
+
+      const minP = Math.min(pBajaDisp, pAltaDisp);
+      const maxP = Math.max(pBajaDisp, pAltaDisp);
+
+      let xRangeDisplay, yRangeDisplay;
+
+      if (pUnit.includes('PSI')) {
+        const marginP = (maxP - minP) * 0.20;
+        xRangeDisplay = [minH - marginH, maxH + marginH];
+        yRangeDisplay = [Math.max(0, minP - marginP), maxP + marginP];
+      } else {
+        xRangeDisplay = [minH - marginH, maxH + marginH];
+        yRangeDisplay = [Math.log10(Math.max(0.1, minP * 0.7)), Math.log10(maxP * 1.3)];
+      }
+
+      const dataDome = {
+        x: dome.hDome,
+        y: dome.pDome,
+        mode: 'lines',
+        name: 'Campana ' + refKey,
+        line: { color: '#00adb5', width: 2 }
+      };
+
+      const cyclePoints = {
+        x: [h1, h2, h3, h4, h1],
+        y: [pBajaDisp, pAltaDisp, pAltaDisp, pBajaDisp, pBajaDisp],
+        mode: 'lines+markers+text',
+        name: 'Ciclo Medido',
+        text: ['P1 (Succión)', 'P2 (Descarga)', 'P3 (Líquido)', 'P4 (Expansión)', ''],
+        textposition: ['bottom right', 'top right', 'top left', 'bottom left', ''],
+        line: { color: '#ff5722', width: 3 },
+        marker: { size: 9, color: '#ffc107' }
+      };
+
+      const pLabel = pUnit === 'PSI_g' ? 'PSIG' : (pUnit === 'PSI_a' ? 'PSIA' : 'Bar abs');
+      const projName = document.getElementById('projectName').value || 'Proyecto Sin Nombre';
+      const timeTag = getDateTimeString();
+
+      const layout = {
+        title: { 
+          text: `${projName}<br><sup>Refrigerante: ${refKey} | Registro: ${timeTag}</sup>`, 
+          font: { color: '#eee', size: 15 } 
+        },
+        paper_bgcolor: '#1e1e1e',
+        plot_bgcolor: '#121212',
+        margin: { l: 60, r: 25, t: 70, b: 50 },
+        xaxis: { 
+          title: 'Entalpía h (kJ/kg)', 
+          color: '#b0b0b0', 
+          gridcolor: '#2a2a2a',
+          range: xRangeDisplay,
+          autorange: false
+        },
+        yaxis: { 
+          title: 'Presión (' + pLabel + ')', 
+          type: pUnit.includes('PSI') ? 'linear' : 'log', 
+          color: '#b0b0b0', 
+          gridcolor: '#2a2a2a',
+          range: yRangeDisplay,
+          autorange: false
+        },
+        showlegend: false
+      };
+
+      const config = {
+        responsive: true,
+        displayModeBar: false
+      };
+
+      Plotly.react('mollierChart', [dataDome, cyclePoints], layout, config);
+    }
+
+    // DESCARGA DE LA GRÁFICA EN PNG HD CON VISTA COMPLETA DE LA CAMPANA
+    function downloadChartPNG() {
+      const projName = document.getElementById('projectName').value || 'Mollier_Chart';
+      const chartElem = document.getElementById('mollierChart');
+
+      // 1. Amplía el rango del gráfico para mostrar todo el mapa antes del renderizado
+      Plotly.relayout(chartElem, {
+        'xaxis.autorange': true,
+        'yaxis.autorange': true
+      }).then(() => {
+        // 2. Exporta la imagen en alta definición
+        Plotly.downloadImage(chartElem, {
+          format: 'png',
+          width: 1920,
+          height: 1080,
+          filename: `Mollier_${projName.replace(/\s+/g, '_')}`
+        }).then(() => {
+          // 3. Regresa al zoom enfocado en el ciclo para continuar la inspección en campo
+          updateAll();
+        });
+      });
+    }
+
+    async function generatePDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('p', 'mm', 'a4');
+
+      const projName = document.getElementById('projectName').value || 'Sin Nombre';
+      const techName = document.getElementById('techName').value || 'N/A';
+      const refKey = document.getElementById('refrigerant').value;
+      const dateTime = getDateTimeString();
+
+      doc.setFillColor(30, 30, 30);
+      doc.rect(0, 0, 210, 35, 'F');
+      
+      doc.setTextColor(0, 173, 181);
+      doc.setFontSize(16);
+      doc.text("REPORTE DE DIAGNÓSTICO TERMODINÁMICO Y ELÉCTRICO", 10, 14);
+      
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(9);
+      doc.text(`Proyecto / Cliente: ${projName}`, 10, 22);
+      doc.text(`Técnico / Empresa: ${techName}`, 10, 28);
+      doc.text(`Fecha y Hora: ${dateTime}`, 120, 22);
+      doc.text(`Refrigerante: ${refKey}`, 120, 28);
+
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(11);
+      doc.text("1. Mediciones en Campo", 10, 43);
+
+      const pUnitLbl = document.querySelector('.lblP').innerText;
+      const tUnitLbl = document.querySelector('.lblT').innerText;
+
+      const pBaja = document.getElementById('pBaja').value;
+      const tSucc = document.getElementById('tSuccion').value;
+      const pAlta = document.getElementById('pAlta').value;
+      const tLiq = document.getElementById('tLiquido').value;
+      const tDesc = document.getElementById('tDescarga').value;
+      const amps = document.getElementById('ampComp').value;
+      const volts = document.getElementById('voltsComp').value;
+
+      doc.setFontSize(9);
+      doc.text(`• Presión de Succión: ${pBaja} ${pUnitLbl}`, 12, 50);
+      doc.text(`• Temp. Succión: ${tSucc} ${tUnitLbl}`, 12, 56);
+      doc.text(`• Presión Alta / Líquido: ${pAlta} ${pUnitLbl}`, 12, 62);
+      doc.text(`• Temp. Líquido: ${tLiq} ${tUnitLbl}`, 105, 50);
+      doc.text(`• Temp. Descarga Real: ${tDesc} ${tUnitLbl}`, 105, 56);
+      doc.text(`• Amperaje: ${amps} A | Voltaje: ${volts} V`, 105, 62);
+
+      doc.setFontSize(11);
+      doc.text("2. Resultados Termodinámicos y Consumo", 10, 72);
+
+      doc.setFontSize(9);
+      doc.text(`• Sobrecalentamiento (SH): ${document.getElementById('valSH').innerText}`, 12, 79);
+      doc.text(`• Subenfriamiento (SC): ${document.getElementById('valSC').innerText}`, 12, 85);
+      doc.text(`• COP Real: ${document.getElementById('valCOP').innerText}`, 12, 91);
+      doc.text(`• Efecto Refrigerante (Qe): ${document.getElementById('valQe').innerText}`, 105, 79);
+      doc.text(`• Trabajo Compresor (W): ${document.getElementById('valW').innerText}`, 105, 85);
+      doc.text(`• Potencia Eléctrica Est.: ${document.getElementById('valPower').innerText}`, 105, 91);
+
+      doc.setFontSize(11);
+      doc.text("3. Diagrama Presión - Entalpía (Mollier)", 10, 103);
+
+      const chartElem = document.getElementById('mollierChart');
+      const canvas = await html2canvas(chartElem, { scale: 2 });
+      const imgData = canvas.toDataURL('image/png');
+
+      doc.addImage(imgData, 'PNG', 10, 108, 190, 110);
+
+      doc.setFontSize(8);
+      doc.setTextColor(120, 120, 120);
+      doc.text("Generado por Mollier HVAC Analyzer - Arga Refrigeración", 10, 285);
+
+      doc.save(`Reporte_HVAC_${projName.replace(/\s+/g, '_')}.pdf`);
+    }
+
+    // CONTROL DE REDIMENSIONAMIENTO AUTOMÁTICO AL GIRAR LA PANTALLA
+    window.addEventListener('resize', () => {
+      const chartElem = document.getElementById('mollierChart');
+      if (chartElem && typeof Plotly !== 'undefined') {
+        Plotly.Plots.resize(chartElem);
+      }
+    });
+
+    window.addEventListener('orientationchange', () => {
+      setTimeout(() => {
+        const chartElem = document.getElementById('mollierChart');
+        if (chartElem && typeof Plotly !== 'undefined') {
+          Plotly.Plots.resize(chartElem);
+        }
+      }, 250);
+    });
+
+    window.onload = () => {
+      changeUnits();
+    };
   </script>
 </body>
 </html>
