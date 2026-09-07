@@ -19,7 +19,7 @@
       width: 100%;
       height: 100%;
       height: 100dvh;
-      overflow: hidden;
+      overflow-y: auto;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background-color: #0f172a;
       color: #f8fafc;
@@ -29,16 +29,16 @@
       display: flex;
       flex-direction: column;
       width: 100%;
-      height: 100dvh;
-      padding: 6px;
-      gap: 6px;
+      min-height: 100dvh;
+      padding: 8px;
+      gap: 8px;
     }
 
     /* --- PANEL SUPERIOR --- */
     .top-panel {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 6px;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 8px;
       flex-shrink: 0;
     }
 
@@ -46,15 +46,15 @@
       background: #1e293b;
       border: 1px solid #334155;
       border-radius: 8px;
-      padding: 6px 10px;
+      padding: 8px 12px;
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
     }
 
     .card h2 {
-      font-size: 0.72rem;
+      font-size: 0.75rem;
       text-transform: uppercase;
       color: #38bdf8;
-      margin-bottom: 4px;
+      margin-bottom: 6px;
       letter-spacing: 0.5px;
       display: flex;
       justify-content: space-between;
@@ -63,8 +63,8 @@
 
     .config-row {
       display: flex;
-      gap: 4px;
-      margin-bottom: 4px;
+      gap: 6px;
+      margin-bottom: 6px;
       width: 100%;
     }
 
@@ -74,7 +74,7 @@
     .controls-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 4px;
+      gap: 6px;
     }
 
     .input-group {
@@ -83,9 +83,9 @@
     }
 
     .input-group label {
-      font-size: 0.58rem;
+      font-size: 0.6rem;
       font-weight: 600;
-      margin-bottom: 1px;
+      margin-bottom: 2px;
       color: #94a3b8;
       white-space: nowrap;
       overflow: hidden;
@@ -93,28 +93,26 @@
     }
 
     .input-group input, .input-group select {
-      padding: 2px 4px;
+      padding: 2px 6px;
       border: 1px solid #475569;
       border-radius: 4px;
-      font-size: 0.72rem;
+      font-size: 0.75rem;
       outline: none;
       background-color: #0f172a;
       color: #f8fafc;
       width: 100%;
-      height: 24px;
+      height: 28px;
     }
 
     .input-group select {
       cursor: pointer;
       border-color: #38bdf8;
       font-weight: 600;
-      text-overflow: ellipsis;
     }
 
     .input-group select optgroup {
       background-color: #1e293b;
       color: #38bdf8;
-      font-style: normal;
       font-weight: bold;
     }
 
@@ -123,23 +121,19 @@
       color: #f8fafc;
     }
 
-    .input-group input:focus, .input-group select:focus {
-      border-color: #38bdf8;
-    }
-
     .action-bar {
       display: flex;
-      gap: 6px;
-      margin-bottom: 4px;
+      gap: 8px;
+      margin-bottom: 8px;
       width: 100%;
     }
 
     .btn {
       flex: 1;
-      padding: 4px 8px;
+      padding: 6px 12px;
       border: none;
       border-radius: 4px;
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       font-weight: 700;
       cursor: pointer;
       transition: all 0.2s;
@@ -147,7 +141,7 @@
       align-items: center;
       justify-content: center;
       gap: 4px;
-      height: 26px;
+      height: 32px;
     }
 
     .btn-primary { background-color: #0284c7; color: #ffffff; }
@@ -163,20 +157,18 @@
     .results-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 4px;
-      height: calc(100% - 18px);
-      align-content: center;
+      gap: 6px;
     }
 
     .kpi-box {
       background-color: #0f172a;
       border-left: 3px solid #38bdf8;
-      padding: 3px 5px;
+      padding: 4px 6px;
       border-radius: 4px;
     }
 
     .kpi-box .label {
-      font-size: 0.55rem;
+      font-size: 0.58rem;
       color: #94a3b8;
       display: block;
       white-space: nowrap;
@@ -185,34 +177,29 @@
     }
 
     .kpi-box .value {
-      font-size: 0.78rem;
+      font-size: 0.82rem;
       font-weight: 700;
       color: #f8fafc;
     }
 
     /* --- PANEL INFERIOR: GRÁFICA --- */
     .chart-card {
-      flex: 1;
       display: flex;
       flex-direction: column;
-      min-height: 0;
-      position: relative;
-      padding: 6px;
+      width: 100%;
+      padding: 8px;
     }
 
     .chart-container {
       width: 100%;
-      height: 100%;
-      flex: 1;
-      min-height: 0;
+      height: 380px; /* Altura controlada para evitar estiramiento vertical */
+      min-height: 320px;
     }
 
     @media (max-width: 680px) {
-      .app-container { padding: 4px; gap: 4px; }
-      .top-panel { grid-template-columns: 1fr; }
-      .input-group label { font-size: 0.54rem; }
-      .input-group input, .input-group select { font-size: 0.68rem; }
-      .results-grid { grid-template-columns: repeat(3, 1fr); }
+      .chart-container {
+        height: 320px; /* Mantener apaisado en pantallas móviles pequeñas */
+      }
     }
   </style>
 </head>
@@ -369,7 +356,7 @@
 
     const refrigerantes = {
       R134a: {
-        nombre: "R-134a", criticalP: 40.6, xRange: [120, 460], pRange: [0.8, 42],
+        nombre: "R-134a", criticalP: 40.6, xRange: [120, 460],
         dome: [
           {p: 0.8, hL: 155, hV: 388.0, tSat: -30}, {p: 1.5, hL: 175, hV: 395.0, tSat: -15},
           {p: 3.0, hL: 200, hV: 402.0, tSat: 0},   {p: 6.0, hL: 232, hV: 410.0, tSat: 22},
@@ -378,7 +365,7 @@
         ]
       },
       R22: {
-        nombre: "R-22", criticalP: 49.9, xRange: [120, 480], pRange: [1.0, 52],
+        nombre: "R-22", criticalP: 49.9, xRange: [120, 480],
         dome: [
           {p: 1.0, hL: 160, hV: 398.0, tSat: -40}, {p: 3.0, hL: 195, hV: 406.0, tSat: -15},
           {p: 7.0, hL: 230, hV: 413.0, tSat: 12},  {p: 15.0, hL: 270, hV: 416.0, tSat: 40},
@@ -386,7 +373,7 @@
         ]
       },
       R404A: {
-        nombre: "R-404A", criticalP: 36.8, xRange: [100, 450], pRange: [1.2, 38],
+        nombre: "R-404A", criticalP: 36.8, xRange: [100, 450],
         dome: [
           {p: 1.2, hL: 142, hV: 381.0, tSat: -32}, {p: 3.0, hL: 166, hV: 379.8, tSat: -18},
           {p: 7.0, hL: 198, hV: 377.8, tSat: 5},   {p: 15.0, hL: 236, hV: 371.0, tSat: 32},
@@ -394,7 +381,7 @@
         ]
       },
       R410A: {
-        nombre: "R-410A", criticalP: 49.0, xRange: [130, 480], pRange: [1.5, 52],
+        nombre: "R-410A", criticalP: 49.0, xRange: [130, 480],
         dome: [
           {p: 1.5, hL: 150, hV: 423.0, tSat: -42}, {p: 5.0, hL: 195, hV: 424.0, tSat: -20},
           {p: 12.0, hL: 238, hV: 422.0, tSat: 8},  {p: 22.0, hL: 280, hV: 415.0, tSat: 35},
@@ -402,7 +389,7 @@
         ]
       },
       R32: {
-        nombre: "R-32", criticalP: 57.8, xRange: [140, 580], pRange: [1.5, 60],
+        nombre: "R-32", criticalP: 57.8, xRange: [140, 580],
         dome: [
           {p: 1.5, hL: 150, hV: 512.0, tSat: -40}, {p: 6.0, hL: 210, hV: 520.0, tSat: -10},
           {p: 15.0, hL: 270, hV: 522.0, tSat: 20}, {p: 30.0, hL: 335, hV: 515.0, tSat: 50},
@@ -410,7 +397,7 @@
         ]
       },
       R290: {
-        nombre: "R-290", criticalP: 42.5, xRange: [170, 640], pRange: [1.0, 45],
+        nombre: "R-290", criticalP: 42.5, xRange: [170, 640],
         dome: [
           {p: 1.0, hL: 200, hV: 568.0, tSat: -40}, {p: 3.0, hL: 250, hV: 578.0, tSat: -22},
           {p: 8.0, hL: 320, hV: 585.0, tSat: 18},  {p: 16.0, hL: 390, hV: 582.0, tSat: 45},
@@ -418,14 +405,14 @@
         ]
       },
       R600a: {
-        nombre: "R-600a", criticalP: 36.5, xRange: [180, 620], pRange: [0.8, 38],
+        nombre: "R-600a", criticalP: 36.5, xRange: [180, 620],
         dome: [
           {p: 0.8, hL: 200, hV: 545.0, tSat: -18}, {p: 3.0, hL: 260, hV: 570.0, tSat: 22},
           {p: 8.0, hL: 330, hV: 580.0, tSat: 56},  {p: 36.5, hL: 544, hV: 544, tSat: 135}
         ]
       },
       R507A: {
-        nombre: "R-507A", criticalP: 37.1, xRange: [100, 440], pRange: [1.2, 38],
+        nombre: "R-507A", criticalP: 37.1, xRange: [100, 440],
         dome: [
           {p: 1.2, hL: 140, hV: 378.0, tSat: -33}, {p: 3.0, hL: 164, hV: 376.0, tSat: -19},
           {p: 7.0, hL: 195, hV: 374.0, tSat: 4},   {p: 15.0, hL: 234, hV: 367.0, tSat: 31},
@@ -433,35 +420,35 @@
         ]
       },
       R407C: {
-        nombre: "R-407C", criticalP: 46.3, xRange: [130, 480], pRange: [1.2, 48],
+        nombre: "R-407C", criticalP: 46.3, xRange: [130, 480],
         dome: [
           {p: 1.2, hL: 155, hV: 412.0, tSat: -35}, {p: 6.0, hL: 215, hV: 420.0, tSat: 5},
           {p: 15.0, hL: 270, hV: 415.0, tSat: 38}, {p: 46.3, hL: 414, hV: 414, tSat: 86}
         ]
       },
       R407A: {
-        nombre: "R-407A", criticalP: 45.2, xRange: [120, 460], pRange: [1.2, 46],
+        nombre: "R-407A", criticalP: 45.2, xRange: [120, 460],
         dome: [
           {p: 1.2, hL: 150, hV: 398.0, tSat: -35}, {p: 6.0, hL: 205, hV: 403.0, tSat: 3},
           {p: 15.0, hL: 260, hV: 398.0, tSat: 35}, {p: 45.2, hL: 403, hV: 403, tSat: 82}
         ]
       },
       R407F: {
-        nombre: "R-407F", criticalP: 47.5, xRange: [120, 470], pRange: [1.2, 48],
+        nombre: "R-407F", criticalP: 47.5, xRange: [120, 470],
         dome: [
           {p: 1.2, hL: 152, hV: 402.0, tSat: -35}, {p: 6.0, hL: 210, hV: 410.0, tSat: 4},
           {p: 15.0, hL: 265, hV: 406.0, tSat: 36}, {p: 47.5, hL: 414, hV: 414, tSat: 83}
         ]
       },
       R417A: {
-        nombre: "R-417A", criticalP: 40.4, xRange: [120, 440], pRange: [1.0, 42],
+        nombre: "R-417A", criticalP: 40.4, xRange: [120, 440],
         dome: [
           {p: 1.0, hL: 145, hV: 378.0, tSat: -36}, {p: 6.0, hL: 202, hV: 384.0, tSat: 8},
           {p: 15.0, hL: 255, hV: 378.0, tSat: 40}, {p: 40.4, hL: 363, hV: 363, tSat: 87}
         ]
       },
       R1234yf: {
-        nombre: "R-1234yf", criticalP: 33.8, xRange: [120, 430], pRange: [0.8, 35],
+        nombre: "R-1234yf", criticalP: 33.8, xRange: [120, 430],
         dome: [
           {p: 0.8, hL: 145, hV: 365.0, tSat: -33}, {p: 2.5, hL: 185, hV: 375.0, tSat: -8},
           {p: 5.0, hL: 212, hV: 381.0, tSat: 12},  {p: 10.0, hL: 245, hV: 385.0, tSat: 36},
@@ -580,7 +567,7 @@
       });
     }
 
-    // SOMBREADO DE ZONAS (LÍQUIDO, MEZCLA/SATURACIÓN Y VAPOR)
+    // CONSTRUCCIÓN DE LAS TRES ZONAS CON COLORES DISTINTOS
     function getZoneTraces(refData, minX, maxX) {
       const f = pUnits[pUnitActual].factor;
       const dome = refData.dome;
@@ -592,7 +579,7 @@
       const pTop = pVals[pVals.length - 1];
       const pBot = pVals[0];
 
-      // 1. Zona Líquido Subenfriado (Izquierda)
+      // 1. ZONA LÍQUIDO SUBENFRIADO (IZQUIERDA) - Azul Cobalto
       const liquidX = [minX, minX];
       const liquidY = [pBot, pTop];
       for (let i = dome.length - 1; i >= 0; i--) {
@@ -604,14 +591,14 @@
         x: liquidX,
         y: liquidY,
         fill: 'toself',
-        fillcolor: 'rgba(56, 189, 248, 0.12)', // Azul/Cian claro
+        fillcolor: 'rgba(2, 132, 199, 0.28)', // Azul Cobalto Vancante
         line: { color: 'transparent' },
-        name: 'Zona Líquido',
+        name: 'Líquido Subenfriado',
         showlegend: false,
         hoverinfo: 'none'
       };
 
-      // 2. Zona Saturación / Mezcla L+V (Dentro del Domo)
+      // 2. ZONA SATURACIÓN / MEZCLA L+V (CENTRO) - Verde Esmeralda
       const satX = [];
       const satY = [];
       for (let i = 0; i < dome.length; i++) {
@@ -627,14 +614,14 @@
         x: satX,
         y: satY,
         fill: 'toself',
-        fillcolor: 'rgba(16, 185, 129, 0.15)', // Verde/Teal
+        fillcolor: 'rgba(16, 185, 129, 0.28)', // Verde esmeralda resplandeciente
         line: { color: 'transparent' },
-        name: 'Zona Mezcla (L+V)',
+        name: 'Mezcla Saturada (L+V)',
         showlegend: false,
         hoverinfo: 'none'
       };
 
-      // 3. Zona Vapor Sobrecalentado (Derecha)
+      // 3. ZONA VAPOR SOBRECALENTADO (DERECHA) - Naranja / Ámbar
       const vaporX = [];
       const vaporY = [];
       for (let i = 0; i < dome.length; i++) {
@@ -648,9 +635,9 @@
         x: vaporX,
         y: vaporY,
         fill: 'toself',
-        fillcolor: 'rgba(245, 158, 11, 0.12)', // Naranja/Ámbar claro
+        fillcolor: 'rgba(245, 158, 11, 0.25)', // Naranja Cálido
         line: { color: 'transparent' },
-        name: 'Zona Vapor',
+        name: 'Vapor Sobrecalentado',
         showlegend: false,
         hoverinfo: 'none'
       };
@@ -678,7 +665,7 @@
         y: pVals,
         mode: 'lines',
         name: `Domo ${refData.nombre}`,
-        line: { color: '#38bdf8', width: 2.5, shape: 'spline', smoothing: 1.1 }
+        line: { color: '#38bdf8', width: 3, shape: 'spline', smoothing: 1.1 }
       };
     }
 
@@ -762,7 +749,7 @@
       const minX = refData.xRange[0];
       const maxX = refData.xRange[1];
 
-      // Obtener zonas sombreadas
+      // Trazar zonas
       const zoneTraces = getZoneTraces(refData, minX, maxX);
 
       const cycleTrace = {
@@ -772,16 +759,16 @@
         name: 'Ciclo Operativo Real',
         text: ['1 (Succ)', '2 (Desc)', '3 (Liq)', '4 (Evap)', ''],
         textposition: ['bottom right', 'top right', 'top left', 'bottom left', ''],
-        textfont: { color: '#f8fafc', size: 11 },
-        line: { color: '#ef4444', width: 2.5 },
-        marker: { size: 6, color: '#f59e0b' }
+        textfont: { color: '#ffffff', size: 11 },
+        line: { color: '#f43f5e', width: 3 },
+        marker: { size: 7, color: '#f59e0b' }
       };
 
       const cycleFillTrace = {
         x: [h1, h2, h3, h4],
         y: [pSuctPlot, pDescPlot, pDescPlot, pSuctPlot],
         fill: 'toself',
-        fillcolor: 'rgba(239, 68, 68, 0.18)', // Sombra interna del ciclo
+        fillcolor: 'rgba(244, 63, 94, 0.22)',
         line: { color: 'transparent' },
         name: 'Área del Ciclo',
         showlegend: false,
@@ -796,25 +783,26 @@
       const minH_Ciclo = Math.min(h1, h2, h3, h4);
 
       if (zonaActivaHabilitada) {
-        const hMargin = (maxH_Ciclo - minH_Ciclo) * 0.15;
-        const minPLog = Math.log10(Math.min(pSuctPlot, pDescPlot)) - 0.08;
-        const maxPLog = Math.log10(Math.max(pSuctPlot, pDescPlot)) + 0.08;
+        const hMargin = (maxH_Ciclo - minH_Ciclo) * 0.2;
+        const minPLog = Math.log10(Math.min(pSuctPlot, pDescPlot)) - 0.12;
+        const maxPLog = Math.log10(Math.max(pSuctPlot, pDescPlot)) + 0.12;
 
         xRangeFinal = [minH_Ciclo - hMargin, maxH_Ciclo + hMargin];
         yRangeFinal = [minPLog, maxPLog];
       } else {
-        const pMinUtil = Math.max(pSuctPlot * 0.7, refData.dome[0].p * pf);
-        const pMaxUtil = Math.min(pDescPlot * 1.35, refData.criticalP * pf);
+        // Rango equilibrado para evitar deformación hacia arriba
+        const pMinDome = refData.dome[0].p * pf;
+        const pMaxDome = refData.criticalP * pf * 1.1;
 
         xRangeFinal = [minX, maxX];
         yRangeFinal = [
-          Math.log10(pMinUtil),
-          Math.log10(pMaxUtil)
+          Math.log10(pMinDome * 0.8),
+          Math.log10(pMaxDome)
         ];
       }
 
       const layout = {
-        margin: { l: 15, r: 15, t: 30, b: 15 },
+        margin: { l: 20, r: 20, t: 25, b: 20 },
         autosize: true,
         paper_bgcolor: '#1e293b',
         plot_bgcolor: '#0f172a',
