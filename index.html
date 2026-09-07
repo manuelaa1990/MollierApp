@@ -61,7 +61,6 @@
       align-items: center;
     }
 
-    /* Fila superior de configuración general */
     .config-row {
       display: flex;
       gap: 4px;
@@ -69,17 +68,9 @@
       width: 100%;
     }
 
-    .config-row .input-group-ref {
-      flex: 2;
-      min-width: 0;
-    }
+    .config-row .input-group-ref { flex: 2; min-width: 0; }
+    .config-row .input-group-unit { flex: 1; min-width: 0; }
 
-    .config-row .input-group-unit {
-      flex: 1;
-      min-width: 0;
-    }
-
-    /* Grilla de 3 columnas para mediciones */
     .controls-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -136,7 +127,6 @@
       border-color: #38bdf8;
     }
 
-    /* Barra de Botones sobre la gráfica */
     .action-bar {
       display: flex;
       gap: 6px;
@@ -160,23 +150,16 @@
       height: 26px;
     }
 
-    .btn-primary {
-      background-color: #0284c7;
-      color: #ffffff;
-    }
+    .btn-primary { background-color: #0284c7; color: #ffffff; }
     .btn-primary:hover { background-color: #0369a1; }
 
-    .btn-toggle {
-      background-color: #334155;
-      color: #cbd5e1;
-    }
+    .btn-toggle { background-color: #334155; color: #cbd5e1; }
     .btn-toggle.active {
       background-color: #10b981;
       color: #ffffff;
       box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
     }
 
-    /* Resultados KPI */
     .results-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -224,29 +207,12 @@
       min-height: 0;
     }
 
-    /* --- AJUSTES PARA MÓVIL --- */
     @media (max-width: 680px) {
-      .app-container { 
-        padding: 4px; 
-        gap: 4px; 
-      }
-
-      .top-panel {
-        grid-template-columns: 1fr;
-      }
-
-      .input-group label {
-        font-size: 0.54rem;
-      }
-
-      .input-group input, 
-      .input-group select {
-        font-size: 0.68rem;
-      }
-
-      .results-grid { 
-        grid-template-columns: repeat(3, 1fr); 
-      }
+      .app-container { padding: 4px; gap: 4px; }
+      .top-panel { grid-template-columns: 1fr; }
+      .input-group label { font-size: 0.54rem; }
+      .input-group input, .input-group select { font-size: 0.68rem; }
+      .results-grid { grid-template-columns: repeat(3, 1fr); }
     }
   </style>
 </head>
@@ -254,16 +220,10 @@
 
   <div class="app-container">
     
-    <!-- PANEL SUPERIOR: CONTROLES Y KPIS -->
     <header class="top-panel">
-      
-      <!-- Panel de Controles Compacto -->
       <div class="card">
-        <h2>
-          <span>Datos de Campo</span>
-        </h2>
+        <h2><span>Datos de Campo</span></h2>
         
-        <!-- Fila Única Superior: Refrigerante + Unidades -->
         <div class="config-row">
           <div class="input-group input-group-ref">
             <label for="refSelect">Refrigerante</label>
@@ -295,8 +255,8 @@
           <div class="input-group input-group-unit">
             <label for="pUnitSelect">U. Presión</label>
             <select id="pUnitSelect" onchange="cambiarUnidades()">
-              <option value="psi">PSI</option>
-              <option value="bar" selected>Bar</option>
+              <option value="psi" selected>PSI</option>
+              <option value="bar">Bar</option>
               <option value="kpa">kPa</option>
             </select>
           </div>
@@ -310,32 +270,30 @@
           </div>
         </div>
 
-        <!-- Grilla de Mediciones en 3 Columnas Recortadas -->
         <div class="controls-grid">
-          
           <div class="input-group">
             <label for="pSuct" id="lblPSuct">P. Succión</label>
-            <input type="number" id="pSuct" value="3.5" step="0.1" oninput="guardarYActualizar()">
+            <input type="number" id="pSuct" value="25" step="1" oninput="guardarYActualizar()">
           </div>
 
           <div class="input-group">
             <label for="pDesc" id="lblPDesc">P. Descarga</label>
-            <input type="number" id="pDesc" value="18.0" step="0.5" oninput="guardarYActualizar()">
+            <input type="number" id="pDesc" value="290" step="1" oninput="guardarYActualizar()">
           </div>
 
           <div class="input-group">
             <label for="tSuct" id="lblTSuct">T. Tubería Succ</label>
-            <input type="number" id="tSuct" value="10" step="0.5" oninput="guardarYActualizar()">
+            <input type="number" id="tSuct" value="-10" step="0.5" oninput="guardarYActualizar()">
           </div>
 
           <div class="input-group">
             <label for="tLiq" id="lblTLiq">T. Tubería Liq</label>
-            <input type="number" id="tLiq" value="35" step="0.5" oninput="guardarYActualizar()">
+            <input type="number" id="tLiq" value="45" step="0.5" oninput="guardarYActualizar()">
           </div>
 
           <div class="input-group">
             <label for="tDescReal" id="lblTDescReal">T. Descarga</label>
-            <input type="number" id="tDescReal" value="75" step="1" oninput="guardarYActualizar()">
+            <input type="number" id="tDescReal" value="90" step="1" oninput="guardarYActualizar()">
           </div>
 
           <div class="input-group">
@@ -345,14 +303,12 @@
 
           <div class="input-group">
             <label for="iAmp">Amperaje (A)</label>
-            <input type="number" id="iAmp" value="10.5" step="0.1" oninput="guardarYActualizar()">
+            <input type="number" id="iAmp" value="22" step="0.1" oninput="guardarYActualizar()">
           </div>
-
         </div>
 
       </div>
 
-      <!-- Panel de Resultados KPI -->
       <div class="card">
         <h2>Indicadores Calculados</h2>
         <div class="results-grid">
@@ -385,7 +341,6 @@
 
     </header>
 
-    <!-- PANEL INFERIOR: GRÁFICO MOLLIER -->
     <main class="card chart-card">
       <div class="action-bar">
         <button class="btn btn-toggle" id="btnZonaActiva" onclick="toggleZonaActiva()">
@@ -402,9 +357,8 @@
   </div>
 
   <script>
-    // ESTADO GLOBAL
     let zonaActivaHabilitada = false;
-    let pUnitActual = 'bar';
+    let pUnitActual = 'psi';
     let tUnitActual = 'C';
 
     const pUnits = {
@@ -413,123 +367,110 @@
       kpa: { factor: 100.0, label: 'kPa' }
     };
 
-    // BASE DE DATOS DE REFRIGERANTES (Presión Absoluta en Bar)
+    // Ajuste de rangos ajustados estrechamente al domo para evitar distorsión
     const refrigerantes = {
       R134a: {
-        nombre: "R-134a", criticalP: 40.6, xRange: [100, 500], pRange: [0.3, 42],
+        nombre: "R-134a", criticalP: 40.6, xRange: [120, 460], pRange: [0.8, 42],
         dome: [
-          {p: 0.3, hL: 135, hV: 382.0, tSat: -40}, {p: 1.0, hL: 165, hV: 392.0, tSat: -26},
-          {p: 2.5, hL: 195, hV: 400.0, tSat: -4},  {p: 5.0, hL: 225, hV: 408.0, tSat: 16},
-          {p: 10.0, hL: 256, hV: 415.0, tSat: 40}, {p: 20.0, hL: 300, hV: 412.0, tSat: 67},
-          {p: 35.0, hL: 355, hV: 390.0, tSat: 93}, {p: 40.6, hL: 382, hV: 382, tSat: 101}
+          {p: 0.8, hL: 155, hV: 388.0, tSat: -30}, {p: 1.5, hL: 175, hV: 395.0, tSat: -15},
+          {p: 3.0, hL: 200, hV: 402.0, tSat: 0},   {p: 6.0, hL: 232, hV: 410.0, tSat: 22},
+          {p: 12.0, hL: 268, hV: 415.0, tSat: 46}, {p: 22.0, hL: 310, hV: 410.0, tSat: 72},
+          {p: 40.6, hL: 382, hV: 382, tSat: 101}
         ]
       },
       R22: {
-        nombre: "R-22", criticalP: 49.9, xRange: [100, 520], pRange: [0.4, 52],
+        nombre: "R-22", criticalP: 49.9, xRange: [120, 480], pRange: [1.0, 52],
         dome: [
-          {p: 0.4, hL: 130, hV: 390.0, tSat: -50}, {p: 1.0, hL: 160, hV: 398.0, tSat: -40},
-          {p: 3.0, hL: 195, hV: 406.0, tSat: -15}, {p: 7.0, hL: 230, hV: 413.0, tSat: 12},
-          {p: 15.0, hL: 270, hV: 416.0, tSat: 40}, {p: 30.0, hL: 320, hV: 405.0, tSat: 72},
-          {p: 45.0, hL: 375, hV: 380.0, tSat: 92}, {p: 49.9, hL: 395, hV: 395, tSat: 96}
+          {p: 1.0, hL: 160, hV: 398.0, tSat: -40}, {p: 3.0, hL: 195, hV: 406.0, tSat: -15},
+          {p: 7.0, hL: 230, hV: 413.0, tSat: 12},  {p: 15.0, hL: 270, hV: 416.0, tSat: 40},
+          {p: 30.0, hL: 320, hV: 405.0, tSat: 72}, {p: 49.9, hL: 395, hV: 395, tSat: 96}
         ]
       },
       R404A: {
-        nombre: "R-404A", criticalP: 36.8, xRange: [100, 600], pRange: [0.3, 40],
+        nombre: "R-404A", criticalP: 36.8, xRange: [100, 450], pRange: [1.2, 38],
         dome: [
-          {p: 0.3, hL: 120, hV: 381.3, tSat: -45}, {p: 1.0, hL: 140, hV: 381.0, tSat: -35},
-          {p: 3.0, hL: 166, hV: 379.8, tSat: -18}, {p: 7.0, hL: 198, hV: 377.8, tSat: 5},
-          {p: 15.0, hL: 236, hV: 371.0, tSat: 32}, {p: 25.0, hL: 271, hV: 360.0, tSat: 55},
-          {p: 35.5, hL: 312, hV: 337.0, tSat: 68}, {p: 36.8, hL: 325, hV: 325, tSat: 72}
+          {p: 1.2, hL: 142, hV: 381.0, tSat: -32}, {p: 3.0, hL: 166, hV: 379.8, tSat: -18},
+          {p: 7.0, hL: 198, hV: 377.8, tSat: 5},   {p: 15.0, hL: 236, hV: 371.0, tSat: 32},
+          {p: 25.0, hL: 271, hV: 360.0, tSat: 55}, {p: 36.8, hL: 325, hV: 325, tSat: 72}
         ]
       },
       R410A: {
-        nombre: "R-410A", criticalP: 49.0, xRange: [120, 550], pRange: [0.5, 55],
+        nombre: "R-410A", criticalP: 49.0, xRange: [130, 480], pRange: [1.5, 52],
         dome: [
-          {p: 0.5, hL: 130, hV: 422.0, tSat: -50}, {p: 2.0, hL: 162, hV: 423.5, tSat: -37},
-          {p: 5.0, hL: 195, hV: 424.0, tSat: -20}, {p: 12.0, hL: 238, hV: 422.0, tSat: 8},
-          {p: 22.0, hL: 280, hV: 415.0, tSat: 35}, {p: 35.0, hL: 325, hV: 400.0, tSat: 58},
-          {p: 47.5, hL: 382, hV: 370.0, tSat: 70}, {p: 49.0, hL: 396, hV: 396, tSat: 72}
+          {p: 1.5, hL: 150, hV: 423.0, tSat: -42}, {p: 5.0, hL: 195, hV: 424.0, tSat: -20},
+          {p: 12.0, hL: 238, hV: 422.0, tSat: 8},  {p: 22.0, hL: 280, hV: 415.0, tSat: 35},
+          {p: 35.0, hL: 325, hV: 400.0, tSat: 58}, {p: 49.0, hL: 396, hV: 396, tSat: 72}
         ]
       },
       R32: {
-        nombre: "R-32", criticalP: 57.8, xRange: [150, 650], pRange: [0.5, 60],
+        nombre: "R-32", criticalP: 57.8, xRange: [140, 580], pRange: [1.5, 60],
         dome: [
-          {p: 0.5, hL: 120, hV: 510.0, tSat: -52}, {p: 2.0, hL: 160, hV: 515.0, tSat: -35},
-          {p: 6.0, hL: 210, hV: 520.0, tSat: -10}, {p: 15.0, hL: 270, hV: 522.0, tSat: 20},
-          {p: 30.0, hL: 335, hV: 515.0, tSat: 50}, {p: 45.0, hL: 400, hV: 495.0, tSat: 68},
+          {p: 1.5, hL: 150, hV: 512.0, tSat: -40}, {p: 6.0, hL: 210, hV: 520.0, tSat: -10},
+          {p: 15.0, hL: 270, hV: 522.0, tSat: 20}, {p: 30.0, hL: 335, hV: 515.0, tSat: 50},
           {p: 57.8, hL: 470, hV: 470, tSat: 78}
         ]
       },
       R290: {
-        nombre: "R-290", criticalP: 42.5, xRange: [150, 700], pRange: [0.3, 48],
+        nombre: "R-290", criticalP: 42.5, xRange: [170, 640], pRange: [1.0, 45],
         dome: [
-          {p: 0.3, hL: 160, hV: 560.0, tSat: -48}, {p: 1.0, hL: 200, hV: 568.0, tSat: -40},
-          {p: 3.0, hL: 250, hV: 578.0, tSat: -22}, {p: 8.0, hL: 320, hV: 585.0, tSat: 18},
-          {p: 16.0, hL: 390, hV: 582.0, tSat: 45}, {p: 28.0, hL: 460, hV: 565.0, tSat: 72},
+          {p: 1.0, hL: 200, hV: 568.0, tSat: -40}, {p: 3.0, hL: 250, hV: 578.0, tSat: -22},
+          {p: 8.0, hL: 320, hV: 585.0, tSat: 18},  {p: 16.0, hL: 390, hV: 582.0, tSat: 45},
           {p: 42.5, hL: 571, hV: 571, tSat: 96}
         ]
       },
       R600a: {
-        nombre: "R-600a", criticalP: 36.5, xRange: [150, 680], pRange: [0.2, 40],
+        nombre: "R-600a", criticalP: 36.5, xRange: [180, 620], pRange: [0.8, 38],
         dome: [
-          {p: 0.2, hL: 165, hV: 530.0, tSat: -40}, {p: 1.0, hL: 210, hV: 550.0, tSat: -12},
-          {p: 3.0, hL: 260, hV: 570.0, tSat: 22}, {p: 8.0, hL: 330, hV: 580.0, tSat: 56},
-          {p: 20.0, hL: 420, hV: 570.0, tSat: 98}, {p: 36.5, hL: 544, hV: 544, tSat: 135}
+          {p: 0.8, hL: 200, hV: 545.0, tSat: -18}, {p: 3.0, hL: 260, hV: 570.0, tSat: 22},
+          {p: 8.0, hL: 330, hV: 580.0, tSat: 56},  {p: 36.5, hL: 544, hV: 544, tSat: 135}
         ]
       },
       R507A: {
-        nombre: "R-507A", criticalP: 37.1, xRange: [100, 510], pRange: [0.3, 40],
+        nombre: "R-507A", criticalP: 37.1, xRange: [100, 440], pRange: [1.2, 38],
         dome: [
-          {p: 0.3, hL: 118, hV: 378.0, tSat: -46}, {p: 1.0, hL: 138, hV: 378.0, tSat: -36},
-          {p: 3.0, hL: 164, hV: 376.0, tSat: -19}, {p: 7.0, hL: 195, hV: 374.0, tSat: 4},
-          {p: 15.0, hL: 234, hV: 367.0, tSat: 31},  {p: 25.0, hL: 268, hV: 356.0, tSat: 54},
+          {p: 1.2, hL: 140, hV: 378.0, tSat: -33}, {p: 3.0, hL: 164, hV: 376.0, tSat: -19},
+          {p: 7.0, hL: 195, hV: 374.0, tSat: 4},   {p: 15.0, hL: 234, hV: 367.0, tSat: 31},
           {p: 37.1, hL: 322, hV: 322, tSat: 71}
         ]
       },
       R407C: {
-        nombre: "R-407C", criticalP: 46.3, xRange: [120, 540], pRange: [0.4, 50],
+        nombre: "R-407C", criticalP: 46.3, xRange: [130, 480], pRange: [1.2, 48],
         dome: [
-          {p: 0.4, hL: 135, hV: 410.0, tSat: -45}, {p: 2.0, hL: 175, hV: 416.0, tSat: -25},
-          {p: 6.0, hL: 215, hV: 420.0, tSat: 5},   {p: 15.0, hL: 270, hV: 415.0, tSat: 38},
-          {p: 30.0, hL: 335, hV: 400.0, tSat: 68},  {p: 46.3, hL: 414, hV: 414, tSat: 86}
+          {p: 1.2, hL: 155, hV: 412.0, tSat: -35}, {p: 6.0, hL: 215, hV: 420.0, tSat: 5},
+          {p: 15.0, hL: 270, hV: 415.0, tSat: 38}, {p: 46.3, hL: 414, hV: 414, tSat: 86}
         ]
       },
       R407A: {
-        nombre: "R-407A", criticalP: 45.2, xRange: [110, 520], pRange: [0.4, 48],
+        nombre: "R-407A", criticalP: 45.2, xRange: [120, 460], pRange: [1.2, 46],
         dome: [
-          {p: 0.4, hL: 130, hV: 395.0, tSat: -45}, {p: 2.0, hL: 168, hV: 400.0, tSat: -25},
-          {p: 6.0, hL: 205, hV: 403.0, tSat: 3},   {p: 15.0, hL: 260, hV: 398.0, tSat: 35},
-          {p: 30.0, hL: 325, hV: 385.0, tSat: 65},  {p: 45.2, hL: 403, hV: 403, tSat: 82}
+          {p: 1.2, hL: 150, hV: 398.0, tSat: -35}, {p: 6.0, hL: 205, hV: 403.0, tSat: 3},
+          {p: 15.0, hL: 260, hV: 398.0, tSat: 35}, {p: 45.2, hL: 403, hV: 403, tSat: 82}
         ]
       },
       R407F: {
-        nombre: "R-407F", criticalP: 47.5, xRange: [115, 530], pRange: [0.4, 50],
+        nombre: "R-407F", criticalP: 47.5, xRange: [120, 470], pRange: [1.2, 48],
         dome: [
-          {p: 0.4, hL: 132, hV: 400.0, tSat: -45}, {p: 2.0, hL: 170, hV: 406.0, tSat: -25},
-          {p: 6.0, hL: 210, hV: 410.0, tSat: 4},   {p: 15.0, hL: 265, hV: 406.0, tSat: 36},
-          {p: 30.0, hL: 330, hV: 395.0, tSat: 66},  {p: 47.5, hL: 414, hV: 414, tSat: 83}
+          {p: 1.2, hL: 152, hV: 402.0, tSat: -35}, {p: 6.0, hL: 210, hV: 410.0, tSat: 4},
+          {p: 15.0, hL: 265, hV: 406.0, tSat: 36}, {p: 47.5, hL: 414, hV: 414, tSat: 83}
         ]
       },
       R417A: {
-        nombre: "R-417A", criticalP: 40.4, xRange: [110, 500], pRange: [0.3, 44],
+        nombre: "R-417A", criticalP: 40.4, xRange: [120, 440], pRange: [1.0, 42],
         dome: [
-          {p: 0.3, hL: 125, hV: 375.0, tSat: -48}, {p: 2.0, hL: 162, hV: 380.0, tSat: -22},
-          {p: 6.0, hL: 202, hV: 384.0, tSat: 8},   {p: 15.0, hL: 255, hV: 378.0, tSat: 40},
-          {p: 30.0, hL: 318, hV: 358.0, tSat: 70},  {p: 40.4, hL: 363, hV: 363, tSat: 87}
+          {p: 1.0, hL: 145, hV: 378.0, tSat: -36}, {p: 6.0, hL: 202, hV: 384.0, tSat: 8},
+          {p: 15.0, hL: 255, hV: 378.0, tSat: 40}, {p: 40.4, hL: 363, hV: 363, tSat: 87}
         ]
       },
       R1234yf: {
-        nombre: "R-1234yf", criticalP: 33.8, xRange: [100, 480], pRange: [0.3, 36],
+        nombre: "R-1234yf", criticalP: 33.8, xRange: [120, 430], pRange: [0.8, 35],
         dome: [
-          {p: 0.3, hL: 130, hV: 360.0, tSat: -42}, {p: 1.0, hL: 155, hV: 368.0, tSat: -29},
-          {p: 2.5, hL: 185, hV: 375.0, tSat: -8},  {p: 5.0, hL: 212, hV: 381.0, tSat: 12},
-          {p: 10.0, hL: 245, hV: 385.0, tSat: 36}, {p: 20.0, hL: 290, hV: 380.0, tSat: 64},
+          {p: 0.8, hL: 145, hV: 365.0, tSat: -33}, {p: 2.5, hL: 185, hV: 375.0, tSat: -8},
+          {p: 5.0, hL: 212, hV: 381.0, tSat: 12},  {p: 10.0, hL: 245, hV: 385.0, tSat: 36},
           {p: 33.8, hL: 361, hV: 361, tSat: 94}
         ]
       }
     };
 
-    // ACTUALIZACIÓN DE ETIQUETAS SEGÚN LA UNIDAD
     function actualizarEtiquetas() {
       document.getElementById('lblPSuct').innerText = `P. Succión (${pUnits[pUnitActual].label})`;
       document.getElementById('lblPDesc').innerText = `P. Descarga (${pUnits[pUnitActual].label})`;
@@ -538,7 +479,6 @@
       document.getElementById('lblTDescReal').innerText = `T. Desc (°${tUnitActual})`;
     }
 
-    // CONVERSIÓN DE UNIDADES
     function cambiarUnidades() {
       const nuevaPUnit = document.getElementById('pUnitSelect').value;
       const nuevaTUnit = document.getElementById('tUnitSelect').value;
@@ -546,14 +486,12 @@
       const pFactorViejo = pUnits[pUnitActual].factor;
       const pFactorNuevo = pUnits[nuevaPUnit].factor;
 
-      // Convertir Presiones en los Inputs
       ['pSuct', 'pDesc'].forEach(id => {
         const elem = document.getElementById(id);
         const valBar = parseFloat(elem.value) / pFactorViejo;
         elem.value = (valBar * pFactorNuevo).toFixed(nuevaPUnit === 'psi' ? 0 : 1);
       });
 
-      // Convertir Temperaturas en los Inputs
       if (tUnitActual !== nuevaTUnit) {
         ['tSuct', 'tLiq', 'tDescReal'].forEach(id => {
           const elem = document.getElementById(id);
@@ -573,7 +511,6 @@
       guardarYActualizar();
     }
 
-    // BOTÓN ZONA ACTIVA
     function toggleZonaActiva() {
       zonaActivaHabilitada = !zonaActivaHabilitada;
       actualizarEstadoBotonZoom();
@@ -586,7 +523,6 @@
       btn.classList.toggle('active', zonaActivaHabilitada);
     }
 
-    // PERSISTENCIA EN LOCALSTORAGE (Guardar Datos)
     function guardarConfiguracion() {
       const data = {
         refSelect: document.getElementById('refSelect').value,
@@ -604,7 +540,6 @@
       localStorage.setItem('mollier_app_data', JSON.stringify(data));
     }
 
-    // PERSISTENCIA EN LOCALSTORAGE (Cargar Datos)
     function cargarConfiguracion() {
       const saved = localStorage.getItem('mollier_app_data');
       if (saved) {
@@ -626,7 +561,7 @@
           tUnitActual = document.getElementById('tUnitSelect').value;
           actualizarEstadoBotonZoom();
         } catch (e) {
-          console.error("Error al cargar configuración guardada", e);
+          console.error("Error al cargar configuración", e);
         }
       }
     }
@@ -636,7 +571,6 @@
       actualizarTodo();
     }
 
-    // DESCARGAR GRÁFICA EN PNG
     function descargarGrafica() {
       const refKey = document.getElementById('refSelect').value;
       Plotly.downloadImage('mollierPlot', {
@@ -647,7 +581,6 @@
       });
     }
 
-    // DOMO DE SATURACIÓN
     function getDomeTrace(refData) {
       const hVals = [];
       const pVals = [];
@@ -672,7 +605,6 @@
       };
     }
 
-    // INTERPOLADOR DE PROPIEDADES EN BAR (ABSOLUTA)
     function getPropAtP(refData, pBarAbs) {
       const dome = refData.dome;
       if (pBarAbs <= dome[0].p) return dome[0];
@@ -691,18 +623,16 @@
       return dome[0];
     }
 
-    // ACTUALIZACIÓN COMPLETA
     function actualizarTodo() {
       const refKey = document.getElementById('refSelect').value;
       const refData = refrigerantes[refKey];
       const pf = pUnits[pUnitActual].factor;
 
-      // Lectura Inputs Presión
       let pSuctInput = parseFloat(document.getElementById('pSuct').value);
       let pDescInput = parseFloat(document.getElementById('pDesc').value);
 
-      if (isNaN(pSuctInput)) pSuctInput = 3.5 * pf;
-      if (isNaN(pDescInput)) pDescInput = 18.0 * pf;
+      if (isNaN(pSuctInput)) pSuctInput = 25;
+      if (isNaN(pDescInput)) pDescInput = 290;
 
       let pSuctBarRel = pSuctInput / pf;
       let pDescBarRel = pDescInput / pf;
@@ -710,14 +640,12 @@
       if (pSuctBarRel < 0.1) pSuctBarRel = 0.1;
       if (pDescBarRel <= pSuctBarRel) pDescBarRel = pSuctBarRel + 2.0;
 
-      // Presión Absoluta para el Diagrama de Mollier
       const pSuctBarAbs = pSuctBarRel + 1.013;
       const pDescBarAbs = Math.min(pDescBarRel + 1.013, refData.criticalP - 0.2);
 
-      // Lectura Inputs Temperatura
-      let tSuctVal = parseFloat(document.getElementById('tSuct').value) || 10;
-      let tLiqVal = parseFloat(document.getElementById('tLiq').value) || 35;
-      let tDescRealVal = parseFloat(document.getElementById('tDescReal').value) || 75;
+      let tSuctVal = parseFloat(document.getElementById('tSuct').value) || -10;
+      let tLiqVal = parseFloat(document.getElementById('tLiq').value) || 45;
+      let tDescRealVal = parseFloat(document.getElementById('tDescReal').value) || 90;
 
       if (tUnitActual === 'F') {
         tSuctVal = (tSuctVal - 32) * 5/9;
@@ -725,26 +653,21 @@
         tDescRealVal = (tDescRealVal - 32) * 5/9;
       }
 
-      // Lectura Mediciones Eléctricas
       const vVolt = parseFloat(document.getElementById('vVolt').value) || 220;
       const iAmp = parseFloat(document.getElementById('iAmp').value) || 0;
       const pKw = (vVolt * iAmp * 0.9) / 1000.0;
 
-      // Propiedades de Saturación
       const propEvap = getPropAtP(refData, pSuctBarAbs);
       const propCond = getPropAtP(refData, pDescBarAbs);
 
-      // Cálculos Recalentamiento y Subenfriamiento
       const superHeatK = Math.max(tSuctVal - propEvap.tSat, 0);
       const subCoolK = Math.max(propCond.tSat - tLiqVal, 0);
 
-      // Entalpías del ciclo (kJ/kg)
       const h1 = propEvap.hV + (superHeatK * 1.25);
       const h2 = propCond.hV + Math.max(tDescRealVal - propCond.tSat, 5) * 1.35;
       const h3 = propCond.hL - (subCoolK * 1.25);
       const h4 = h3;
 
-      // KPIs
       const qn = h1 - h4;
       const w = h2 - h1;
       const cop = w > 0 ? (qn / w) : 0;
@@ -756,11 +679,9 @@
       document.getElementById('kpiw').innerText = `${w.toFixed(1)} kJ/kg`;
       document.getElementById('kpicop').innerText = cop.toFixed(2);
 
-      // Trazos en la unidad seleccionada
       const pSuctPlot = pSuctBarAbs * pf;
       const pDescPlot = pDescBarAbs * pf;
 
-      // Trazado del Ciclo Operativo Real
       const cycleTrace = {
         x: [h1, h2, h3, h4, h1],
         y: [pSuctPlot, pDescPlot, pDescPlot, pSuctPlot, pSuctPlot],
@@ -775,7 +696,6 @@
 
       const traces = [getDomeTrace(refData), cycleTrace];
 
-      // Sombra interna del área de trabajo
       traces.unshift({
         x: [h1, h2, h3, h4],
         y: [pSuctPlot, pDescPlot, pDescPlot, pSuctPlot],
@@ -786,36 +706,33 @@
         showlegend: false
       });
 
-      // DEFINICIÓN DE LÍMITES FIJOS RECOR TADOS (SIN ZONA MUERTA INFERIOR)
       let xRangeFinal, yRangeFinal;
 
       const maxH_Ciclo = Math.max(h1, h2, h3, h4);
       const minH_Ciclo = Math.min(h1, h2, h3, h4);
 
       if (zonaActivaHabilitada) {
-        // MODO ZONA ACTIVA: Zoom ultra enfocado
-        const hMargin = (maxH_Ciclo - minH_Ciclo) * 0.2;
-        const minPLog = Math.log10(Math.min(pSuctPlot, pDescPlot)) - 0.12;
-        const maxPLog = Math.log10(Math.max(pSuctPlot, pDescPlot)) + 0.12;
+        const hMargin = (maxH_Ciclo - minH_Ciclo) * 0.15;
+        const minPLog = Math.log10(Math.min(pSuctPlot, pDescPlot)) - 0.08;
+        const maxPLog = Math.log10(Math.max(pSuctPlot, pDescPlot)) + 0.08;
 
         xRangeFinal = [minH_Ciclo - hMargin, maxH_Ciclo + hMargin];
         yRangeFinal = [minPLog, maxPLog];
       } else {
-        // MODO NORMAL: Recorta la base inútil (mínimo a 50% de la P. Succión)
-        const pMinUtil = Math.max(pSuctPlot * 0.55, refData.dome[0].p * pf);
-        const pMaxUtil = Math.max(refData.pRange[1] * pf, pDescPlot * 1.25);
+        // AJUSTE CLAVE: Ajustar eje Y estrictamente alrededor del ciclo para evitar que la gráfica se estire verticalmente
+        const pMinUtil = Math.max(pSuctPlot * 0.7, refData.dome[0].p * pf);
+        const pMaxUtil = Math.min(pDescPlot * 1.35, refData.criticalP * pf);
 
-        const xLimitMax = Math.max(refData.xRange[1], maxH_Ciclo + 20);
-        xRangeFinal = [refData.xRange[0], xLimitMax];
+        // Ajustar X ajustado al domo específico
+        xRangeFinal = [refData.xRange[0], refData.xRange[1]];
         yRangeFinal = [
           Math.log10(pMinUtil),
           Math.log10(pMaxUtil)
         ];
       }
 
-      // LAYOUT CON EJES TOTALMENTE OCULTOS / LIMPIOS
       const layout = {
-        margin: { l: 10, r: 10, t: 25, b: 10 },
+        margin: { l: 15, r: 15, t: 30, b: 15 },
         autosize: true,
         paper_bgcolor: '#1e293b',
         plot_bgcolor: '#0f172a',
@@ -827,7 +744,7 @@
         },
         xaxis: {
           visible: true,
-          showticklabels: false, // Sin números en X
+          showticklabels: false,
           showgrid: true,
           gridcolor: '#1e293b',
           range: xRangeFinal,
@@ -835,7 +752,7 @@
         },
         yaxis: {
           visible: true,
-          showticklabels: false, // Sin números en Y (Regla ocultada)
+          showticklabels: false,
           showgrid: true,
           gridcolor: '#1e293b',
           type: 'log',
@@ -853,7 +770,6 @@
       Plotly.react('mollierPlot', traces, layout, config);
     }
 
-    // INICIALIZACIÓN CON RESTAURACIÓN DE DATOS
     window.addEventListener('DOMContentLoaded', () => {
       cargarConfiguracion();
       actualizarEtiquetas();
