@@ -1,6 +1,3 @@
-Aquí tienes el **código HTML/JavaScript completo**, integrado con las correcciones de inmovilización y el control exclusivo mediante el botón de **Zoom Zona Activa**.
-
-```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -227,7 +224,7 @@ Aquí tienes el **código HTML/JavaScript completo**, integrado con las correcci
           <!-- Selector Refrigerante + Unidades -->
           <div class="input-group col-2">
             <label for="refSelect">Refrigerante</label>
-            <select id="refSelect" onchange="actualizarTodo()">
+            <select id="refSelect" onchange="guardarYActualizar()">
               <optgroup label="Puros y Tradicionales">
                 <option value="R134a">R-134a</option>
                 <option value="R22">R-22</option>
@@ -269,42 +266,42 @@ Aquí tienes el **código HTML/JavaScript completo**, integrado con las correcci
             </select>
           </div>
 
-          <!-- Mediciones Presión de Campo -->
+          <!-- Mediciones Presión de Campo (Etiquetas Dinámicas) -->
           <div class="input-group">
-            <label for="pSuct" id="lblPSuct">P. Succión (Bar)</label>
-            <input type="number" id="pSuct" value="3.5" step="0.1" oninput="actualizarTodo()">
+            <label for="pSuct" id="lblPSuct">P. Succión</label>
+            <input type="number" id="pSuct" value="3.5" step="0.1" oninput="guardarYActualizar()">
           </div>
 
           <div class="input-group">
-            <label for="pDesc" id="lblPDesc">P. Descarga (Bar)</label>
-            <input type="number" id="pDesc" value="18.0" step="0.5" oninput="actualizarTodo()">
+            <label for="pDesc" id="lblPDesc">P. Descarga</label>
+            <input type="number" id="pDesc" value="18.0" step="0.5" oninput="guardarYActualizar()">
           </div>
 
-          <!-- Mediciones Temperatura de Campo -->
+          <!-- Mediciones Temperatura de Campo (Etiquetas Dinámicas) -->
           <div class="input-group">
-            <label for="tSuct" id="lblTSuct">T. Tubería Succ (°C)</label>
-            <input type="number" id="tSuct" value="10" step="0.5" oninput="actualizarTodo()">
+            <label for="tSuct" id="lblTSuct">T. Tubería Succ</label>
+            <input type="number" id="tSuct" value="10" step="0.5" oninput="guardarYActualizar()">
           </div>
 
           <div class="input-group">
-            <label for="tLiq" id="lblTLiq">T. Tubería Liq (°C)</label>
-            <input type="number" id="tLiq" value="35" step="0.5" oninput="actualizarTodo()">
+            <label for="tLiq" id="lblTLiq">T. Tubería Liq</label>
+            <input type="number" id="tLiq" value="35" step="0.5" oninput="guardarYActualizar()">
           </div>
 
           <div class="input-group col-2">
-            <label for="tDescReal" id="lblTDescReal">T. Descarga Compresor (°C)</label>
-            <input type="number" id="tDescReal" value="75" step="1" oninput="actualizarTodo()">
+            <label for="tDescReal" id="lblTDescReal">T. Descarga Compresor</label>
+            <input type="number" id="tDescReal" value="75" step="1" oninput="guardarYActualizar()">
           </div>
 
           <!-- Mediciones Eléctricas -->
           <div class="input-group">
             <label for="vVolt">Voltaje (V)</label>
-            <input type="number" id="vVolt" value="220" step="1" oninput="actualizarTodo()">
+            <input type="number" id="vVolt" value="220" step="1" oninput="guardarYActualizar()">
           </div>
 
           <div class="input-group">
             <label for="iAmp">Amperaje (A)</label>
-            <input type="number" id="iAmp" value="10.5" step="0.1" oninput="actualizarTodo()">
+            <input type="number" id="iAmp" value="10.5" step="0.1" oninput="guardarYActualizar()">
           </div>
 
         </div>
@@ -489,6 +486,15 @@ Aquí tienes el **código HTML/JavaScript completo**, integrado con las correcci
       }
     };
 
+    // ACTUALIZACIÓN DE ETIQUETAS SEGÚN LA UNIDAD
+    function actualizarEtiquetas() {
+      document.getElementById('lblPSuct').innerText = `P. Succión (${pUnits[pUnitActual].label})`;
+      document.getElementById('lblPDesc').innerText = `P. Descarga (${pUnits[pUnitActual].label})`;
+      document.getElementById('lblTSuct').innerText = `T. Tubería Succ (°${tUnitActual})`;
+      document.getElementById('lblTLiq').innerText = `T. Tubería Liq (°${tUnitActual})`;
+      document.getElementById('lblTDescReal').innerText = `T. Descarga Compresor (°${tUnitActual})`;
+    }
+
     // CONVERSIÓN DE UNIDADES
     function cambiarUnidades() {
       const nuevaPUnit = document.getElementById('pUnitSelect').value;
@@ -497,14 +503,14 @@ Aquí tienes el **código HTML/JavaScript completo**, integrado con las correcci
       const pFactorViejo = pUnits[pUnitActual].factor;
       const pFactorNuevo = pUnits[nuevaPUnit].factor;
 
-      // Convertir Presiones
+      // Convertir Presiones en los Inputs
       ['pSuct', 'pDesc'].forEach(id => {
         const elem = document.getElementById(id);
         const valBar = parseFloat(elem.value) / pFactorViejo;
         elem.value = (valBar * pFactorNuevo).toFixed(nuevaPUnit === 'psi' ? 0 : 1);
       });
 
-      // Convertir Temperaturas
+      // Convertir Temperaturas en los Inputs
       if (tUnitActual !== nuevaTUnit) {
         ['tSuct', 'tLiq', 'tDescReal'].forEach(id => {
           const elem = document.getElementById(id);
@@ -520,21 +526,70 @@ Aquí tienes el **código HTML/JavaScript completo**, integrado con las correcci
       pUnitActual = nuevaPUnit;
       tUnitActual = nuevaTUnit;
 
-      document.getElementById('lblPSuct').innerText = `P. Succión (${pUnits[pUnitActual].label})`;
-      document.getElementById('lblPDesc').innerText = `P. Descarga (${pUnits[pUnitActual].label})`;
-      document.getElementById('lblTSuct').innerText = `T. Tubería Succ (°${tUnitActual})`;
-      document.getElementById('lblTLiq').innerText = `T. Tubería Liq (°${tUnitActual})`;
-      document.getElementById('lblTDescReal').innerText = `T. Descarga Compresor (°${tUnitActual})`;
-
-      actualizarTodo();
+      actualizarEtiquetas();
+      guardarYActualizar();
     }
 
     // BOTÓN ZONA ACTIVA
     function toggleZonaActiva() {
       zonaActivaHabilitada = !zonaActivaHabilitada;
+      actualizarEstadoBotonZoom();
+      guardarYActualizar();
+    }
+
+    function actualizarEstadoBotonZoom() {
       const btn = document.getElementById('btnZonaActiva');
       btn.innerText = `🔍 Zoom Zona Activa: ${zonaActivaHabilitada ? 'ON' : 'OFF'}`;
       btn.classList.toggle('active', zonaActivaHabilitada);
+    }
+
+    // PERSISTENCIA EN LOCALSTORAGE (Guardar Datos)
+    function guardarConfiguracion() {
+      const data = {
+        refSelect: document.getElementById('refSelect').value,
+        pUnitSelect: document.getElementById('pUnitSelect').value,
+        tUnitSelect: document.getElementById('tUnitSelect').value,
+        pSuct: document.getElementById('pSuct').value,
+        pDesc: document.getElementById('pDesc').value,
+        tSuct: document.getElementById('tSuct').value,
+        tLiq: document.getElementById('tLiq').value,
+        tDescReal: document.getElementById('tDescReal').value,
+        vVolt: document.getElementById('vVolt').value,
+        iAmp: document.getElementById('iAmp').value,
+        zonaActivaHabilitada: zonaActivaHabilitada
+      };
+      localStorage.setItem('mollier_app_data', JSON.stringify(data));
+    }
+
+    // PERSISTENCIA EN LOCALSTORAGE (Cargar Datos)
+    function cargarConfiguracion() {
+      const saved = localStorage.getItem('mollier_app_data');
+      if (saved) {
+        try {
+          const data = JSON.parse(saved);
+          if (data.refSelect) document.getElementById('refSelect').value = data.refSelect;
+          if (data.pUnitSelect) document.getElementById('pUnitSelect').value = data.pUnitSelect;
+          if (data.tUnitSelect) document.getElementById('tUnitSelect').value = data.tUnitSelect;
+          if (data.pSuct !== undefined) document.getElementById('pSuct').value = data.pSuct;
+          if (data.pDesc !== undefined) document.getElementById('pDesc').value = data.pDesc;
+          if (data.tSuct !== undefined) document.getElementById('tSuct').value = data.tSuct;
+          if (data.tLiq !== undefined) document.getElementById('tLiq').value = data.tLiq;
+          if (data.tDescReal !== undefined) document.getElementById('tDescReal').value = data.tDescReal;
+          if (data.vVolt !== undefined) document.getElementById('vVolt').value = data.vVolt;
+          if (data.iAmp !== undefined) document.getElementById('iAmp').value = data.iAmp;
+          if (data.zonaActivaHabilitada !== undefined) zonaActivaHabilitada = data.zonaActivaHabilitada;
+
+          pUnitActual = document.getElementById('pUnitSelect').value;
+          tUnitActual = document.getElementById('tUnitSelect').value;
+          actualizarEstadoBotonZoom();
+        } catch (e) {
+          console.error("Error al cargar configuración guardada", e);
+        }
+      }
+    }
+
+    function guardarYActualizar() {
+      guardarConfiguracion();
       actualizarTodo();
     }
 
@@ -549,7 +604,7 @@ Aquí tienes el **código HTML/JavaScript completo**, integrado con las correcci
       });
     }
 
-    // DOMO DE SATURACIÓN CONVERTIDO A LA UNIDAD DE PRESIÓN SELECCIONADA
+    // DOMO DE SATURACIÓN
     function getDomeTrace(refData) {
       const hVals = [];
       const pVals = [];
@@ -599,7 +654,7 @@ Aquí tienes el **código HTML/JavaScript completo**, integrado con las correcci
       const refData = refrigerantes[refKey];
       const pf = pUnits[pUnitActual].factor;
 
-      // Lectura Inputs Presión -> Convertir a bar relativo
+      // Lectura Inputs Presión
       let pSuctInput = parseFloat(document.getElementById('pSuct').value);
       let pDescInput = parseFloat(document.getElementById('pDesc').value);
 
@@ -695,7 +750,7 @@ Aquí tienes el **código HTML/JavaScript completo**, integrado con las correcci
       const minH_Ciclo = Math.min(h1, h2, h3, h4);
 
       if (zonaActivaHabilitada) {
-        // MODO ZONA ACTIVA: Zoom enfocado solo en el ciclo
+        // MODO ZONA ACTIVA: Zoom enfocado en el ciclo
         const hMargin = (maxH_Ciclo - minH_Ciclo) * 0.25;
         const minPLog = Math.log10(Math.min(pSuctPlot, pDescPlot)) - 0.15;
         const maxPLog = Math.log10(Math.max(pSuctPlot, pDescPlot)) + 0.15;
@@ -703,7 +758,7 @@ Aquí tienes el **código HTML/JavaScript completo**, integrado con las correcci
         xRangeFinal = [minH_Ciclo - hMargin, maxH_Ciclo + hMargin];
         yRangeFinal = [minPLog, maxPLog];
       } else {
-        // MODO NORMAL (OFF): Vista completa del Domo con el ciclo visible
+        // MODO NORMAL (OFF): Domo Completo
         const xLimitMax = Math.max(refData.xRange[1], maxH_Ciclo + 30);
         xRangeFinal = [refData.xRange[0], xLimitMax];
         yRangeFinal = [
@@ -712,13 +767,13 @@ Aquí tienes el **código HTML/JavaScript completo**, integrado con las correcci
         ];
       }
 
-      // CONFIGURACIÓN DEL LAYOUT (TOTALMENTE ESTÁTICO)
+      // CONFIGURACIÓN DEL LAYOUT (ESTÁTICO SIN MOVIMIENTO)
       const layout = {
         margin: { l: 50, r: 20, t: 30, b: 40 },
         autosize: true,
         paper_bgcolor: '#1e293b',
         plot_bgcolor: '#0f172a',
-        dragmode: false, // Bloquea el arrastre manual con el mouse/dedo
+        dragmode: false,
         title: {
           text: `Diagrama Mollier p-h (${refData.nombre}) - Operación Real`,
           font: { color: '#f8fafc', size: 13 }
@@ -726,7 +781,7 @@ Aquí tienes el **código HTML/JavaScript completo**, integrado con las correcci
         xaxis: {
           title: { text: 'Entalpía h [kJ/kg]', font: { color: '#94a3b8', size: 11 } },
           range: xRangeFinal,
-          fixedrange: true, // Bloquea el zoom manual en el eje X
+          fixedrange: true,
           gridcolor: '#334155',
           tickfont: { color: '#94a3b8' }
         },
@@ -734,7 +789,7 @@ Aquí tienes el **código HTML/JavaScript completo**, integrado con las correcci
           title: { text: `Presión P_abs [${pUnits[pUnitActual].label}]`, font: { color: '#94a3b8', size: 11 } },
           type: 'log',
           range: yRangeFinal,
-          fixedrange: true, // Bloquea el zoom manual en el eje Y
+          fixedrange: true,
           gridcolor: '#334155',
           tickfont: { color: '#94a3b8' }
         },
@@ -745,18 +800,19 @@ Aquí tienes el **código HTML/JavaScript completo**, integrado con las correcci
         }
       };
 
-      // OPCIONES DE PLOTLY
       const config = {
         responsive: true,
-        displayModeBar: false, // Oculta la barra flotante
-        scrollZoom: false      // Desactiva el zoom con la rueda o pellizco táctil
+        displayModeBar: false,
+        scrollZoom: false
       };
 
       Plotly.react('mollierPlot', traces, layout, config);
     }
 
-    // INICIALIZACIÓN
+    // INICIALIZACIÓN CON RESTAURACIÓN DE DATOS
     window.addEventListener('DOMContentLoaded', () => {
+      cargarConfiguracion();
+      actualizarEtiquetas();
       actualizarTodo();
     });
 
@@ -766,5 +822,3 @@ Aquí tienes el **código HTML/JavaScript completo**, integrado con las correcci
   </script>
 </body>
 </html>
-
-```
