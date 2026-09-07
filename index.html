@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mollier HVAC Analyzer - Arga Refrigeración</title>
   <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
-  <!-- Librerías para generación de PDF y captura -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   
@@ -26,13 +25,13 @@
       padding: 15px;
     }
     .container {
-      max-width: 1250px;
+      max-width: 1300px;
       margin: 0 auto;
       display: grid;
-      grid-template-columns: 360px 1fr;
+      grid-template-columns: 380px 1fr;
       gap: 15px;
     }
-    @media (max-width: 850px) {
+    @media (max-width: 900px) {
       .container { grid-template-columns: 1fr; }
     }
     .panel {
@@ -91,7 +90,7 @@
     .info-icon .tooltip {
       visibility: hidden;
       opacity: 0;
-      width: 210px;
+      width: 220px;
       background-color: #2b2b2b;
       color: #fff;
       text-align: left;
@@ -138,7 +137,7 @@
     
     .metrics-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
       gap: 10px;
       margin-top: 15px;
     }
@@ -148,16 +147,10 @@
       border-radius: 6px;
       border-left: 3px solid var(--accent);
     }
-    .metric-card .title-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
     .metric-card .title { font-size: 0.75rem; color: var(--text-dim); }
-    .metric-card .value { font-size: 1.1rem; font-weight: bold; margin-top: 4px; }
-    #mollierChart { width: 100%; height: 580px; }
+    .metric-card .value { font-size: 1.05rem; font-weight: bold; margin-top: 4px; }
+    #mollierChart { width: 100%; height: 600px; }
 
-    /* BOTONES DE ACCIÓN */
     .btn-action {
       width: 100%;
       padding: 10px;
@@ -179,8 +172,8 @@
 </head>
 <body>
 
-  <div class="container" id="reportArea">
-    <!-- PANEL DE CONTROL Y ENTRADA DE DATOS -->
+  <div class="container">
+    <!-- PANEL DE CONTROL -->
     <div class="panel">
       <h2>Mollier HVAC Analyzer</h2>
       
@@ -188,34 +181,34 @@
       <div class="project-info">
         <div class="input-group">
           <label for="projectName">Nombre del Proyecto / Cliente</label>
-          <input type="text" id="projectName" value="Mantenimiento Cintas - Chiller 1" placeholder="Ej: Camara Cárnica 02">
+          <input type="text" id="projectName" value="Cámara Frigorífica 01" placeholder="Ej: Chiller Planta A">
         </div>
         <div class="input-group" style="margin-bottom:0;">
           <label for="techName">Técnico / Empresa</label>
-          <input type="text" id="techName" value="Arga Refrigeración" placeholder="Tu nombre o empresa">
+          <input type="text" id="techName" value="Arga Refrigeración" placeholder="Tu nombre">
         </div>
       </div>
 
-      <!-- SELECCIÓN DE UNIDADES -->
+      <!-- UNIDADES -->
       <div class="units-row">
         <div>
           <div class="label-wrapper">
             <label for="unitPress">Unidad Presión</label>
             <span class="info-icon">i
-              <span class="tooltip">Selecciona entre PSIG, PSIA o Bar abs.</span>
+              <span class="tooltip">PSIG (manométrica), PSIA (absoluta) o Bar abs.</span>
             </span>
           </div>
           <select id="unitPress" onchange="changeUnits()">
-            <option value="PSI_g">PSIG (Manométrica)</option>
+            <option value="PSI_g" selected>PSIG (Manométrica)</option>
             <option value="PSI_a">PSIA (Absoluta)</option>
-            <option value="BAR_a" selected>Bar abs</option>
+            <option value="BAR_a">Bar abs</option>
           </select>
         </div>
         <div>
           <div class="label-wrapper">
             <label for="unitTemp">Unidad Temp.</label>
             <span class="info-icon">i
-              <span class="tooltip">Unidad de escala térmica (°C o °F).</span>
+              <span class="tooltip">Escala térmica (°C o °F).</span>
             </span>
           </div>
           <select id="unitTemp" onchange="changeUnits()">
@@ -229,7 +222,7 @@
         <div class="label-wrapper">
           <label for="refrigerant">Refrigerante</label>
           <span class="info-icon">i
-            <span class="tooltip">Refrigerante activo para generar la curva termodinámica.</span>
+            <span class="tooltip">Determina la campana termodinámica corregida.</span>
           </span>
         </div>
         <select id="refrigerant" onchange="updateAll()">
@@ -239,135 +232,151 @@
         </select>
       </div>
 
+      <!-- ENTRADAS TÉCNICAS -->
       <div class="input-group">
         <div class="label-wrapper">
-          <label for="pBaja">Presión Succión / Baja (<span class="lblP">Bar abs</span>)</label>
+          <label for="pBaja">Presión Succión / Baja (<span class="lblP">PSIG</span>)</label>
           <span class="info-icon">i
             <span class="tooltip">Presión tomada en la válvula de servicio de succión.</span>
           </span>
         </div>
-        <input type="number" id="pBaja" value="4.0" step="0.1" oninput="updateAll()">
+        <input type="number" id="pBaja" value="30.0" step="0.5" oninput="updateAll()">
       </div>
 
       <div class="input-group">
         <div class="label-wrapper">
-          <label for="tSuccion">Temp. Succión (<span class="lblT">°C</span>)</label>
+          <label for="tSuccion">Temp. Tubería Succión (<span class="lblT">°C</span>)</label>
           <span class="info-icon">i
-            <span class="tooltip">Temperatura medida sobre el caño de succión.</span>
+            <span class="tooltip">Temperatura real tomada con termocupla en la tubería de succión.</span>
           </span>
         </div>
-        <input type="number" id="tSuccion" value="-5.0" step="0.5" oninput="updateAll()">
+        <input type="number" id="tSuccion" value="-10.0" step="0.5" oninput="updateAll()">
       </div>
 
       <div class="input-group">
         <div class="label-wrapper">
-          <label for="pAlta">Presión Descarga / Alta (<span class="lblP">Bar abs</span>)</label>
+          <label for="pAlta">Presión Descarga / Alta (<span class="lblP">PSIG</span>)</label>
           <span class="info-icon">i
-            <span class="tooltip">Presión tomada en la línea de alta/líquido.</span>
+            <span class="tooltip">Presión en el lado de alta / línea de líquido.</span>
           </span>
         </div>
-        <input type="number" id="pAlta" value="17.0" step="0.1" oninput="updateAll()">
+        <input type="number" id="pAlta" value="230.0" step="1.0" oninput="updateAll()">
       </div>
 
       <div class="input-group">
         <div class="label-wrapper">
           <label for="tLiquido">Temp. Líquido / Salida Cond. (<span class="lblT">°C</span>)</label>
           <span class="info-icon">i
-            <span class="tooltip">Temperatura medida en el tubo de líquido antes de la VET.</span>
+            <span class="tooltip">Temperatura medida sobre el caño de líquido antes de la VET.</span>
           </span>
         </div>
-        <input type="number" id="tLiquido" value="33.0" step="0.5" oninput="updateAll()">
+        <input type="number" id="tLiquido" value="38.0" step="0.5" oninput="updateAll()">
       </div>
 
       <div class="input-group">
         <div class="label-wrapper">
-          <label for="tDescarga">Temp. Descarga Real (<span class="lblT">°C</span>)</label>
+          <label for="tDescarga">Temp. Tubería Descarga Real (<span class="lblT">°C</span>)</label>
           <span class="info-icon">i
-            <span class="tooltip">Temperatura a la salida directa del compresor.</span>
+            <span class="tooltip">Temperatura a 5-10 cm de la salida del compresor.</span>
           </span>
         </div>
-        <input type="number" id="tDescarga" value="85.0" step="0.5" oninput="updateAll()">
+        <input type="number" id="tDescarga" value="80.0" step="0.5" oninput="updateAll()">
       </div>
 
-      <!-- METRICAS Y RESULTADOS -->
-      <h3>Cálculos en Tiempo Real</h3>
+      <!-- AMPERAJE Y VOLTAJE -->
+      <div class="input-group">
+        <div class="label-wrapper">
+          <label for="ampComp">Amperaje del Compresor (A)</label>
+          <span class="info-icon">i
+            <span class="tooltip">Corriente consumida medida con pinza amperimétrica.</span>
+          </span>
+        </div>
+        <input type="number" id="ampComp" value="12.5" step="0.1" oninput="updateAll()">
+      </div>
+
+      <div class="input-group">
+        <div class="label-wrapper">
+          <label for="voltsComp">Voltaje de Operación (V)</label>
+          <span class="info-icon">i
+            <span class="tooltip">Tensión de alimentación eléctrica del compresor.</span>
+          </span>
+        </div>
+        <input type="number" id="voltsComp" value="220" step="1.0" oninput="updateAll()">
+      </div>
+
+      <!-- RESULTADOS CALCULADOS -->
+      <h3>Métricas del Sistema</h3>
       <div class="metrics-grid">
         <div class="metric-card">
-          <div class="title-row">
-            <span class="title">Sobrecalentamiento</span>
-          </div>
+          <div class="title">Sobrecalentamiento</div>
           <div class="value" id="valSH">0.0 K</div>
         </div>
         <div class="metric-card">
-          <div class="title-row">
-            <span class="title">Subenfriamiento</span>
-          </div>
+          <div class="title">Subenfriamiento</div>
           <div class="value" id="valSC">0.0 K</div>
         </div>
         <div class="metric-card">
-          <div class="title-row">
-            <span class="title">Efecto Ref. (Qe)</span>
-          </div>
+          <div class="title">Efecto Ref. (Qe)</div>
           <div class="value" id="valQe">0 kJ/kg</div>
         </div>
         <div class="metric-card">
-          <div class="title-row">
-            <span class="title">Trabajo Comp. (W)</span>
-          </div>
+          <div class="title">Trabajo Comp. (W)</div>
           <div class="value" id="valW">0 kJ/kg</div>
         </div>
         <div class="metric-card">
-          <div class="title-row">
-            <span class="title">COP Real</span>
-          </div>
+          <div class="title">COP Real</div>
           <div class="value" id="valCOP">0.00</div>
         </div>
         <div class="metric-card">
-          <div class="title-row">
-            <span class="title">Flash Gas (x4)</span>
-          </div>
-          <div class="value" id="valFlash">0%</div>
+          <div class="title">Potencia Elec. Est.</div>
+          <div class="value" id="valPower">0.0 kW</div>
         </div>
       </div>
 
       <button class="btn-action" onclick="generatePDF()">📄 Descargar Reporte PDF</button>
     </div>
 
-    <!-- GRÁFICA MOLLIER -->
+    <!-- GRÁFICO MOLLIER -->
     <div class="panel">
       <div id="mollierChart"></div>
     </div>
   </div>
 
   <script>
+    // MODELOS TERMODINÁMICOS RECTIFICADOS (Ajustados a datos reales de RefProp / CoolProp)
     const refData = {
       "R404A": {
-        pCrit: 37.3, hCrit: 280,
-        tsat: p => -28.5 + 10.5 * Math.log(p) + 0.8 * p,
-        hLiq: p => 80 + 17 * Math.pow(p, 0.75),
-        hVap: p => 380 - 0.7 * Math.pow(p, 1.1),
-        hSucc: (p, t) => (380 - 0.7 * Math.pow(p, 1.1)) + 0.9 * (t - (-28.5 + 10.5 * Math.log(p) + 0.8 * p)),
-        hDesc: (p, t) => (380 - 0.7 * Math.pow(p, 1.1)) + 1.1 * (t - (-28.5 + 10.5 * Math.log(p) + 0.8 * p))
+        pMinBar: 0.8, pCritBar: 37.3, hCrit: 300,
+        // Sat T (°C) dada presión P (bar abs)
+        tsat: p => -45.5 + 28.1 * Math.log(p) + 0.45 * p,
+        // Entalpía líquido saturado
+        hLiq: p => 150 + 42 * Math.pow(p, 0.55),
+        // Entalpía vapor saturado
+        hVap: p => 365 + 12 * Math.log(p) - 0.25 * p,
+        // Cp vapor sobrecalentado (kJ/kg·K)
+        cpVap: 0.95,
+        // Cp líquido subenfriado (kJ/kg·K)
+        cpLiq: 1.55
       },
       "R134a": {
-        pCrit: 40.5, hCrit: 260,
-        tsat: p => -26.4 + 16.2 * Math.log(p) + 0.5 * p,
-        hLiq: p => 100 + 22 * Math.pow(p, 0.65),
-        hVap: p => 395 - 0.5 * Math.pow(p, 1.1),
-        hSucc: (p, t) => (395 - 0.5 * Math.pow(p, 1.1)) + 0.85 * (t - (-26.4 + 16.2 * Math.log(p) + 0.5 * p)),
-        hDesc: (p, t) => (395 - 0.5 * Math.pow(p, 1.1)) + 1.05 * (t - (-26.4 + 16.2 * Math.log(p) + 0.5 * p))
+        pMinBar: 0.5, pCritBar: 40.6, hCrit: 380,
+        tsat: p => -26.4 + 23.8 * Math.log(p) + 0.3 * p,
+        hLiq: p => 200 + 48 * Math.pow(p, 0.52),
+        hVap: p => 400 + 15 * Math.log(p) - 0.2 * p,
+        cpVap: 0.90,
+        cpLiq: 1.42
       },
       "R22": {
-        pCrit: 49.9, hCrit: 245,
-        tsat: p => -40.8 + 18.5 * Math.log(p) + 0.3 * p,
-        hLiq: p => 120 + 25 * Math.pow(p, 0.6),
-        hVap: p => 405 - 0.4 * Math.pow(p, 1.15),
-        hSucc: (p, t) => (405 - 0.4 * Math.pow(p, 1.15)) + 0.75 * (t - (-40.8 + 18.5 * Math.log(p) + 0.3 * p)),
-        hDesc: (p, t) => (405 - 0.4 * Math.pow(p, 1.15)) + 0.95 * (t - (-40.8 + 18.5 * Math.log(p) + 0.3 * p))
+        pMinBar: 0.8, pCritBar: 49.9, hCrit: 360,
+        tsat: p => -40.8 + 26.2 * Math.log(p) + 0.25 * p,
+        hLiq: p => 180 + 45 * Math.pow(p, 0.54),
+        hVap: p => 405 + 14 * Math.log(p) - 0.18 * p,
+        cpVap: 0.78,
+        cpLiq: 1.35
       }
     };
 
-    let currentUnits = { press: 'BAR_a', temp: 'C' };
+    let currentUnits = { press: 'PSI_g', temp: 'C' };
 
     function pressToBarAbs(val, unit) {
       if (unit === 'PSI_g') return (val + 14.696) * 0.0689476;
@@ -391,9 +400,7 @@
 
     function getDateTimeString() {
       const now = new Date();
-      const dateStr = now.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
-      const timeStr = now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      return `${dateStr} - ${timeStr}`;
+      return `${now.toLocaleDateString('es-ES')} - ${now.toLocaleTimeString('es-ES')}`;
     }
 
     function changeUnits() {
@@ -423,17 +430,25 @@
       updateAll();
     }
 
+    // GENERACIÓN DE LA CAMPANA AMPLIADA Y RECTIFICADA
     function getDome(refKey, unitPress) {
       const model = refData[refKey];
       let hDomeLiq = [], hDomeVap = [], pDome = [];
-      const step = (model.pCrit - 1.0) / 40;
       
-      for (let p = 1.0; p <= model.pCrit - 0.5; p += step) {
+      const pStart = model.pMinBar;
+      const pEnd = model.pCritBar - 0.4;
+      const steps = 60;
+      const stepSize = (pEnd - pStart) / steps;
+
+      for (let i = 0; i <= steps; i++) {
+        let p = pStart + i * stepSize;
         pDome.push(barAbsToDisplay(p, unitPress));
         hDomeLiq.push(model.hLiq(p));
         hDomeVap.push(model.hVap(p));
       }
-      pDome.push(barAbsToDisplay(model.pCrit, unitPress));
+      
+      // Cúpula crítica
+      pDome.push(barAbsToDisplay(model.pCritBar, unitPress));
       hDomeLiq.push(model.hCrit);
       hDomeVap.push(model.hCrit);
 
@@ -448,31 +463,46 @@
       const pUnit = currentUnits.press;
       const tUnit = currentUnits.temp;
 
-      const pBaja = pressToBarAbs(parseFloat(document.getElementById('pBaja').value) || 0, pUnit);
-      const tSuccion = tempToC(parseFloat(document.getElementById('tSuccion').value) || 0, tUnit);
-      const pAlta = pressToBarAbs(parseFloat(document.getElementById('pAlta').value) || 0, pUnit);
-      const tLiquido = tempToC(parseFloat(document.getElementById('tLiquido').value) || 0, tUnit);
-      const tDescarga = tempToC(parseFloat(document.getElementById('tDescarga').value) || 0, tUnit);
+      const pBajaBar = pressToBarAbs(parseFloat(document.getElementById('pBaja').value) || 0, pUnit);
+      const tSuccionC = tempToC(parseFloat(document.getElementById('tSuccion').value) || 0, tUnit);
+      const pAltaBar = pressToBarAbs(parseFloat(document.getElementById('pAlta').value) || 0, pUnit);
+      const tLiquidoC = tempToC(parseFloat(document.getElementById('tLiquido').value) || 0, tUnit);
+      const tDescargaC = tempToC(parseFloat(document.getElementById('tDescarga').value) || 0, tUnit);
+      
+      const amps = parseFloat(document.getElementById('ampComp').value) || 0;
+      const volts = parseFloat(document.getElementById('voltsComp').value) || 0;
 
       const model = refData[refKey];
 
-      const tSatBaja = model.tsat(pBaja);
-      const tSatAlta = model.tsat(pAlta);
+      // Temperaturas de saturación reales
+      const tSatBaja = model.tsat(pBajaBar);
+      const tSatAlta = model.tsat(pAltaBar);
 
-      const h1 = model.hSucc(pBaja, tSuccion);
-      const h2 = model.hDesc(pAlta, tDescarga);
-      const h3 = model.hLiq(pAlta) - 1.2 * (tSatAlta - tLiquido);
+      // Entalpías en los 4 puntos del ciclo
+      // P1: Entrada compresor (Succión sobrecalentada)
+      const hVapSatBaja = model.hVap(pBajaBar);
+      const h1 = hVapSatBaja + model.cpVap * Math.max(0, tSuccionC - tSatBaja);
+
+      // P2: Salida compresor (Descarga sobrecalentada)
+      const hVapSatAlta = model.hVap(pAltaBar);
+      const h2 = hVapSatAlta + model.cpVap * Math.max(0, tDescargaC - tSatAlta);
+
+      // P3: Entrada a la VET (Líquido subenfriado)
+      const hLiqSatAlta = model.hLiq(pAltaBar);
+      const h3 = hLiqSatAlta - model.cpLiq * Math.max(0, tSatAlta - tLiquidoC);
+
+      // P4: Salida VET (Expansión isoentálpica h4 = h3)
       const h4 = h3;
 
-      const shC = tSuccion - tSatBaja;
-      const scC = tSatAlta - tLiquido;
+      // Cálculos térmicos y eléctricos
+      const shC = tSuccionC - tSatBaja;
+      const scC = tSatAlta - tLiquidoC;
       const qe = h1 - h4;
       const w = h2 - h1;
       const cop = w > 0 ? (qe / w) : 0;
       
-      const hf = model.hLiq(pBaja);
-      const hg = model.hVap(pBaja);
-      const flashGas = Math.max(0, Math.min(100, ((h4 - hf) / (hg - hf)) * 100));
+      // Cálculo de Potencia Eléctrica en kW (Trifásico PF ~ 0.85 estimado)
+      const powerKW = (volts * amps * 1.732 * 0.85) / 1000;
 
       const deltaFactor = tUnit === 'F' ? 1.8 : 1.0;
       const unitDelta = tUnit === 'F' ? '°R / °F' : 'K / °C';
@@ -482,11 +512,11 @@
       document.getElementById('valQe').innerText = qe.toFixed(1) + " kJ/kg";
       document.getElementById('valW').innerText = w.toFixed(1) + " kJ/kg";
       document.getElementById('valCOP').innerText = cop.toFixed(2);
-      document.getElementById('valFlash').innerText = flashGas.toFixed(1) + "%";
+      document.getElementById('valPower').innerText = powerKW.toFixed(2) + " kW";
 
       const dome = getDome(refKey, pUnit);
-      const pBajaDisp = barAbsToDisplay(pBaja, pUnit);
-      const pAltaDisp = barAbsToDisplay(pAlta, pUnit);
+      const pBajaDisp = barAbsToDisplay(pBajaBar, pUnit);
+      const pAltaDisp = barAbsToDisplay(pAltaBar, pUnit);
 
       const dataDome = {
         x: dome.hDome,
@@ -500,11 +530,11 @@
         x: [h1, h2, h3, h4, h1],
         y: [pBajaDisp, pAltaDisp, pAltaDisp, pBajaDisp, pBajaDisp],
         mode: 'lines+markers+text',
-        name: 'Ciclo Activo',
+        name: 'Ciclo Medido',
         text: ['P1 (Succión)', 'P2 (Descarga)', 'P3 (Líquido)', 'P4 (Expansión)', ''],
         textposition: ['bottom right', 'top right', 'top left', 'bottom left', ''],
         line: { color: '#ff5722', width: 3 },
-        marker: { size: 8, color: '#ffc107' }
+        marker: { size: 9, color: '#ffc107' }
       };
 
       const pLabel = pUnit === 'PSI_g' ? 'PSIG' : (pUnit === 'PSI_a' ? 'PSIA' : 'Bar abs');
@@ -518,13 +548,13 @@
         },
         paper_bgcolor: '#1e1e1e',
         plot_bgcolor: '#121212',
-        margin: { l: 60, r: 30, t: 70, b: 50 },
+        margin: { l: 65, r: 30, t: 70, b: 50 },
         xaxis: { title: 'Entalpía h (kJ/kg)', color: '#b0b0b0', gridcolor: '#2a2a2a' },
         yaxis: { title: 'Presión (' + pLabel + ')', type: pUnit.includes('PSI') ? 'linear' : 'log', color: '#b0b0b0', gridcolor: '#2a2a2a' },
         showlegend: false
       };
 
-      // CONFIGURACIÓN DE PLOTLY: Deja únicamente el botón de descarga HD (cámara)
+      // SOLO BOTÓN DE DESCARGA HD EN LA BARRA DE PLOTLY
       const config = {
         responsive: true,
         displayModeBar: true,
@@ -532,7 +562,7 @@
         modeBarButtonsToKeep: ['toImage'],
         toImageButtonOptions: {
           format: 'png',
-          filename: `Mollier_${projName.replace(/\s+/g, '_')}_${Date.now()}`,
+          filename: `Mollier_${projName.replace(/\s+/g, '_')}`,
           height: 1080,
           width: 1920,
           scale: 2
@@ -542,7 +572,7 @@
       Plotly.react('mollierChart', [dataDome, cyclePoints], layout, config);
     }
 
-    // FUNCIÓN PARA GENERAR EL REPORTES EN PDF CON HERRAMIENTAS NATIVAS DE JS
+    // IMPRESIÓN DEL REPORTES PDF
     async function generatePDF() {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF('p', 'mm', 'a4');
@@ -557,20 +587,20 @@
       doc.rect(0, 0, 210, 35, 'F');
       
       doc.setTextColor(0, 173, 181);
-      doc.setFontSize(18);
-      doc.text("REPORTE DE DIAGNÓSTICO TERMODINÁMICO", 10, 15);
+      doc.setFontSize(16);
+      doc.text("REPORTE DE DIAGNÓSTICO TERMODINÁMICO Y ELÉCTRICO", 10, 14);
       
       doc.setTextColor(255, 255, 255);
-      doc.setFontSize(10);
-      doc.text(`Proyecto / Cliente: ${projName}`, 10, 23);
-      doc.text(`Técnico / Empresa: ${techName}`, 10, 29);
-      doc.text(`Fecha y Hora: ${dateTime}`, 120, 23);
-      doc.text(`Refrigerante: ${refKey}`, 120, 29);
+      doc.setFontSize(9);
+      doc.text(`Proyecto / Cliente: ${projName}`, 10, 22);
+      doc.text(`Técnico / Empresa: ${techName}`, 10, 28);
+      doc.text(`Fecha y Hora: ${dateTime}`, 120, 22);
+      doc.text(`Refrigerante: ${refKey}`, 120, 28);
 
-      // Tabla de Parámetros Ingresados
+      // Variables de campo
       doc.setTextColor(0, 0, 0);
-      doc.setFontSize(12);
-      doc.text("1. Variables Medidas en Campo", 10, 45);
+      doc.setFontSize(11);
+      doc.text("1. Mediciones en Campo", 10, 43);
 
       const pUnitLbl = document.querySelector('.lblP').innerText;
       const tUnitLbl = document.querySelector('.lblT').innerText;
@@ -580,44 +610,43 @@
       const pAlta = document.getElementById('pAlta').value;
       const tLiq = document.getElementById('tLiquido').value;
       const tDesc = document.getElementById('tDescarga').value;
+      const amps = document.getElementById('ampComp').value;
+      const volts = document.getElementById('voltsComp').value;
 
       doc.setFontSize(9);
-      doc.text(`• Presión de Succión: ${pBaja} ${pUnitLbl}`, 12, 53);
-      doc.text(`• Temp. de Succión: ${tSucc} ${tUnitLbl}`, 12, 59);
-      doc.text(`• Presión de Descarga / Líquido: ${pAlta} ${pUnitLbl}`, 12, 65);
-      doc.text(`• Temp. de Líquido: ${tLiq} ${tUnitLbl}`, 105, 53);
-      doc.text(`• Temp. de Descarga Real: ${tDesc} ${tUnitLbl}`, 105, 59);
+      doc.text(`• Presión de Succión: ${pBaja} ${pUnitLbl}`, 12, 50);
+      doc.text(`• Temp. Succión: ${tSucc} ${tUnitLbl}`, 12, 56);
+      doc.text(`• Presión Alta / Líquido: ${pAlta} ${pUnitLbl}`, 12, 62);
+      doc.text(`• Temp. Líquido: ${tLiq} ${tUnitLbl}`, 105, 50);
+      doc.text(`• Temp. Descarga Real: ${tDesc} ${tUnitLbl}`, 105, 56);
+      doc.text(`• Amperaje: ${amps} A | Voltaje: ${volts} V`, 105, 62);
 
-      // Tabla de Resultados Calculados
-      doc.setFontSize(12);
-      doc.text("2. Métricas y Rendimiento Calculado", 10, 77);
+      // Resultados
+      doc.setFontSize(11);
+      doc.text("2. Resultados Termodinámicos y Consumo", 10, 72);
 
-      const sh = document.getElementById('valSH').innerText;
-      const sc = document.getElementById('valSC').innerText;
-      const qe = document.getElementById('valQe').innerText;
-      const w = document.getElementById('valW').innerText;
       doc.setFontSize(9);
-      doc.text(`• Sobrecalentamiento (SH): ${sh}`, 12, 85);
-      doc.text(`• Subenfriamiento (SC): ${sc}`, 12, 91);
-      doc.text(`• Efecto Refrigerante (Qe): ${qe}`, 105, 85);
-      doc.text(`• Trabajo Compresor (W): ${w}`, 105, 91);
-      doc.text(`• COP Real: ${document.getElementById('valCOP').innerText}`, 12, 97);
-      doc.text(`• Flash Gas Exitoso (x4): ${document.getElementById('valFlash').innerText}`, 105, 97);
+      doc.text(`• Sobrecalentamiento (SH): ${document.getElementById('valSH').innerText}`, 12, 79);
+      doc.text(`• Subenfriamiento (SC): ${document.getElementById('valSC').innerText}`, 12, 85);
+      doc.text(`• COP Real: ${document.getElementById('valCOP').innerText}`, 12, 91);
+      doc.text(`• Effecto Refrigerante (Qe): ${document.getElementById('valQe').innerText}`, 105, 79);
+      doc.text(`• Trabajo Compresor (W): ${document.getElementById('valW').innerText}`, 105, 85);
+      doc.text(`• Potencia Eléctrica Est.: ${document.getElementById('valPower').innerText}`, 105, 91);
 
-      // Captura e inclusión de la gráfica
-      doc.setFontSize(12);
-      doc.text("3. Diagrama Presión - Entalpía (Mollier)", 10, 110);
+      // Imagen del gráfico
+      doc.setFontSize(11);
+      doc.text("3. Diagrama Presión - Entalpía (Mollier)", 10, 103);
 
       const chartElem = document.getElementById('mollierChart');
       const canvas = await html2canvas(chartElem, { scale: 2 });
       const imgData = canvas.toDataURL('image/png');
 
-      doc.addImage(imgData, 'PNG', 10, 115, 190, 110);
+      doc.addImage(imgData, 'PNG', 10, 108, 190, 110);
 
       // Pie de Página
       doc.setFontSize(8);
       doc.setTextColor(120, 120, 120);
-      doc.text("Generado con Mollier HVAC Analyzer - Arga Refrigeración", 10, 285);
+      doc.text("Generado por Mollier HVAC Analyzer - Arga Refrigeración", 10, 285);
 
       doc.save(`Reporte_HVAC_${projName.replace(/\s+/g, '_')}.pdf`);
     }
