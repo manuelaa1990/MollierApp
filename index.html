@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Monitor Temperatura HVAC V2.1</title>
+<title>Monitor HVAC V2.2</title>
 
 <link rel="icon" type="image/svg+xml" href="icono.svg">
 <link rel="apple-touch-icon" href="icono.png">
@@ -13,20 +13,33 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
+
+/* =========================================================
+   VARIABLES
+   ========================================================= */
+
 :root{
   --bg:#071018;
   --panel:#0d1923;
   --panel2:#101f2b;
-  --border:#203342;
-  --text:#e9f1f7;
+  --input:#08151e;
+  --border:#203542;
+
+  --text:#eaf2f7;
   --muted:#91a5b5;
+
   --accent:#39b7ff;
-  --accent2:#64d7a2;
+  --good:#58d69d;
   --warn:#ffc857;
   --danger:#ff6577;
-  --good:#57d69b;
-  --shadow:0 8px 24px rgba(0,0,0,.22);
+
+  --radius:10px;
 }
+
+
+/* =========================================================
+   BASE
+   ========================================================= */
 
 *{
   box-sizing:border-box;
@@ -39,101 +52,155 @@ html{
 body{
   margin:0;
   background:
-    radial-gradient(circle at top,#102230 0,#071018 42%,#050b10 100%);
+    radial-gradient(
+      circle at top,
+      #122432 0%,
+      #071018 42%,
+      #050b10 100%
+    );
   color:var(--text);
-  font-family:Arial,Helvetica,sans-serif;
+  font-family:
+    Arial,
+    Helvetica,
+    sans-serif;
   font-size:14px;
 }
 
-.app{
-  width:min(1200px,100%);
-  margin:auto;
-  padding:8px;
+button,
+input,
+select{
+  font-family:inherit;
 }
+
+.app{
+  width:min(1180px,100%);
+  margin:auto;
+  padding:7px;
+}
+
+
+/* =========================================================
+   CABECERA
+   ========================================================= */
 
 .topbar{
   display:flex;
   align-items:center;
   justify-content:space-between;
+
   gap:8px;
-  margin-bottom:8px;
+
   padding:8px 10px;
-  background:rgba(13,25,35,.94);
+
+  margin-bottom:7px;
+
+  background:rgba(13,25,35,.97);
+
   border:1px solid var(--border);
-  border-radius:12px;
-  box-shadow:var(--shadow);
+  border-radius:var(--radius);
+
+  box-shadow:
+    0 7px 22px rgba(0,0,0,.24);
+
   position:sticky;
   top:4px;
-  z-index:20;
-  backdrop-filter:blur(10px);
-}
+  z-index:30;
 
-.brand{
-  min-width:0;
+  backdrop-filter:blur(10px);
 }
 
 .brand h1{
   margin:0;
+
   font-size:17px;
-  line-height:1.15;
+  line-height:1.1;
+}
+
+.brand h1 span{
+  color:var(--accent);
 }
 
 .brand small{
+  display:block;
+  margin-top:2px;
+
   color:var(--muted);
-  font-size:10px;
+  font-size:9px;
 }
 
 .status{
   display:flex;
   align-items:center;
+
   gap:5px;
+
   white-space:nowrap;
+
   color:var(--muted);
-  font-size:10px;
+  font-size:9px;
 }
 
-.dot{
+.status-dot{
   width:7px;
   height:7px;
+
   border-radius:50%;
+
   background:var(--good);
-  box-shadow:0 0 8px var(--good);
+
+  box-shadow:
+    0 0 7px var(--good);
 }
 
+
+/* =========================================================
+   CARDS
+   ========================================================= */
+
 .card{
-  background:rgba(13,25,35,.96);
-  border:1px solid var(--border);
-  border-radius:12px;
+  margin-bottom:7px;
+
   padding:9px;
-  margin-bottom:8px;
-  box-shadow:var(--shadow);
+
+  background:rgba(13,25,35,.97);
+
+  border:1px solid var(--border);
+
+  border-radius:var(--radius);
+
+  box-shadow:
+    0 6px 18px rgba(0,0,0,.20);
 }
 
 .card-title{
   display:flex;
   align-items:center;
   justify-content:space-between;
+
   gap:8px;
+
   margin-bottom:7px;
 }
 
 .card-title h2{
   margin:0;
+
   font-size:13px;
 }
 
 .card-title span{
   color:var(--muted);
-  font-size:10px;
+  font-size:9px;
 }
 
-details{
-  border:0;
-}
+
+/* =========================================================
+   DETAILS
+   ========================================================= */
 
 details summary{
-  list-style:none;
   cursor:pointer;
+  list-style:none;
 }
 
 details summary::-webkit-details-marker{
@@ -144,13 +211,15 @@ details summary::-webkit-details-marker{
   display:flex;
   align-items:center;
   justify-content:space-between;
+
   gap:8px;
-  padding:2px 0;
 }
 
 .compact-summary::after{
   content:"＋";
+
   color:var(--accent);
+
   font-size:16px;
 }
 
@@ -158,18 +227,30 @@ details[open] .compact-summary::after{
   content:"−";
 }
 
+
+/* =========================================================
+   GRID
+   ========================================================= */
+
 .grid{
   display:grid;
   gap:6px;
 }
 
 .grid-id{
-  grid-template-columns:repeat(4,1fr);
+  grid-template-columns:
+    repeat(4,minmax(0,1fr));
 }
 
 .grid-measure{
-  grid-template-columns:repeat(4,1fr);
+  grid-template-columns:
+    repeat(4,minmax(0,1fr));
 }
+
+
+/* =========================================================
+   CAMPOS
+   ========================================================= */
 
 .field{
   min-width:0;
@@ -177,83 +258,133 @@ details[open] .compact-summary::after{
 
 .field label{
   display:block;
+
   margin-bottom:3px;
+
   color:var(--muted);
+
   font-size:10px;
 }
 
 input,
 select{
   width:100%;
-  min-height:34px;
+
+  min-height:35px;
+
   padding:6px 7px;
-  border-radius:7px;
+
   border:1px solid #294050;
-  background:#09151e;
+
+  border-radius:7px;
+
+  background:var(--input);
+
   color:var(--text);
+
   outline:none;
+
   font-size:13px;
 }
 
 input:focus,
 select:focus{
   border-color:var(--accent);
-  box-shadow:0 0 0 2px rgba(57,183,255,.10);
+
+  box-shadow:
+    0 0 0 2px rgba(57,183,255,.10);
 }
 
 .input-unit{
   display:grid;
+
   grid-template-columns:1fr auto;
+
   gap:4px;
 }
 
 .unit{
   display:flex;
+
   align-items:center;
   justify-content:center;
-  min-width:38px;
+
+  min-width:40px;
+
   padding:0 5px;
+
   border:1px solid #294050;
+
   border-radius:7px;
+
   background:#0a1720;
+
   color:var(--muted);
+
   font-size:10px;
 }
 
+
+/* =========================================================
+   GRUPOS DE MEDICIONES
+   ========================================================= */
+
 .measure-group{
-  border-top:1px solid #172936;
   margin-top:7px;
+
   padding-top:7px;
+
+  border-top:1px solid #172936;
 }
 
 .measure-group:first-child{
-  border-top:0;
   margin-top:0;
   padding-top:0;
+
+  border-top:0;
 }
 
 .group-title{
   margin:0 0 6px;
-  color:#b9cad7;
+
+  color:#c0ced8;
+
   font-size:11px;
+
   font-weight:bold;
 }
 
+
+/* =========================================================
+   BOTONES
+   ========================================================= */
+
 .actions{
   display:flex;
+
   gap:6px;
+
   flex-wrap:wrap;
 }
 
 button{
+  min-height:32px;
+
+  padding:6px 11px;
+
   border:1px solid #2b4a5e;
-  background:#102432;
-  color:var(--text);
+
   border-radius:7px;
-  padding:7px 10px;
+
+  background:#102432;
+
+  color:var(--text);
+
   cursor:pointer;
-  font-weight:bold;
+
   font-size:11px;
+
+  font-weight:bold;
 }
 
 button:hover{
@@ -265,49 +396,68 @@ button.primary{
   border-color:#267da9;
 }
 
-button.warning{
-  background:#3a3017;
-  border-color:#725c21;
+button.export{
+  background:#123b2d;
+  border-color:#287653;
 }
 
-button.danger{
-  background:#3c1820;
-  border-color:#71313e;
+button.graph{
+  background:#102f40;
+  border-color:#276781;
 }
+
+
+/* =========================================================
+   KPI
+   ========================================================= */
 
 .kpis{
   display:grid;
-  grid-template-columns:repeat(4,1fr);
+
+  grid-template-columns:
+    repeat(4,minmax(0,1fr));
+
   gap:6px;
 }
 
 .kpi{
   min-width:0;
+
   padding:7px;
-  background:#0a1720;
+
+  background:#09161f;
+
   border:1px solid #203644;
+
   border-radius:8px;
 }
 
 .kpi-label{
   color:var(--muted);
+
   font-size:9px;
+
   line-height:1.15;
 }
 
 .kpi-value{
   margin-top:3px;
+
   font-size:15px;
+
   font-weight:bold;
+
   white-space:nowrap;
+
   overflow:hidden;
+
   text-overflow:ellipsis;
 }
 
-.kpi-sub{
-  color:#738999;
+.kpi-unit{
+  color:#708594;
+
   font-size:9px;
-  margin-top:2px;
 }
 
 .good{
@@ -322,56 +472,57 @@ button.danger{
   color:var(--danger);
 }
 
+
+/* =========================================================
+   DIAGNOSTICO
+   ========================================================= */
+
 .diagnostic{
-  border-left:4px solid var(--accent);
-  background:#0a1720;
   padding:8px 9px;
+
+  background:#09161f;
+
+  border-left:4px solid var(--accent);
+
   border-radius:7px;
 }
 
 .diagnostic-title{
-  font-size:13px;
-  font-weight:bold;
   margin-bottom:4px;
+
+  font-size:13px;
+
+  font-weight:bold;
 }
 
 .diagnostic-text{
-  color:#c5d2dc;
-  line-height:1.35;
+  color:#c3d0d9;
+
   font-size:11px;
+
+  line-height:1.4;
 }
 
 .diag-list{
   margin:6px 0 0;
-  padding-left:17px;
+
+  padding-left:18px;
 }
 
 .diag-list li{
   margin-bottom:3px;
-  color:#b7c8d3;
-  font-size:11px;
+
+  color:#b7c7d1;
+
+  font-size:10px;
+
+  line-height:1.35;
 }
 
-.severity{
-  display:inline-block;
-  margin-left:5px;
-  padding:2px 5px;
-  border-radius:5px;
-  font-size:9px;
-  font-weight:bold;
-}
 
-.severity.good{
-  background:#123628;
-}
-
-.severity.warn{
-  background:#3a3017;
-}
-
-.severity.bad{
-  background:#3c1820;
-}
+/* =========================================================
+   GRAFICA
+   ========================================================= */
 
 .chart-card{
   padding:7px;
@@ -379,96 +530,354 @@ button.danger{
 
 .chart-header{
   display:flex;
-  justify-content:space-between;
+
   align-items:center;
+  justify-content:space-between;
+
   gap:6px;
+
   margin-bottom:5px;
 }
 
 .chart-header h2{
   margin:0;
+
   font-size:13px;
 }
 
 .chart-tools{
   display:flex;
+
   gap:5px;
 }
 
 .chart-tools button{
+  min-height:29px;
+
   padding:5px 8px;
+
   font-size:10px;
 }
 
 #phChart{
   width:100%;
+
+  /*
+    TAMAÑO FIJO DEL AREA DE GRAFICA.
+    No se modifica por zoom.
+  */
+
   height:680px;
-  border-radius:8px;
+
+  border-radius:7px;
+
   overflow:hidden;
+
+  background:#09151e;
 }
 
-.details-engineering{
-  margin-top:6px;
+.chart-help{
+  margin-top:5px;
+
+  color:#687d8b;
+
+  font-size:9px;
+
+  text-align:center;
 }
 
-.details-engineering summary{
-  color:var(--accent);
-  font-size:11px;
-  font-weight:bold;
-  padding:5px 0;
-}
+
+/* =========================================================
+   DATOS INGENIERIA
+   ========================================================= */
 
 .tech-table{
   width:100%;
+
   border-collapse:collapse;
+
   font-size:10px;
 }
 
 .tech-table td{
-  border-bottom:1px solid #1b2c38;
   padding:4px;
+
+  border-bottom:1px solid #1a2b36;
 }
 
 .tech-table td:first-child{
-  color:var(--muted);
   width:55%;
+
+  color:var(--muted);
 }
+
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
 
 .footer{
+  padding:7px 0 15px;
+
+  color:#607582;
+
+  font-size:9px;
+
   text-align:center;
-  color:#627684;
-  font-size:9px;
-  padding:5px 0 15px;
 }
 
-.weather{
-  color:var(--muted);
+
+/* =========================================================
+   REPORT PDF
+   ========================================================= */
+
+#pdfReport{
+  display:none;
+}
+
+
+/*
+  Este es el documento que html2pdf convierte.
+  NO aparece en pantalla.
+*/
+
+.pdf-page{
+  width:190mm;
+
+  min-height:277mm;
+
+  padding:9mm;
+
+  background:#ffffff;
+
+  color:#17222b;
+
+  font-family:
+    Arial,
+    Helvetica,
+    sans-serif;
+}
+
+.pdf-header{
+  display:flex;
+
+  align-items:flex-start;
+  justify-content:space-between;
+
+  padding-bottom:6mm;
+
+  border-bottom:2px solid #1d566f;
+}
+
+.pdf-title{
+  font-size:20px;
+
+  font-weight:bold;
+
+  color:#173848;
+}
+
+.pdf-subtitle{
+  margin-top:2px;
+
+  color:#637580;
+
+  font-size:9px;
+}
+
+.pdf-meta{
+  text-align:right;
+
+  font-size:9px;
+
+  color:#596b75;
+}
+
+.pdf-section{
+  margin-top:5mm;
+}
+
+.pdf-section-title{
+  margin-bottom:2mm;
+
+  padding:2mm 2.5mm;
+
+  background:#edf4f7;
+
+  border-left:3px solid #1d718f;
+
+  color:#173848;
+
+  font-size:11px;
+
+  font-weight:bold;
+}
+
+.pdf-grid{
+  display:grid;
+
+  grid-template-columns:
+    repeat(3,1fr);
+
+  gap:2mm;
+}
+
+.pdf-item{
+  min-height:12mm;
+
+  padding:2mm;
+
+  border:1px solid #d8e0e4;
+
+  border-radius:2mm;
+
+  background:#fafcfd;
+}
+
+.pdf-label{
+  color:#687982;
+
+  font-size:7.5px;
+
+  text-transform:uppercase;
+}
+
+.pdf-value{
+  margin-top:1mm;
+
+  color:#1b2b34;
+
   font-size:10px;
+
+  font-weight:bold;
 }
 
-.note{
-  color:#718695;
-  font-size:9px;
-  line-height:1.3;
-  margin-top:5px;
+.pdf-table{
+  width:100%;
+
+  border-collapse:collapse;
+
+  font-size:8.5px;
 }
 
-.hidden{
-  display:none!important;
+.pdf-table th{
+  padding:2mm;
+
+  background:#e9f0f3;
+
+  border:1px solid #ccd8de;
+
+  color:#28424f;
+
+  text-align:left;
 }
 
-/* TABLET */
+.pdf-table td{
+  padding:1.8mm 2mm;
+
+  border:1px solid #d7e0e4;
+}
+
+.pdf-table td:last-child{
+  text-align:right;
+
+  font-weight:bold;
+}
+
+.pdf-diagnostic{
+  padding:3mm;
+
+  border:1px solid #d7e0e4;
+
+  border-left:4px solid #1d718f;
+
+  background:#fafcfd;
+
+  border-radius:2mm;
+}
+
+.pdf-diagnostic-title{
+  margin-bottom:2mm;
+
+  color:#173848;
+
+  font-size:11px;
+
+  font-weight:bold;
+}
+
+.pdf-diagnostic-text{
+  color:#455963;
+
+  font-size:8.5px;
+
+  line-height:1.45;
+}
+
+.pdf-list{
+  margin:2mm 0 0;
+
+  padding-left:5mm;
+}
+
+.pdf-list li{
+  margin-bottom:1mm;
+
+  color:#455963;
+
+  font-size:8.5px;
+}
+
+.pdf-note{
+  margin-top:4mm;
+
+  padding:2.5mm;
+
+  background:#f4f7f8;
+
+  border:1px solid #d9e1e4;
+
+  color:#63737c;
+
+  font-size:7.5px;
+
+  line-height:1.4;
+}
+
+.pdf-footer{
+  margin-top:7mm;
+
+  padding-top:3mm;
+
+  border-top:1px solid #d8e0e4;
+
+  color:#71818a;
+
+  font-size:7px;
+
+  text-align:center;
+}
+
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
 @media(max-width:900px){
+
   .grid-id{
-    grid-template-columns:repeat(2,1fr);
+    grid-template-columns:
+      repeat(2,minmax(0,1fr));
   }
 
   .grid-measure{
-    grid-template-columns:repeat(2,1fr);
+    grid-template-columns:
+      repeat(2,minmax(0,1fr));
   }
 
   .kpis{
-    grid-template-columns:repeat(3,1fr);
+    grid-template-columns:
+      repeat(3,minmax(0,1fr));
   }
 
   #phChart{
@@ -476,8 +885,13 @@ button.danger{
   }
 }
 
-/* TELEFONO */
+
+/* =========================================================
+   TELEFONO
+   ========================================================= */
+
 @media(max-width:600px){
+
   body{
     font-size:13px;
   }
@@ -488,7 +902,7 @@ button.danger{
 
   .topbar{
     padding:7px 8px;
-    border-radius:10px;
+
     margin-bottom:5px;
   }
 
@@ -497,16 +911,12 @@ button.danger{
   }
 
   .brand small{
-    font-size:9px;
+    font-size:8px;
   }
 
   .card{
     padding:7px;
-    margin-bottom:5px;
-    border-radius:9px;
-  }
 
-  .card-title{
     margin-bottom:5px;
   }
 
@@ -514,12 +924,10 @@ button.danger{
     gap:5px;
   }
 
-  .grid-id{
-    grid-template-columns:repeat(2,1fr);
-  }
-
+  .grid-id,
   .grid-measure{
-    grid-template-columns:repeat(2,1fr);
+    grid-template-columns:
+      repeat(2,minmax(0,1fr));
   }
 
   .field label{
@@ -528,23 +936,25 @@ button.danger{
 
   input,
   select{
-    min-height:32px;
+    min-height:35px;
+
     font-size:12px;
-    padding:5px 6px;
   }
 
   .unit{
-    min-width:34px;
+    min-width:35px;
+
     font-size:9px;
   }
 
   .group-title{
-    margin-bottom:5px;
     font-size:10px;
   }
 
   .kpis{
-    grid-template-columns:repeat(2,1fr);
+    grid-template-columns:
+      repeat(2,minmax(0,1fr));
+
     gap:5px;
   }
 
@@ -556,25 +966,20 @@ button.danger{
     font-size:14px;
   }
 
-  .diagnostic{
-    padding:7px 8px;
-  }
-
   .diagnostic-title{
     font-size:12px;
   }
 
-  .diagnostic-text,
-  .diag-list li{
+  .diagnostic-text{
     font-size:10px;
+  }
+
+  .diag-list li{
+    font-size:9.5px;
   }
 
   .chart-card{
     padding:5px;
-  }
-
-  .chart-header{
-    margin-bottom:3px;
   }
 
   .chart-header h2{
@@ -582,468 +987,1153 @@ button.danger{
   }
 
   #phChart{
-    height:690px;
+    height:680px;
   }
 
-  .note{
-    display:none;
+  .chart-help{
+    font-size:8px;
   }
 }
 
-/* TELEFONOS MUY PEQUEÑOS */
-@media(max-width:380px){
-  .grid-id,
-  .grid-measure{
-    grid-template-columns:1fr 1fr;
-  }
 
-  .kpis{
-    grid-template-columns:1fr 1fr;
-  }
+/* =========================================================
+   MOVIL PEQUEÑO
+   ========================================================= */
+
+@media(max-width:380px){
 
   #phChart{
-    height:640px;
+    height:630px;
   }
 }
 
-/* IMPRESION */
+
+/* =========================================================
+   PDF / PRINT
+   ========================================================= */
+
 @media print{
+
   body{
     background:white;
-    color:black;
   }
 
-  .topbar{
-    position:static;
-    box-shadow:none;
+  #pdfReport{
+    display:block;
   }
 
-  .card{
-    box-shadow:none;
-    break-inside:avoid;
-  }
-
-  button{
+  .app{
     display:none;
   }
-
-  #phChart{
-    height:550px;
-  }
 }
+
 </style>
 </head>
 
+
 <body>
 
-<div class="app" id="report">
 
-  <!-- TOP -->
+<!-- =======================================================
+     APLICACION
+     ======================================================= -->
+
+<div class="app" id="app">
+
+
+  <!-- CABECERA -->
+
   <div class="topbar">
+
     <div class="brand">
-      <h1>Monitor HVAC <span style="color:#39b7ff">V2.1</span></h1>
-      <small>Analizador de campo para técnicos</small>
+
+      <h1>
+        Monitor HVAC <span>V2.2</span>
+      </h1>
+
+      <small>
+        Analizador técnico de campo
+      </small>
+
     </div>
 
     <div class="status">
-      <span class="dot"></span>
-      <span id="systemStatus">Listo</span>
+
+      <span class="status-dot"></span>
+
+      <span id="systemStatus">
+        Listo
+      </span>
+
     </div>
+
   </div>
 
-  <!-- IDENTIFICACION -->
+
+  <!-- =====================================================
+       IDENTIFICACION
+       ===================================================== -->
+
   <div class="card">
+
     <details>
+
       <summary class="compact-summary">
+
         <div>
-          <div style="font-weight:bold;font-size:12px">Identificación del servicio</div>
-          <div style="font-size:9px;color:#718695">
-            Empresa · técnico · equipo
+
+          <div style="
+            font-size:12px;
+            font-weight:bold;
+          ">
+            Identificación del servicio
           </div>
+
+          <div style="
+            color:#718695;
+            font-size:9px;
+          ">
+            Datos administrativos y del equipo
+          </div>
+
         </div>
+
       </summary>
 
-      <div style="height:6px"></div>
+
+      <div style="height:7px"></div>
+
 
       <div class="grid grid-id">
 
-        <div class="field">
-          <label>Empresa</label>
-          <input id="empresa" type="text" placeholder="Empresa">
-        </div>
 
         <div class="field">
-          <label>ID fiscal</label>
-          <input id="fiscal" type="text" placeholder="ID / RIF / Tax ID">
+
+          <label>
+            Empresa
+          </label>
+
+          <input
+            id="empresa"
+            type="text"
+            placeholder="Empresa"
+          >
+
         </div>
 
-        <div class="field">
-          <label>Técnico</label>
-          <input id="tecnico" type="text" placeholder="Técnico">
-        </div>
 
         <div class="field">
-          <label>Marca</label>
-          <input id="marca" type="text" placeholder="Marca">
+
+          <label>
+            ID fiscal
+          </label>
+
+          <input
+            id="fiscal"
+            type="text"
+            placeholder="ID / RIF / Tax ID"
+          >
+
         </div>
 
-        <div class="field">
-          <label>Modelo</label>
-          <input id="modelo" type="text" placeholder="Modelo">
-        </div>
 
         <div class="field">
-          <label>Capacidad nominal</label>
+
+          <label>
+            Técnico
+          </label>
+
+          <input
+            id="tecnico"
+            type="text"
+            placeholder="Técnico"
+          >
+
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            Marca
+          </label>
+
+          <input
+            id="marca"
+            type="text"
+            placeholder="Marca"
+          >
+
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            Modelo
+          </label>
+
+          <input
+            id="modelo"
+            type="text"
+            placeholder="Modelo"
+          >
+
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            Capacidad nominal
+          </label>
+
           <div class="input-unit">
-            <input id="capacidad" type="number" step="0.1" placeholder="Ej. 3.5">
-            <select id="capUnidad" class="unit">
-              <option value="kW">kW</option>
-              <option value="BTU/h">BTU/h</option>
-              <option value="TR">TR</option>
+
+            <input
+              id="capacidad"
+              type="number"
+              step="0.1"
+              placeholder="Ej. 3.5"
+            >
+
+            <select id="capUnidad">
+
+              <option value="kW">
+                kW
+              </option>
+
+              <option value="BTU/h">
+                BTU/h
+              </option>
+
+              <option value="TR">
+                TR
+              </option>
+
             </select>
+
           </div>
+
         </div>
 
+
         <div class="field">
-          <label>Refrigerante</label>
+
+          <label>
+            Refrigerante
+          </label>
+
           <select id="refrigerante">
-            <option value="R410A">R410A</option>
-            <option value="R32">R32</option>
-            <option value="R134a">R134a</option>
-            <option value="R22">R22</option>
-            <option value="R407C">R407C</option>
-            <option value="R404A">R404A</option>
-            <option value="R507A">R507A</option>
-            <option value="R290">R290</option>
-            <option value="R600a">R600a</option>
+
+            <option value="R410A">
+              R410A
+            </option>
+
+            <option value="R32">
+              R32
+            </option>
+
+            <option value="R134a">
+              R134a
+            </option>
+
+            <option value="R22">
+              R22
+            </option>
+
+            <option value="R407C">
+              R407C
+            </option>
+
+            <option value="R404A">
+              R404A
+            </option>
+
+            <option value="R507A">
+              R507A
+            </option>
+
+            <option value="R290">
+              R290
+            </option>
+
+            <option value="R600a">
+              R600a
+            </option>
+
           </select>
+
         </div>
 
+
         <div class="field">
-          <label>Unidad presión</label>
+
+          <label>
+            Unidad presión
+          </label>
+
           <select id="presUnidad">
-            <option value="psi">psi</option>
-            <option value="bar">bar</option>
-            <option value="kPa">kPa</option>
+
+            <option value="psi">
+              psi
+            </option>
+
+            <option value="bar">
+              bar
+            </option>
+
+            <option value="kPa">
+              kPa
+            </option>
+
           </select>
+
         </div>
 
+
         <div class="field">
-          <label>Unidad temperatura</label>
+
+          <label>
+            Unidad temperatura
+          </label>
+
           <select id="tempUnidad">
-            <option value="F">°F</option>
-            <option value="C">°C</option>
+
+            <option value="F">
+              °F
+            </option>
+
+            <option value="C">
+              °C
+            </option>
+
           </select>
+
         </div>
 
+
       </div>
+
     </details>
+
   </div>
 
-  <!-- MEDICIONES -->
+
+  <!-- =====================================================
+       MEDICIONES
+       ===================================================== -->
+
   <div class="card">
+
 
     <div class="card-title">
-      <h2>Mediciones de campo</h2>
-      <span>Valores reales</span>
+
+      <h2>
+        Mediciones de campo
+      </h2>
+
+      <span>
+        Valores medidos
+      </span>
+
     </div>
+
+
+    <!-- PRESIONES -->
 
     <div class="measure-group">
 
-      <div class="group-title">Presiones</div>
+      <div class="group-title">
+        Presiones
+      </div>
+
 
       <div class="grid grid-measure">
 
-        <div class="field">
-          <label>Presión de succión</label>
-          <div class="input-unit">
-            <input id="succion" type="number" step="0.1" placeholder="0.0">
-            <span class="unit" id="presUnit1">psi</span>
-          </div>
-        </div>
 
         <div class="field">
-          <label>Presión descarga</label>
+
+          <label>
+            Presión de succión
+          </label>
+
           <div class="input-unit">
-            <input id="descarga" type="number" step="0.1" placeholder="0.0">
-            <span class="unit" id="presUnit2">psi</span>
+
+            <input
+              id="succion"
+              type="number"
+              step="0.1"
+              placeholder="0.0"
+            >
+
+            <span
+              class="unit"
+              id="presUnit1"
+            >
+              psi
+            </span>
+
           </div>
+
         </div>
+
+
+        <div class="field">
+
+          <label>
+            Presión de descarga
+          </label>
+
+          <div class="input-unit">
+
+            <input
+              id="descarga"
+              type="number"
+              step="0.1"
+              placeholder="0.0"
+            >
+
+            <span
+              class="unit"
+              id="presUnit2"
+            >
+              psi
+            </span>
+
+          </div>
+
+        </div>
+
 
       </div>
+
     </div>
+
+
+    <!-- TEMPERATURAS -->
 
     <div class="measure-group">
 
-      <div class="group-title">Temperaturas frigoríficas</div>
+      <div class="group-title">
+        Temperaturas frigoríficas
+      </div>
+
 
       <div class="grid grid-measure">
 
-        <div class="field">
-          <label>Salida evaporador</label>
-          <div class="input-unit">
-            <input id="evapOut" type="number" step="0.1" placeholder="0.0">
-            <span class="unit" id="tempUnit1">°F</span>
-          </div>
-        </div>
 
         <div class="field">
-          <label>Temperatura succión</label>
+
+          <label>
+            Salida evaporador
+          </label>
+
           <div class="input-unit">
-            <input id="suctTemp" type="number" step="0.1" placeholder="0.0">
-            <span class="unit" id="tempUnit2">°F</span>
+
+            <input
+              id="evapOut"
+              type="number"
+              step="0.1"
+              placeholder="0.0"
+            >
+
+            <span
+              class="unit"
+              id="tempUnit1"
+            >
+              °F
+            </span>
+
           </div>
+
         </div>
 
-        <div class="field">
-          <label>Línea líquida</label>
-          <div class="input-unit">
-            <input id="liqTemp" type="number" step="0.1" placeholder="0.0">
-            <span class="unit" id="tempUnit3">°F</span>
-          </div>
-        </div>
 
         <div class="field">
-          <label>Descarga compresor</label>
+
+          <label>
+            Temperatura succión
+          </label>
+
           <div class="input-unit">
-            <input id="descTemp" type="number" step="0.1" placeholder="0.0">
-            <span class="unit" id="tempUnit4">°F</span>
+
+            <input
+              id="suctTemp"
+              type="number"
+              step="0.1"
+              placeholder="0.0"
+            >
+
+            <span
+              class="unit"
+              id="tempUnit2"
+            >
+              °F
+            </span>
+
           </div>
+
         </div>
+
+
+        <div class="field">
+
+          <label>
+            Línea líquida
+          </label>
+
+          <div class="input-unit">
+
+            <input
+              id="liqTemp"
+              type="number"
+              step="0.1"
+              placeholder="0.0"
+            >
+
+            <span
+              class="unit"
+              id="tempUnit3"
+            >
+              °F
+            </span>
+
+          </div>
+
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            Descarga compresor
+          </label>
+
+          <div class="input-unit">
+
+            <input
+              id="descTemp"
+              type="number"
+              step="0.1"
+              placeholder="0.0"
+            >
+
+            <span
+              class="unit"
+              id="tempUnit4"
+            >
+              °F
+            </span>
+
+          </div>
+
+        </div>
+
 
       </div>
+
     </div>
+
+
+    <!-- ELECTRICO -->
 
     <div class="measure-group">
 
-      <div class="group-title">Eléctrico</div>
+      <div class="group-title">
+        Eléctrico
+      </div>
+
 
       <div class="grid grid-measure">
 
-        <div class="field">
-          <label>Voltaje</label>
-          <div class="input-unit">
-            <input id="voltaje" type="number" step="0.1" placeholder="0">
-            <span class="unit">V</span>
-          </div>
-        </div>
 
         <div class="field">
-          <label>Amperaje</label>
+
+          <label>
+            Voltaje
+          </label>
+
           <div class="input-unit">
-            <input id="amperaje" type="number" step="0.1" placeholder="0">
-            <span class="unit">A</span>
+
+            <input
+              id="voltaje"
+              type="number"
+              step="0.1"
+              placeholder="0"
+            >
+
+            <span class="unit">
+              V
+            </span>
+
           </div>
+
         </div>
+
+
+        <div class="field">
+
+          <label>
+            Amperaje
+          </label>
+
+          <div class="input-unit">
+
+            <input
+              id="amperaje"
+              type="number"
+              step="0.1"
+              placeholder="0"
+            >
+
+            <span class="unit">
+              A
+            </span>
+
+          </div>
+
+        </div>
+
 
       </div>
+
     </div>
+
 
   </div>
 
-  <!-- BOTONES -->
+
+  <!-- =====================================================
+       ACCIONES
+       ===================================================== -->
+
   <div class="card">
+
     <div class="actions">
-      <button class="primary" onclick="calculate()">⚙ Analizar</button>
-      <button onclick="saveData()">💾 Guardar</button>
-      <button onclick="loadData()">↻ Cargar</button>
-      <button onclick="generatePDF()">PDF</button>
-      <button class="danger" onclick="clearData()">Limpiar</button>
+
+      <button
+        class="primary"
+        onclick="calculate()"
+      >
+        ⚙ Analizar
+      </button>
+
+
+      <button
+        class="export"
+        onclick="generatePDF()"
+      >
+        ↓ Descargar PDF
+      </button>
+
     </div>
+
   </div>
 
-  <!-- KPI -->
+
+  <!-- =====================================================
+       INDICADORES
+       ===================================================== -->
+
   <div class="card">
 
+
     <div class="card-title">
-      <h2>Indicadores principales</h2>
-      <span id="kpiStatus">Esperando mediciones</span>
+
+      <h2>
+        Indicadores principales
+      </h2>
+
+      <span id="kpiStatus">
+        Esperando análisis
+      </span>
+
     </div>
+
 
     <div class="kpis">
 
-      <div class="kpi">
-        <div class="kpi-label">SH útil evaporador</div>
-        <div class="kpi-value" id="kpiSHUseful">—</div>
-        <div class="kpi-sub">K</div>
-      </div>
 
       <div class="kpi">
-        <div class="kpi-label">SH total succión</div>
-        <div class="kpi-value" id="kpiSHTotal">—</div>
-        <div class="kpi-sub">K</div>
+
+        <div class="kpi-label">
+          SH útil evaporador
+        </div>
+
+        <div
+          class="kpi-value"
+          id="kpiSHUseful"
+        >
+          —
+        </div>
+
+        <div class="kpi-unit">
+          K
+        </div>
+
       </div>
 
-      <div class="kpi">
-        <div class="kpi-label">Subenfriamiento</div>
-        <div class="kpi-value" id="kpiSC">—</div>
-        <div class="kpi-sub">K</div>
-      </div>
 
       <div class="kpi">
-        <div class="kpi-label">SH línea succión</div>
-        <div class="kpi-value" id="kpiSHLine">—</div>
-        <div class="kpi-sub">K</div>
+
+        <div class="kpi-label">
+          SH total succión
+        </div>
+
+        <div
+          class="kpi-value"
+          id="kpiSHTotal"
+        >
+          —
+        </div>
+
+        <div class="kpi-unit">
+          K
+        </div>
+
       </div>
 
-      <div class="kpi">
-        <div class="kpi-label">Potencia eléctrica</div>
-        <div class="kpi-value" id="kpiPower">—</div>
-        <div class="kpi-sub">kW aprox.</div>
-      </div>
 
       <div class="kpi">
-        <div class="kpi-label">Calor evaporador q</div>
-        <div class="kpi-value" id="kpiQ">—</div>
-        <div class="kpi-sub">kJ/kg aprox.</div>
+
+        <div class="kpi-label">
+          Subenfriamiento
+        </div>
+
+        <div
+          class="kpi-value"
+          id="kpiSC"
+        >
+          —
+        </div>
+
+        <div class="kpi-unit">
+          K
+        </div>
+
       </div>
 
-      <div class="kpi">
-        <div class="kpi-label">Trabajo compresor</div>
-        <div class="kpi-value" id="kpiWork">—</div>
-        <div class="kpi-sub">kJ/kg aprox.</div>
-      </div>
 
       <div class="kpi">
-        <div class="kpi-label">COP estimado</div>
-        <div class="kpi-value" id="kpiCOP">—</div>
-        <div class="kpi-sub">ciclo</div>
+
+        <div class="kpi-label">
+          SH línea succión
+        </div>
+
+        <div
+          class="kpi-value"
+          id="kpiSHLine"
+        >
+          —
+        </div>
+
+        <div class="kpi-unit">
+          K
+        </div>
+
       </div>
 
-      <div class="kpi">
-        <div class="kpi-label">Relación presión</div>
-        <div class="kpi-value" id="kpiPR">—</div>
-        <div class="kpi-sub">Pcond/Pevap</div>
-      </div>
 
       <div class="kpi">
-        <div class="kpi-label">Approach condensador</div>
-        <div class="kpi-value" id="kpiApproach">—</div>
-        <div class="kpi-sub">K</div>
+
+        <div class="kpi-label">
+          Potencia eléctrica
+        </div>
+
+        <div
+          class="kpi-value"
+          id="kpiPower"
+        >
+          —
+        </div>
+
+        <div class="kpi-unit">
+          kW aprox.
+        </div>
+
       </div>
 
-      <div class="kpi">
-        <div class="kpi-label">Temp. descarga</div>
-        <div class="kpi-value" id="kpiDescTemp">—</div>
-        <div class="kpi-sub">°C</div>
-      </div>
 
       <div class="kpi">
-        <div class="kpi-label">SH descarga</div>
-        <div class="kpi-value" id="kpiDescSH">—</div>
-        <div class="kpi-sub">K</div>
+
+        <div class="kpi-label">
+          Calor evaporador
+        </div>
+
+        <div
+          class="kpi-value"
+          id="kpiQ"
+        >
+          —
+        </div>
+
+        <div class="kpi-unit">
+          kJ/kg
+        </div>
+
       </div>
+
+
+      <div class="kpi">
+
+        <div class="kpi-label">
+          Trabajo compresor
+        </div>
+
+        <div
+          class="kpi-value"
+          id="kpiWork"
+        >
+          —
+        </div>
+
+        <div class="kpi-unit">
+          kJ/kg
+        </div>
+
+      </div>
+
+
+      <div class="kpi">
+
+        <div class="kpi-label">
+          COP estimado
+        </div>
+
+        <div
+          class="kpi-value"
+          id="kpiCOP"
+        >
+          —
+        </div>
+
+        <div class="kpi-unit">
+          ciclo
+        </div>
+
+      </div>
+
+
+      <div class="kpi">
+
+        <div class="kpi-label">
+          Relación de presión
+        </div>
+
+        <div
+          class="kpi-value"
+          id="kpiPR"
+        >
+          —
+        </div>
+
+        <div class="kpi-unit">
+          Pcond/Pevap
+        </div>
+
+      </div>
+
+
+      <div class="kpi">
+
+        <div class="kpi-label">
+          Approach condensador
+        </div>
+
+        <div
+          class="kpi-value"
+          id="kpiApproach"
+        >
+          —
+        </div>
+
+        <div class="kpi-unit">
+          K
+        </div>
+
+      </div>
+
+
+      <div class="kpi">
+
+        <div class="kpi-label">
+          Temperatura descarga
+        </div>
+
+        <div
+          class="kpi-value"
+          id="kpiDescTemp"
+        >
+          —
+        </div>
+
+        <div class="kpi-unit">
+          °C
+        </div>
+
+      </div>
+
+
+      <div class="kpi">
+
+        <div class="kpi-label">
+          SH descarga
+        </div>
+
+        <div
+          class="kpi-value"
+          id="kpiDescSH"
+        >
+          —
+        </div>
+
+        <div class="kpi-unit">
+          K
+        </div>
+
+      </div>
+
 
     </div>
+
   </div>
 
-  <!-- DIAGNOSTICO -->
+
+  <!-- =====================================================
+       DIAGNOSTICO
+       ===================================================== -->
+
   <div class="card">
 
     <div class="card-title">
-      <h2>Diagnóstico orientativo</h2>
-      <span>Patrones de operación</span>
+
+      <h2>
+        Diagnóstico orientativo
+      </h2>
+
+      <span>
+        Patrones de operación
+      </span>
+
     </div>
 
-    <div class="diagnostic">
 
-      <div class="diagnostic-title" id="diagnosticTitle">
+    <div
+      class="diagnostic"
+      id="diagnosticBox"
+    >
+
+      <div
+        class="diagnostic-title"
+        id="diagnosticTitle"
+      >
         Introduzca las mediciones
       </div>
 
-      <div class="diagnostic-text" id="diagnosticText">
-        La aplicación correlacionará presiones y temperaturas para identificar
-        patrones compatibles con carga, alimentación del evaporador,
-        restricciones, condensación y esfuerzo del compresor.
+
+      <div
+        class="diagnostic-text"
+        id="diagnosticText"
+      >
+        La aplicación correlacionará las mediciones de campo
+        para identificar patrones compatibles con las condiciones
+        de operación del sistema.
       </div>
 
-      <ul class="diag-list" id="diagnosticList"></ul>
+
+      <ul
+        class="diag-list"
+        id="diagnosticList"
+      ></ul>
+
 
     </div>
 
   </div>
 
-  <!-- MOLLier -->
+
+  <!-- =====================================================
+       MOLLIER
+       ===================================================== -->
+
   <div class="card chart-card">
+
 
     <div class="chart-header">
 
-      <h2>Diagrama Mollier P-h</h2>
+      <h2>
+        Diagrama Mollier P-h
+      </h2>
+
 
       <div class="chart-tools">
-        <button onclick="toggleZoom()">↔ Zona activa</button>
-        <button onclick="resetChart()">Reset</button>
+
+        <button
+          class="graph"
+          onclick="downloadGraph()"
+        >
+          ↓ PNG HD
+        </button>
+
+
+        <button
+          onclick="resetChart()"
+        >
+          Reset
+        </button>
+
       </div>
 
     </div>
 
+
     <div id="phChart"></div>
 
-    <div class="note">
-      Diagrama orientativo calculado con la base interna del refrigerante seleccionado.
-      Para diagnóstico final deben contrastarse las condiciones reales del fabricante.
+
+    <div class="chart-help">
+      Arrastre para ampliar una zona · doble clic para restablecer ·
+      rueda del mouse sin zoom automático
     </div>
+
 
   </div>
 
-  <!-- DATOS INGENIERIA -->
+
+  <!-- =====================================================
+       DATOS DE INGENIERIA
+       ===================================================== -->
+
   <div class="card">
 
-    <details class="details-engineering">
+    <details>
 
-      <summary>Ver datos de ingeniería</summary>
+      <summary
+        style="
+          color:#39b7ff;
+          font-size:11px;
+          font-weight:bold;
+        "
+      >
+        Ver datos de ingeniería
+      </summary>
+
+
+      <div style="height:7px"></div>
+
 
       <table class="tech-table">
 
-        <tr>
-          <td>Refrigerante</td>
-          <td id="dRef">—</td>
-        </tr>
 
         <tr>
-          <td>Presión evaporación absoluta</td>
-          <td id="dPEvap">—</td>
+          <td>
+            Refrigerante
+          </td>
+
+          <td id="dRef">
+            —
+          </td>
         </tr>
 
-        <tr>
-          <td>Presión condensación absoluta</td>
-          <td id="dPCond">—</td>
-        </tr>
 
         <tr>
-          <td>Temperatura saturación evaporación</td>
-          <td id="dTEvap">—</td>
+          <td>
+            Presión evaporación absoluta
+          </td>
+
+          <td id="dPEvap">
+            —
+          </td>
         </tr>
 
-        <tr>
-          <td>Temperatura saturación condensación</td>
-          <td id="dTCond">—</td>
-        </tr>
 
         <tr>
-          <td>Entalpía h1</td>
-          <td id="dh1">—</td>
+          <td>
+            Presión condensación absoluta
+          </td>
+
+          <td id="dPCond">
+            —
+          </td>
         </tr>
 
-        <tr>
-          <td>Entalpía h2</td>
-          <td id="dh2">—</td>
-        </tr>
 
         <tr>
-          <td>Entalpía h3</td>
-          <td id="dh3">—</td>
+          <td>
+            Temperatura evaporación
+          </td>
+
+          <td id="dTEvap">
+            —
+          </td>
         </tr>
 
-        <tr>
-          <td>Entalpía h4</td>
-          <td id="dh4">—</td>
-        </tr>
 
         <tr>
-          <td>Glide refrigerante</td>
-          <td id="dGlide">—</td>
+          <td>
+            Temperatura condensación
+          </td>
+
+          <td id="dTCond">
+            —
+          </td>
         </tr>
+
+
+        <tr>
+          <td>
+            Entalpía h1
+          </td>
+
+          <td id="dh1">
+            —
+          </td>
+        </tr>
+
+
+        <tr>
+          <td>
+            Entalpía h2
+          </td>
+
+          <td id="dh2">
+            —
+          </td>
+        </tr>
+
+
+        <tr>
+          <td>
+            Entalpía h3
+          </td>
+
+          <td id="dh3">
+            —
+          </td>
+        </tr>
+
+
+        <tr>
+          <td>
+            Entalpía h4
+          </td>
+
+          <td id="dh4">
+            —
+          </td>
+        </tr>
+
+
+        <tr>
+          <td>
+            Glide
+          </td>
+
+          <td id="dGlide">
+            —
+          </td>
+        </tr>
+
 
       </table>
 
@@ -1051,406 +2141,898 @@ button.danger{
 
   </div>
 
+
   <div class="footer">
-    Monitor HVAC V2.1 · Herramienta de apoyo para mediciones de campo
+
+    Monitor HVAC V2.2 · Herramienta de apoyo para técnicos
+
+  </div>
+
+
+</div>
+
+
+
+<!-- =======================================================
+     REPORTE PDF
+     =======================================================
+
+     IMPORTANTE:
+     Este bloque NO se muestra en la aplicación.
+
+     html2pdf convierte exclusivamente este contenido.
+
+     No contiene la gráfica.
+     ======================================================= -->
+
+<div id="pdfReport">
+
+
+  <div class="pdf-page">
+
+
+    <!-- HEADER -->
+
+    <div class="pdf-header">
+
+
+      <div>
+
+        <div class="pdf-title">
+          REPORTE TÉCNICO HVAC
+        </div>
+
+        <div class="pdf-subtitle">
+          Análisis de condiciones de operación
+        </div>
+
+      </div>
+
+
+      <div class="pdf-meta">
+
+        <div>
+          Monitor HVAC V2.2
+        </div>
+
+        <div id="pdfDate">
+          —
+        </div>
+
+      </div>
+
+
+    </div>
+
+
+    <!-- =================================================
+         ADMINISTRATIVO
+         ================================================= -->
+
+    <div class="pdf-section">
+
+
+      <div class="pdf-section-title">
+        DATOS ADMINISTRATIVOS
+      </div>
+
+
+      <div class="pdf-grid">
+
+
+        <div class="pdf-item">
+
+          <div class="pdf-label">
+            Empresa
+          </div>
+
+          <div
+            class="pdf-value"
+            id="pdfEmpresa"
+          >
+            —
+          </div>
+
+        </div>
+
+
+        <div class="pdf-item">
+
+          <div class="pdf-label">
+            ID fiscal
+          </div>
+
+          <div
+            class="pdf-value"
+            id="pdfFiscal"
+          >
+            —
+          </div>
+
+        </div>
+
+
+        <div class="pdf-item">
+
+          <div class="pdf-label">
+            Técnico
+          </div>
+
+          <div
+            class="pdf-value"
+            id="pdfTecnico"
+          >
+            —
+          </div>
+
+        </div>
+
+
+      </div>
+
+    </div>
+
+
+    <!-- =================================================
+         EQUIPO
+         ================================================= -->
+
+    <div class="pdf-section">
+
+
+      <div class="pdf-section-title">
+        DATOS DEL EQUIPO
+      </div>
+
+
+      <div class="pdf-grid">
+
+
+        <div class="pdf-item">
+
+          <div class="pdf-label">
+            Marca
+          </div>
+
+          <div
+            class="pdf-value"
+            id="pdfMarca"
+          >
+            —
+          </div>
+
+        </div>
+
+
+        <div class="pdf-item">
+
+          <div class="pdf-label">
+            Modelo
+          </div>
+
+          <div
+            class="pdf-value"
+            id="pdfModelo"
+          >
+            —
+          </div>
+
+        </div>
+
+
+        <div class="pdf-item">
+
+          <div class="pdf-label">
+            Refrigerante
+          </div>
+
+          <div
+            class="pdf-value"
+            id="pdfRef"
+          >
+            —
+          </div>
+
+        </div>
+
+
+        <div class="pdf-item">
+
+          <div class="pdf-label">
+            Capacidad nominal
+          </div>
+
+          <div
+            class="pdf-value"
+            id="pdfCapacidad"
+          >
+            —
+          </div>
+
+        </div>
+
+
+        <div class="pdf-item">
+
+          <div class="pdf-label">
+            Unidad de presión
+          </div>
+
+          <div
+            class="pdf-value"
+            id="pdfPresUnit"
+          >
+            —
+          </div>
+
+        </div>
+
+
+        <div class="pdf-item">
+
+          <div class="pdf-label">
+            Unidad de temperatura
+          </div>
+
+          <div
+            class="pdf-value"
+            id="pdfTempUnit"
+          >
+            —
+          </div>
+
+        </div>
+
+
+      </div>
+
+    </div>
+
+
+    <!-- =================================================
+         MEDICIONES
+         ================================================= -->
+
+    <div class="pdf-section">
+
+
+      <div class="pdf-section-title">
+        MEDICIONES DE CAMPO
+      </div>
+
+
+      <table class="pdf-table">
+
+
+        <thead>
+
+          <tr>
+
+            <th>
+              Parámetro
+            </th>
+
+            <th>
+              Valor
+            </th>
+
+            <th>
+              Parámetro
+            </th>
+
+            <th>
+              Valor
+            </th>
+
+          </tr>
+
+        </thead>
+
+
+        <tbody>
+
+
+          <tr>
+
+            <td>
+              Presión de succión
+            </td>
+
+            <td id="pdfSuccion">
+              —
+            </td>
+
+            <td>
+              Presión de descarga
+            </td>
+
+            <td id="pdfDescarga">
+              —
+            </td>
+
+          </tr>
+
+
+          <tr>
+
+            <td>
+              Salida evaporador
+            </td>
+
+            <td id="pdfEvapOut">
+              —
+            </td>
+
+            <td>
+              Temperatura succión
+            </td>
+
+            <td id="pdfSuctTemp">
+              —
+            </td>
+
+          </tr>
+
+
+          <tr>
+
+            <td>
+              Temperatura línea líquida
+            </td>
+
+            <td id="pdfLiqTemp">
+              —
+            </td>
+
+            <td>
+              Temperatura descarga
+            </td>
+
+            <td id="pdfDescTemp">
+              —
+            </td>
+
+          </tr>
+
+
+          <tr>
+
+            <td>
+              Voltaje
+            </td>
+
+            <td id="pdfVoltaje">
+              —
+            </td>
+
+            <td>
+              Amperaje
+            </td>
+
+            <td id="pdfAmperaje">
+              —
+            </td>
+
+          </tr>
+
+
+        </tbody>
+
+
+      </table>
+
+    </div>
+
+
+    <!-- =================================================
+         INDICADORES
+         ================================================= -->
+
+    <div class="pdf-section">
+
+
+      <div class="pdf-section-title">
+        INDICADORES CALCULADOS
+      </div>
+
+
+      <table class="pdf-table">
+
+
+        <thead>
+
+          <tr>
+
+            <th>
+              Indicador
+            </th>
+
+            <th>
+              Resultado
+            </th>
+
+            <th>
+              Indicador
+            </th>
+
+            <th>
+              Resultado
+            </th>
+
+          </tr>
+
+        </thead>
+
+
+        <tbody>
+
+
+          <tr>
+
+            <td>
+              SH útil evaporador
+            </td>
+
+            <td id="pdfSHUseful">
+              —
+            </td>
+
+            <td>
+              SH total succión
+            </td>
+
+            <td id="pdfSHTotal">
+              —
+            </td>
+
+          </tr>
+
+
+          <tr>
+
+            <td>
+              Subenfriamiento
+            </td>
+
+            <td id="pdfSC">
+              —
+            </td>
+
+            <td>
+              SH línea succión
+            </td>
+
+            <td id="pdfSHLine">
+              —
+            </td>
+
+          </tr>
+
+
+          <tr>
+
+            <td>
+              Relación de presión
+            </td>
+
+            <td id="pdfPR">
+              —
+            </td>
+
+            <td>
+              Approach condensador
+            </td>
+
+            <td id="pdfApproach">
+              —
+            </td>
+
+          </tr>
+
+
+          <tr>
+
+            <td>
+              Temperatura descarga
+            </td>
+
+            <td id="pdfDescTempC">
+              —
+            </td>
+
+            <td>
+              SH descarga
+            </td>
+
+            <td id="pdfDescSH">
+              —
+            </td>
+
+          </tr>
+
+
+          <tr>
+
+            <td>
+              Potencia eléctrica
+            </td>
+
+            <td id="pdfPower">
+              —
+            </td>
+
+            <td>
+              COP estimado
+            </td>
+
+            <td id="pdfCOP">
+              —
+            </td>
+
+          </tr>
+
+
+        </tbody>
+
+
+      </table>
+
+    </div>
+
+
+    <!-- =================================================
+         DIAGNOSTICO
+         ================================================= -->
+
+    <div class="pdf-section">
+
+
+      <div class="pdf-section-title">
+        EVALUACIÓN Y SUGERENCIAS
+      </div>
+
+
+      <div class="pdf-diagnostic">
+
+
+        <div
+          class="pdf-diagnostic-title"
+          id="pdfDiagnosticTitle"
+        >
+          —
+        </div>
+
+
+        <div
+          class="pdf-diagnostic-text"
+          id="pdfDiagnosticText"
+        >
+          —
+        </div>
+
+
+        <ul
+          class="pdf-list"
+          id="pdfDiagnosticList"
+        ></ul>
+
+
+      </div>
+
+
+      <div class="pdf-note">
+
+        <strong>Nota técnica:</strong>
+        Los resultados constituyen una evaluación orientativa
+        basada en las mediciones suministradas y en el modelo
+        termodinámico incorporado en la herramienta.
+        Los patrones identificados no constituyen por sí solos
+        una confirmación de falla. Se recomienda contrastar
+        las condiciones observadas con las especificaciones
+        del fabricante y las condiciones reales de operación.
+
+      </div>
+
+
+    </div>
+
+
+    <!-- FOOTER -->
+
+    <div class="pdf-footer">
+
+      Reporte generado por Monitor HVAC V2.2 ·
+      Documento de apoyo técnico
+
+    </div>
+
+
   </div>
 
 </div>
 
+
+
 <script>
 
+
 /* =========================================================
-   BASE DE DATOS REFRIGERANTES
+   BASE DE REFRIGERANTES
    ========================================================= */
 
-const REF = {
+const REF={
 
-  R410A:{
-    type:"zeotropic",
-    glide:0.1,
-    tAlarm:107,
-    shRange:[5,12],
-    scRange:[4,10],
-    prMax:4.5,
 
-    dome:[
-      [1.5,-40, -40,190,395],
-      [2,-32,-32,205,398],
-      [3,-20,-20,220,400],
-      [4,-10,-10,235,402],
-      [5,-2,-2,248,404],
-      [6,5,5,260,406],
-      [7,12,12,272,408],
-      [8,18,18,284,410],
-      [10,28,28,300,412],
-      [12,36,36,315,414],
-      [15,47,47,335,416],
-      [18,56,56,352,418],
-      [22,65,65,370,420],
-      [26,73,73,387,421],
-      [30,80,80,402,422]
-    ]
-  },
+R410A:{
+  type:"zeotropic",
+  glide:.1,
+  tAlarm:107,
+  shRange:[5,12],
+  scRange:[4,10],
+  prMax:4.5,
 
-  R32:{
-    type:"pure",
-    glide:0,
-    tAlarm:107,
-    shRange:[5,12],
-    scRange:[4,10],
-    prMax:4.7,
+  dome:[
+    [1.5,-40,-40,190,395],
+    [2,-32,-32,205,398],
+    [3,-20,-20,220,400],
+    [4,-10,-10,235,402],
+    [5,-2,-2,248,404],
+    [6,5,5,260,406],
+    [7,12,12,272,408],
+    [8,18,18,284,410],
+    [10,28,28,300,412],
+    [12,36,36,315,414],
+    [15,47,47,335,416],
+    [18,56,56,352,418],
+    [22,65,65,370,420],
+    [26,73,73,387,421],
+    [30,80,80,402,422]
+  ]
+},
 
-    dome:[
-      [2,-43,-43,185,470],
-      [3,-34,-34,200,475],
-      [4,-27,-27,214,480],
-      [5,-20,-20,228,485],
-      [6,-14,-14,240,490],
-      [7,-8,-8,252,495],
-      [8,-3,-3,264,500],
-      [10,7,7,280,505],
-      [12,15,15,295,510],
-      [15,25,25,315,515],
-      [18,33,33,330,520],
-      [22,43,43,350,525],
-      [26,51,51,365,530],
-      [30,59,59,380,535]
-    ]
-  },
 
-  R134a:{
-    type:"pure",
-    glide:0,
-    tAlarm:107,
-    shRange:[5,12],
-    scRange:[4,10],
-    prMax:5,
+R32:{
+  type:"pure",
+  glide:0,
+  tAlarm:107,
+  shRange:[5,12],
+  scRange:[4,10],
+  prMax:4.7,
 
-    dome:[
-      [0.8,-30,-30,170,385],
-      [1,-26,-26,175,390],
-      [1.5,-15,-15,185,395],
-      [2,-8,-8,195,400],
-      [2.5,-2,-2,205,405],
-      [3,4,4,215,410],
-      [4,14,14,230,415],
-      [5,22,22,245,420],
-      [6,28,28,255,423],
-      [7,34,34,265,426],
-      [8,39,39,275,429],
-      [10,49,49,290,432],
-      [12,58,58,305,435],
-      [14,65,65,320,438]
-    ]
-  },
+  dome:[
+    [2,-43,-43,185,470],
+    [3,-34,-34,200,475],
+    [4,-27,-27,214,480],
+    [5,-20,-20,228,485],
+    [6,-14,-14,240,490],
+    [7,-8,-8,252,495],
+    [8,-3,-3,264,500],
+    [10,7,7,280,505],
+    [12,15,15,295,510],
+    [15,25,25,315,515],
+    [18,33,33,330,520],
+    [22,43,43,350,525],
+    [26,51,51,365,530],
+    [30,59,59,380,535]
+  ]
+},
 
-  R22:{
-    type:"pure",
-    glide:0,
-    tAlarm:107,
-    shRange:[5,12],
-    scRange:[4,10],
-    prMax:5,
 
-    dome:[
-      [1.5,-40,-40,175,395],
-      [2,-32,-32,185,400],
-      [3,-20,-20,200,405],
-      [4,-10,-10,215,410],
-      [5,-2,-2,230,415],
-      [6,5,5,242,420],
-      [7,12,12,255,425],
-      [8,18,18,267,430],
-      [10,28,28,285,435],
-      [12,36,36,300,440],
-      [15,47,47,320,445],
-      [18,56,56,340,450],
-      [22,65,65,360,455],
-      [26,73,73,380,460],
-      [30,80,80,395,465]
-    ]
-  },
+R134a:{
+  type:"pure",
+  glide:0,
+  tAlarm:107,
+  shRange:[5,12],
+  scRange:[4,10],
+  prMax:5,
 
-  R407C:{
-    type:"zeotropic",
-    glide:5,
-    tAlarm:107,
-    shRange:[5,12],
-    scRange:[4,10],
-    prMax:5,
+  dome:[
+    [.8,-30,-30,170,385],
+    [1,-26,-26,175,390],
+    [1.5,-15,-15,185,395],
+    [2,-8,-8,195,400],
+    [2.5,-2,-2,205,405],
+    [3,4,4,215,410],
+    [4,14,14,230,415],
+    [5,22,22,245,420],
+    [6,28,28,255,423],
+    [7,34,34,265,426],
+    [8,39,39,275,429],
+    [10,49,49,290,432],
+    [12,58,58,305,435],
+    [14,65,65,320,438]
+  ]
+},
 
-    dome:[
-      [2,-28,-23,180,395],
-      [3,-18,-13,195,400],
-      [4,-10,-5,210,405],
-      [5,-3,2,225,410],
-      [6,4,9,240,415],
-      [7,10,15,253,420],
-      [8,16,21,265,425],
-      [10,26,31,282,430],
-      [12,34,39,298,435],
-      [15,44,49,318,440],
-      [18,53,58,338,445],
-      [22,62,67,358,450],
-      [26,70,75,378,455],
-      [30,78,83,397,460]
-    ]
-  },
 
-  R404A:{
-    type:"zeotropic",
-    glide:0.8,
-    tAlarm:107,
-    shRange:[5,12],
-    scRange:[4,10],
-    prMax:5,
+R22:{
+  type:"pure",
+  glide:0,
+  tAlarm:107,
+  shRange:[5,12],
+  scRange:[4,10],
+  prMax:5,
 
-    dome:[
-      [1.5,-42,-41,180,385],
-      [2,-35,-34,190,390],
-      [3,-25,-24,205,395],
-      [4,-16,-15,220,400],
-      [5,-8,-7,235,405],
-      [6,-1,0,248,410],
-      [7,5,6,260,415],
-      [8,11,12,272,420],
-      [10,21,22,290,425],
-      [12,29,30,305,430],
-      [15,39,40,325,435],
-      [18,48,49,345,440],
-      [22,58,59,365,445],
-      [26,67,68,385,450],
-      [30,75,76,402,455]
-    ]
-  },
+  dome:[
+    [1.5,-40,-40,175,395],
+    [2,-32,-32,185,400],
+    [3,-20,-20,200,405],
+    [4,-10,-10,215,410],
+    [5,-2,-2,230,415],
+    [6,5,5,242,420],
+    [7,12,12,255,425],
+    [8,18,18,267,430],
+    [10,28,28,285,435],
+    [12,36,36,300,440],
+    [15,47,47,320,445],
+    [18,56,56,340,450],
+    [22,65,65,360,455],
+    [26,73,73,380,460],
+    [30,80,80,395,465]
+  ]
+},
 
-  R507A:{
-    type:"nearAzeotropic",
-    glide:0.1,
-    tAlarm:107,
-    shRange:[5,12],
-    scRange:[4,10],
-    prMax:5,
 
-    dome:[
-      [1.5,-44,-44,178,390],
-      [2,-37,-37,190,395],
-      [3,-26,-26,205,400],
-      [4,-17,-17,220,405],
-      [5,-9,-9,235,410],
-      [6,-2,-2,248,415],
-      [7,5,5,260,420],
-      [8,11,11,272,425],
-      [10,21,21,290,430],
-      [12,29,29,305,435],
-      [15,39,39,325,440],
-      [18,48,48,345,445],
-      [22,58,58,365,450],
-      [26,67,67,385,455],
-      [30,75,75,402,460]
-    ]
-  },
+R407C:{
+  type:"zeotropic",
+  glide:5,
+  tAlarm:107,
+  shRange:[5,12],
+  scRange:[4,10],
+  prMax:5,
 
-  R290:{
-    type:"pure",
-    glide:0,
-    tAlarm:107,
-    shRange:[5,12],
-    scRange:[3,8],
-    prMax:4.5,
+  dome:[
+    [2,-28,-23,180,395],
+    [3,-18,-13,195,400],
+    [4,-10,-5,210,405],
+    [5,-3,2,225,410],
+    [6,4,9,240,415],
+    [7,10,15,253,420],
+    [8,16,21,265,425],
+    [10,26,31,282,430],
+    [12,34,39,298,435],
+    [15,44,49,318,440],
+    [18,53,58,338,445],
+    [22,62,67,358,450],
+    [26,70,75,378,455],
+    [30,78,83,397,460]
+  ]
+},
 
-    dome:[
-      [1,-42,-42,150,450],
-      [1.5,-32,-32,160,455],
-      [2,-25,-25,170,460],
-      [3,-14,-14,185,465],
-      [4,-5,-5,200,470],
-      [5,3,3,215,475],
-      [6,9,9,228,480],
-      [8,21,21,250,485],
-      [10,30,30,270,490],
-      [12,38,38,288,495],
-      [15,48,48,308,500],
-      [18,56,56,328,505],
-      [22,65,65,348,510],
-      [26,73,73,368,515],
-      [30,80,80,388,520]
-    ]
-  },
 
-  R600a:{
-    type:"pure",
-    glide:0,
-    tAlarm:107,
-    shRange:[5,12],
-    scRange:[3,8],
-    prMax:5,
+R404A:{
+  type:"zeotropic",
+  glide:.8,
+  tAlarm:107,
+  shRange:[5,12],
+  scRange:[4,10],
+  prMax:5,
 
-    dome:[
-      [0.5,-35,-35,150,380],
-      [0.8,-25,-25,160,385],
-      [1,-20,-20,170,390],
-      [1.5,-9,-9,185,395],
-      [2,-1,-1,198,400],
-      [2.5,6,6,210,405],
-      [3,12,12,222,410],
-      [4,22,22,238,415],
-      [5,30,30,252,420],
-      [6,37,37,265,425],
-      [7,43,43,278,430],
-      [8,49,49,290,435],
-      [10,59,59,305,440],
-      [12,68,68,320,445]
-    ]
-  }
+  dome:[
+    [1.5,-42,-41,180,385],
+    [2,-35,-34,190,390],
+    [3,-25,-24,205,395],
+    [4,-16,-15,220,400],
+    [5,-8,-7,235,405],
+    [6,-1,0,248,410],
+    [7,5,6,260,415],
+    [8,11,12,272,420],
+    [10,21,22,290,425],
+    [12,29,30,305,430],
+    [15,39,40,325,435],
+    [18,48,49,345,440],
+    [22,58,59,365,445],
+    [26,67,68,385,450],
+    [30,75,76,402,455]
+  ]
+},
+
+
+R507A:{
+  type:"nearAzeotropic",
+  glide:.1,
+  tAlarm:107,
+  shRange:[5,12],
+  scRange:[4,10],
+  prMax:5,
+
+  dome:[
+    [1.5,-44,-44,178,390],
+    [2,-37,-37,190,395],
+    [3,-26,-26,205,400],
+    [4,-17,-17,220,405],
+    [5,-9,-9,235,410],
+    [6,-2,-2,248,415],
+    [7,5,5,260,420],
+    [8,11,11,272,425],
+    [10,21,21,290,430],
+    [12,29,29,305,435],
+    [15,39,39,325,440],
+    [18,48,48,345,445],
+    [22,58,58,365,450],
+    [26,67,67,385,455],
+    [30,75,75,402,460]
+  ]
+},
+
+
+R290:{
+  type:"pure",
+  glide:0,
+  tAlarm:107,
+  shRange:[5,12],
+  scRange:[3,8],
+  prMax:4.5,
+
+  dome:[
+    [1,-42,-42,150,450],
+    [1.5,-32,-32,160,455],
+    [2,-25,-25,170,460],
+    [3,-14,-14,185,465],
+    [4,-5,-5,200,470],
+    [5,3,3,215,475],
+    [6,9,9,228,480],
+    [8,21,21,250,485],
+    [10,30,30,270,490],
+    [12,38,38,288,495],
+    [15,48,48,308,500],
+    [18,56,56,328,505],
+    [22,65,65,348,510],
+    [26,73,73,368,515],
+    [30,80,80,388,520]
+  ]
+},
+
+
+R600a:{
+  type:"pure",
+  glide:0,
+  tAlarm:107,
+  shRange:[5,12],
+  scRange:[3,8],
+  prMax:5,
+
+  dome:[
+    [.5,-35,-35,150,380],
+    [.8,-25,-25,160,385],
+    [1,-20,-20,170,390],
+    [1.5,-9,-9,185,395],
+    [2,-1,-1,198,400],
+    [2.5,6,6,210,405],
+    [3,12,12,222,410],
+    [4,22,22,238,415],
+    [5,30,30,252,420],
+    [6,37,37,265,425],
+    [7,43,43,278,430],
+    [8,49,49,290,435],
+    [10,59,59,305,440],
+    [12,68,68,320,445]
+  ]
+}
 
 };
 
 
 /* =========================================================
-   VARIABLES
+   CONSTANTES
    ========================================================= */
 
-let lastResult = null;
-let zoomActive = false;
+const CP={
 
-
-/* =========================================================
-   UTILIDADES
-   ========================================================= */
-
-function n(v){
-  const x = parseFloat(v);
-  return Number.isFinite(x) ? x : NaN;
-}
-
-function clamp(v,a,b){
-  return Math.max(a,Math.min(b,v));
-}
-
-function celsius(value){
-  const t = n(value);
-  if(!Number.isFinite(t)) return NaN;
-
-  return document.getElementById("tempUnidad").value === "F"
-    ? (t - 32) * 5/9
-    : t;
-}
-
-function pressureBarGauge(value){
-  const p = n(value);
-  if(!Number.isFinite(p)) return NaN;
-
-  const unit = document.getElementById("presUnidad").value;
-
-  if(unit === "psi"){
-    return p * 0.0689475729;
-  }
-
-  if(unit === "kPa"){
-    return p / 100;
-  }
-
-  return p;
-}
-
-function format(v,d=1){
-  if(!Number.isFinite(v)) return "—";
-  return v.toFixed(d);
-}
-
-function cToF(c){
-  return c * 9/5 + 32;
-}
-
-function updateUnits(){
-
-  const p = document.getElementById("presUnidad").value;
-  const t = document.getElementById("tempUnidad").value;
-
-  document.getElementById("presUnit1").textContent = p;
-  document.getElementById("presUnit2").textContent = p;
-
-  const tu = t === "F" ? "°F" : "°C";
-
-  document.getElementById("tempUnit1").textContent = tu;
-  document.getElementById("tempUnit2").textContent = tu;
-  document.getElementById("tempUnit3").textContent = tu;
-  document.getElementById("tempUnit4").textContent = tu;
-}
-
-
-/* =========================================================
-   INTERPOLACION
-   ========================================================= */
-
-function propertyAtPressure(refName,p){
-
-  const ref = REF[refName];
-
-  if(!ref) return null;
-
-  const d = ref.dome;
-
-  if(p <= d[0][0]){
-    return {
-      tBubble:d[0][1],
-      tDew:d[0][2],
-      hL:d[0][3],
-      hV:d[0][4]
-    };
-  }
-
-  if(p >= d[d.length-1][0]){
-    const x=d[d.length-1];
-
-    return {
-      tBubble:x[1],
-      tDew:x[2],
-      hL:x[3],
-      hV:x[4]
-    };
-  }
-
-  for(let i=0;i<d.length-1;i++){
-
-    const a=d[i];
-    const b=d[i+1];
-
-    if(p>=a[0] && p<=b[0]){
-
-      const f=(p-a[0])/(b[0]-a[0]);
-
-      return {
-        tBubble:a[1]+f*(b[1]-a[1]),
-        tDew:a[2]+f*(b[2]-a[2]),
-        hL:a[3]+f*(b[3]-a[3]),
-        hV:a[4]+f*(b[4]-a[4])
-      };
-    }
-  }
-
-  return null;
-}
-
-
-/* =========================================================
-   ENTALPIAS APROXIMADAS
-   ========================================================= */
-
-const CP = {
   R410A:1.00,
   R32:1.02,
-  R134a:0.90,
-  R22:0.78,
+  R134a:.90,
+  R22:.78,
   R407C:1.00,
-  R404A:0.95,
-  R507A:0.95,
+  R404A:.95,
+  R507A:.95,
   R290:1.65,
   R600a:1.70
+
 };
 
-const KMAP = {
+const KMAP={
+
   R410A:1.13,
   R32:1.17,
   R134a:1.12,
@@ -1460,28 +3042,230 @@ const KMAP = {
   R507A:1.12,
   R290:1.13,
   R600a:1.12
+
 };
 
-function vaporEnthalpy(refName,p,t){
+let lastResult=null;
 
-  const prop=propertyAtPressure(refName,p);
 
-  if(!prop) return NaN;
+/* =========================================================
+   UTILIDADES
+   ========================================================= */
 
-  const cp=CP[refName] || 1;
+function n(v){
 
-  return prop.hV + cp*(t-prop.tDew);
+  const x=parseFloat(v);
+
+  return Number.isFinite(x)
+    ? x
+    : NaN;
+
 }
 
-function liquidEnthalpy(refName,p,t){
 
-  const prop=propertyAtPressure(refName,p);
+function format(v,d=1){
 
-  if(!prop) return NaN;
+  return Number.isFinite(v)
+    ? v.toFixed(d)
+    : "—";
 
-  const cp=CP[refName] || 1;
+}
 
-  return prop.hL + cp*(t-prop.tBubble);
+
+function celsius(value){
+
+  const t=n(value);
+
+  if(!Number.isFinite(t))
+    return NaN;
+
+  return document.getElementById("tempUnidad").value==="F"
+    ? (t-32)*5/9
+    : t;
+
+}
+
+
+function pressureBarGauge(value){
+
+  const p=n(value);
+
+  if(!Number.isFinite(p))
+    return NaN;
+
+  const unit=
+    document.getElementById("presUnidad").value;
+
+  if(unit==="psi")
+    return p*.0689475729;
+
+  if(unit==="kPa")
+    return p/100;
+
+  return p;
+
+}
+
+
+function updateUnits(){
+
+  const p=
+    document.getElementById("presUnidad").value;
+
+  const t=
+    document.getElementById("tempUnidad").value;
+
+  document.getElementById("presUnit1").textContent=p;
+
+  document.getElementById("presUnit2").textContent=p;
+
+  const tu=t==="F"
+    ? "°F"
+    : "°C";
+
+  document.getElementById("tempUnit1").textContent=tu;
+  document.getElementById("tempUnit2").textContent=tu;
+  document.getElementById("tempUnit3").textContent=tu;
+  document.getElementById("tempUnit4").textContent=tu;
+
+}
+
+
+/* =========================================================
+   PROPIEDADES
+   ========================================================= */
+
+function propertyAtPressure(refName,p){
+
+  const ref=REF[refName];
+
+  if(!ref)
+    return null;
+
+  const d=ref.dome;
+
+  if(p<=d[0][0]){
+
+    return {
+
+      tBubble:d[0][1],
+      tDew:d[0][2],
+      hL:d[0][3],
+      hV:d[0][4]
+
+    };
+
+  }
+
+
+  if(p>=d[d.length-1][0]){
+
+    const x=d[d.length-1];
+
+    return {
+
+      tBubble:x[1],
+      tDew:x[2],
+      hL:x[3],
+      hV:x[4]
+
+    };
+
+  }
+
+
+  for(let i=0;i<d.length-1;i++){
+
+    const a=d[i];
+    const b=d[i+1];
+
+    if(
+      p>=a[0] &&
+      p<=b[0]
+    ){
+
+      const f=
+        (p-a[0])/
+        (b[0]-a[0]);
+
+      return {
+
+        tBubble:
+          a[1]+
+          f*(b[1]-a[1]),
+
+        tDew:
+          a[2]+
+          f*(b[2]-a[2]),
+
+        hL:
+          a[3]+
+          f*(b[3]-a[3]),
+
+        hV:
+          a[4]+
+          f*(b[4]-a[4])
+
+      };
+
+    }
+
+  }
+
+  return null;
+
+}
+
+
+function vaporEnthalpy(
+  refName,
+  p,
+  t
+){
+
+  const prop=
+    propertyAtPressure(
+      refName,
+      p
+    );
+
+  if(!prop)
+    return NaN;
+
+  const cp=
+    CP[refName]||1;
+
+  return(
+    prop.hV+
+    cp*(t-prop.tDew)
+  );
+
+}
+
+
+function liquidEnthalpy(
+  refName,
+  p,
+  t
+){
+
+  const prop=
+    propertyAtPressure(
+      refName,
+      p
+    );
+
+  if(!prop)
+    return NaN;
+
+  const cp=
+    CP[refName]||1;
+
+  return(
+    prop.hL+
+    cp*(t-prop.tBubble)
+  );
+
 }
 
 
@@ -1491,32 +3275,33 @@ function liquidEnthalpy(refName,p,t){
 
 function makeDiagnostic(x){
 
-  const {
-    ref,
-    shUseful,
-    shTotal,
-    sc,
-    shLine,
-    pEvap,
-    pCond,
-    tEvap,
-    tCond,
-    tDesc,
-    ambient,
-    pr,
-    approach
-  }=x;
+  const ref=x.ref;
+
+  const shUseful=x.shUseful;
+  const shTotal=x.shTotal;
+  const sc=x.sc;
+  const pEvap=x.pEvap;
+  const tEvap=x.tEvap;
+  const tCond=x.tCond;
+  const tDesc=x.tDesc;
+  const pr=x.pr;
+  const approach=x.approach;
+
 
   const score={
+
     lowCharge:0,
     restriction:0,
     condenser:0,
     overcharge:0,
     underfeed:0,
     compressor:0
+
   };
 
+
   const findings=[];
+
 
   const shMin=ref.shRange[0];
   const shMax=ref.shRange[1];
@@ -1524,385 +3309,610 @@ function makeDiagnostic(x){
   const scMin=ref.scRange[0];
   const scMax=ref.scRange[1];
 
-  /* retorno de liquido */
+
+  /* RETORNO DE LIQUIDO */
 
   if(shTotal<=0){
-    findings.push("SH total ≤ 0 K: patrón compatible con retorno de líquido / inundación del compresor.");
+
+    findings.push(
+      "SH total ≤ 0 K: patrón compatible con retorno de líquido al compresor."
+    );
+
     score.compressor+=3;
-  }
-  else if(shTotal<5){
-    findings.push("SH total muy bajo: revisar riesgo de migración o retorno de líquido.");
-    score.compressor+=2;
+
   }
 
-  /* evaporador */
+  else if(shTotal<5){
+
+    findings.push(
+      "SH total bajo: revisar protección del compresor y riesgo de retorno de líquido."
+    );
+
+    score.compressor+=2;
+
+  }
+
+
+  /* SH EVAPORADOR */
 
   if(shUseful<shMin){
+
     findings.push(
-      `SH útil bajo (${format(shUseful)} K): evaporador con poca protección térmica.`
+      `SH útil bajo (${format(shUseful)} K): revisar alimentación del evaporador y protección del compresor.`
     );
-    score.underfeed+=0;
+
     score.compressor+=1;
+
   }
 
+
   if(shUseful>shMax){
+
     findings.push(
       `SH útil elevado (${format(shUseful)} K): patrón compatible con evaporador subalimentado.`
     );
+
     score.underfeed+=2;
+
   }
 
-  /* carga */
 
-  if(shTotal>15){
+  /* POSIBLE BAJA CARGA */
+
+  if(shTotal>15)
     score.lowCharge+=2;
-  }
 
-  if(sc<scMin){
+  if(sc<scMin)
     score.lowCharge+=2;
-  }
 
-  if(tEvap<-5){
+  if(tEvap<-5)
     score.lowCharge+=1;
-  }
 
-  if(tDesc>95){
+  if(tDesc>95)
     score.lowCharge+=1;
-  }
 
-  if(approach>=8 && approach<=18){
+  if(
+    approach>=8 &&
+    approach<=18
+  )
     score.lowCharge+=1;
-  }
 
-  /* restricción */
+
+  /* RESTRICCION */
 
   if(
     shUseful>shMax &&
     sc>scMax &&
     pEvap<6
   ){
+
     score.restriction+=3;
 
     findings.push(
       "SH útil alto + subenfriamiento elevado + presión de evaporación baja: patrón compatible con restricción o falta de alimentación."
     );
+
   }
 
-  /* condensador */
+
+  /* CONDENSACION */
 
   if(approach>18){
+
     score.condenser+=2;
 
     findings.push(
       `Approach de condensación elevado (${format(approach)} K): revisar intercambio térmico, flujo de aire y limpieza del condensador.`
     );
+
   }
 
-  if(pr>ref.prMax){
+
+  if(pr>ref.prMax)
     score.condenser+=1;
-    score.compressor+=2;
-  }
 
-  if(tCond>50){
+  if(tCond>50)
     score.condenser+=1;
-  }
 
-  /* sobrecarga */
+
+  /* SOBRE CARGA */
 
   if(
     sc>10 &&
-    pr>ref.prMax*0.8 &&
+    pr>ref.prMax*.8 &&
     shTotal<8
   ){
+
     score.overcharge+=3;
 
     findings.push(
       "Subenfriamiento elevado + relación de presión alta + SH bajo: patrón compatible con exceso de refrigerante."
     );
+
   }
 
-  /* compresor */
+
+  /* COMPRESOR */
 
   if(pr>ref.prMax){
-    findings.push(
-      `Relación de presión elevada (${format(pr,2)}): compresor trabajando en condición exigente.`
-    );
-  }
 
-  if(tDesc>=ref.tAlarm){
-    score.compressor+=4;
-
-    findings.push(
-      `Temperatura de descarga crítica (${format(tDesc)} °C): condición de alta exigencia térmica del compresor.`
-    );
-  }
-  else if(tDesc>=95){
     score.compressor+=2;
 
     findings.push(
-      `Temperatura de descarga elevada (${format(tDesc)} °C): vigilar enfriamiento y condiciones de operación.`
+      `Relación de presión elevada (${format(pr,2)}): condición exigente para el compresor.`
     );
+
   }
 
-  /* elegir diagnóstico */
+
+  if(tDesc>=ref.tAlarm){
+
+    score.compressor+=4;
+
+    findings.push(
+      `Temperatura de descarga crítica (${format(tDesc)} °C): revisar inmediatamente las condiciones térmicas del compresor.`
+    );
+
+  }
+
+  else if(tDesc>=95){
+
+    score.compressor+=2;
+
+    findings.push(
+      `Temperatura de descarga elevada (${format(tDesc)} °C): condición que requiere vigilancia.`
+    );
+
+  }
+
+
+  /* RANKING */
 
   const ranked=[
+
     ["compressor",score.compressor],
     ["restriction",score.restriction],
     ["lowCharge",score.lowCharge],
     ["condenser",score.condenser],
     ["overcharge",score.overcharge],
     ["underfeed",score.underfeed]
-  ].sort((a,b)=>b[1]-a[1]);
+
+  ].sort(
+    (a,b)=>b[1]-a[1]
+  );
+
 
   const best=ranked[0];
 
-  let title="Condición sin patrón dominante";
+
+  let title=
+    "Condición sin patrón dominante";
+
   let severity="good";
+
 
   if(best[1]>=3){
 
     severity="warn";
 
+
     const names={
-      compressor:"Patrón compatible con esfuerzo elevado del compresor",
-      restriction:"Patrón compatible con restricción / falta de alimentación",
-      lowCharge:"Patrón compatible con baja carga de refrigerante",
-      condenser:"Patrón compatible con problema de condensación",
-      overcharge:"Patrón compatible con exceso de refrigerante",
-      underfeed:"Patrón compatible con evaporador subalimentado"
+
+      compressor:
+        "Patrón compatible con esfuerzo elevado del compresor",
+
+      restriction:
+        "Patrón compatible con restricción o falta de alimentación",
+
+      lowCharge:
+        "Patrón compatible con baja carga de refrigerante",
+
+      condenser:
+        "Patrón compatible con problema de condensación",
+
+      overcharge:
+        "Patrón compatible con exceso de refrigerante",
+
+      underfeed:
+        "Patrón compatible con evaporador subalimentado"
+
     };
 
-    title=names[best[0]];
+
+    title=
+      names[best[0]];
+
   }
+
   else if(findings.length){
 
     severity="warn";
-    title="Se detectan condiciones que requieren revisión";
+
+    title=
+      "Se detectan condiciones que requieren revisión";
+
   }
 
-  return {
+
+  return{
+
     title,
     severity,
     findings,
     score
+
   };
+
 }
 
 
 /* =========================================================
-   CALCULO PRINCIPAL
+   CALCULO
    ========================================================= */
 
 function calculate(){
 
   updateUnits();
 
-  const refName=document.getElementById("refrigerante").value;
-  const ref=REF[refName];
 
-  const PgEvap=pressureBarGauge(
-    document.getElementById("succion").value
-  );
+  const refName=
+    document.getElementById("refrigerante").value;
 
-  const PgCond=pressureBarGauge(
-    document.getElementById("descarga").value
-  );
+  const ref=
+    REF[refName];
 
-  const pEvap=PgEvap+1.01325;
-  const pCond=PgCond+1.01325;
 
-  const tEvapOut=celsius(
-    document.getElementById("evapOut").value
-  );
+  const PgEvap=
+    pressureBarGauge(
+      document.getElementById("succion").value
+    );
 
-  const tSuct=celsius(
-    document.getElementById("suctTemp").value
-  );
 
-  const tLiq=celsius(
-    document.getElementById("liqTemp").value
-  );
+  const PgCond=
+    pressureBarGauge(
+      document.getElementById("descarga").value
+    );
 
-  const tDesc=celsius(
-    document.getElementById("descTemp").value
-  );
-
-  const voltage=n(
-    document.getElementById("voltaje").value
-  );
-
-  const amperage=n(
-    document.getElementById("amperaje").value
-  );
 
   if(
     !Number.isFinite(PgEvap) ||
-    !Number.isFinite(PgCond) ||
+    !Number.isFinite(PgCond)
+  ){
+
+    alert(
+      "Ingrese las dos presiones."
+    );
+
+    return;
+
+  }
+
+
+  const pEvap=
+    PgEvap+1.01325;
+
+  const pCond=
+    PgCond+1.01325;
+
+
+  const tEvapOut=
+    celsius(
+      document.getElementById("evapOut").value
+    );
+
+  const tSuct=
+    celsius(
+      document.getElementById("suctTemp").value
+    );
+
+  const tLiq=
+    celsius(
+      document.getElementById("liqTemp").value
+    );
+
+  const tDesc=
+    celsius(
+      document.getElementById("descTemp").value
+    );
+
+
+  if(
     !Number.isFinite(tEvapOut) ||
     !Number.isFinite(tSuct) ||
     !Number.isFinite(tLiq) ||
     !Number.isFinite(tDesc)
   ){
 
-    document.getElementById("systemStatus").textContent="Faltan datos";
-    document.getElementById("kpiStatus").textContent="Complete las mediciones";
+    alert(
+      "Ingrese todas las temperaturas frigoríficas."
+    );
 
     return;
+
   }
 
-  const evap=propertyAtPressure(refName,pEvap);
-  const cond=propertyAtPressure(refName,pCond);
+
+  const evap=
+    propertyAtPressure(
+      refName,
+      pEvap
+    );
+
+  const cond=
+    propertyAtPressure(
+      refName,
+      pCond
+    );
+
 
   if(!evap || !cond){
-    alert("Presión fuera del rango de la base interna.");
+
+    alert(
+      "La presión está fuera del rango de la base interna."
+    );
+
     return;
+
   }
 
-  /* Superheats */
 
-  const shUseful=tEvapOut-evap.tDew;
-  const shTotal=tSuct-evap.tDew;
-  const shLine=shTotal-shUseful;
+  /* SUPERHEAT */
 
-  /* Subcooling */
+  const shUseful=
+    tEvapOut-
+    evap.tDew;
 
-  const sc=cond.tBubble-tLiq;
+  const shTotal=
+    tSuct-
+    evap.tDew;
 
-  /* Descarga */
+  const shLine=
+    shTotal-
+    shUseful;
 
-  const dischargeSH=tDesc-cond.tDew;
 
-  /* Condenser approach */
+  /* SUBCOOLING */
 
-  /*
-    Se usa ambiente fijo / obtenido de Open-Meteo.
-    Si no existe, se utiliza 30 °C.
-  */
+  const sc=
+    cond.tBubble-
+    tLiq;
 
-  const ambient=window.currentAmbient || 30;
 
-  const approach=tCondAmbient(cond.tBubble,ambient);
+  /* DESCARGA */
 
-  /* Ciclo */
+  const dischargeSH=
+    tDesc-
+    cond.tDew;
 
-  const h1=vaporEnthalpy(
-    refName,
-    pEvap,
-    tSuct
-  );
 
-  const h3=liquidEnthalpy(
-    refName,
-    pCond,
-    tLiq
-  );
+  /* AMBIENTE */
+
+  const ambient=
+    window.currentAmbient||
+    30;
+
+
+  const approach=
+    cond.tDew-
+    ambient;
+
+
+  /* ENTALPIAS */
+
+  const h1=
+    vaporEnthalpy(
+      refName,
+      pEvap,
+      tSuct
+    );
+
+
+  const h3=
+    liquidEnthalpy(
+      refName,
+      pCond,
+      tLiq
+    );
+
 
   const h4=h3;
 
-  const k=KMAP[refName] || 1.13;
-  const cp=CP[refName] || 1;
 
-  const T1=tSuct+273.15;
+  /* COMPRESOR */
 
-  const PR=pCond/pEvap;
+  const k=
+    KMAP[refName]||
+    1.13;
+
+  const cp=
+    CP[refName]||
+    1;
+
+
+  const T1=
+    tSuct+
+    273.15;
+
+
+  const PR=
+    pCond/
+    pEvap;
+
 
   const T2s=
-    T1*Math.pow(PR,(k-1)/k);
+    T1*
+    Math.pow(
+      PR,
+      (k-1)/k
+    );
+
 
   const h2s=
-    h1+cp*(T2s-T1);
+    h1+
+    cp*
+    (T2s-T1);
+
 
   const ETA_IS=.70;
 
+
   const h2=
-    h1+(h2s-h1)/ETA_IS;
+    h1+
+    (h2s-h1)/
+    ETA_IS;
 
-  const qEvap=h1-h4;
 
-  const work=h2-h1;
+  /* CICLO */
+
+  const qEvap=
+    h1-h4;
+
+  const work=
+    h2-h1;
+
 
   const COP=
     work>0
       ? qEvap/work
       : NaN;
 
-  /* Electrical */
+
+  /* ELECTRICO */
+
+  const voltage=
+    n(
+      document.getElementById("voltaje").value
+    );
+
+  const amperage=
+    n(
+      document.getElementById("amperaje").value
+    );
+
 
   const electricalPower=
     Number.isFinite(voltage) &&
     Number.isFinite(amperage)
-      ? voltage*amperage*0.9/1000
+      ? voltage*
+        amperage*
+        .9/
+        1000
       : NaN;
 
+
   const result={
+
     ref,
     refName,
+
     pEvap,
     pCond,
+
     PgEvap,
     PgCond,
+
     evap,
     cond,
+
     tEvapOut,
     tSuct,
     tLiq,
     tDesc,
+
     ambient,
+
     shUseful,
     shTotal,
     shLine,
+
     sc,
     dischargeSH,
+
     approach,
+
     h1,
     h2,
     h3,
     h4,
+
     qEvap,
     work,
     COP,
+
     PR,
+
+    voltage,
+    amperage,
+
     electricalPower
+
   };
+
 
   lastResult=result;
 
+
   updateKPIs(result);
 
-  const diagnostic=makeDiagnostic({
-    ref,
-    shUseful,
-    shTotal,
-    sc,
-    shLine,
-    pEvap,
-    pCond,
-    tEvap:evap.tDew,
-    tCond:cond.tDew,
-    tDesc,
-    ambient,
-    pr:PR,
-    approach
-  });
 
-  updateDiagnostic(diagnostic);
+  const diagnostic=
+    makeDiagnostic({
 
-  updateEngineering(result);
+      ref,
 
-  drawChart(result);
+      shUseful,
+      shTotal,
+      sc,
+      pEvap,
 
-  document.getElementById("systemStatus").textContent="Analizado";
-  document.getElementById("kpiStatus").textContent="Análisis actualizado";
-}
+      tEvap:
+        evap.tDew,
+
+      tCond:
+        cond.tDew,
+
+      tDesc,
+
+      pr:PR,
+
+      approach
+
+    });
 
 
-/* =========================================================
-   APPROACH
-   ========================================================= */
+  updateDiagnostic(
+    diagnostic
+  );
 
-function tCondAmbient(tCond,ambient){
-  return tCond-ambient;
+
+  updateEngineering(
+    result
+  );
+
+
+  updatePDFData(
+    result,
+    diagnostic
+  );
+
+
+  drawChart(
+    result
+  );
+
+
+  document.getElementById(
+    "systemStatus"
+  ).textContent=
+    "Analizado";
+
+
+  document.getElementById(
+    "kpiStatus"
+  ).textContent=
+    "Análisis actualizado";
+
+
 }
 
 
@@ -1910,45 +3920,127 @@ function tCondAmbient(tCond,ambient){
    KPI
    ========================================================= */
 
-function setKPI(id,value,unit="",cls=""){
+function setKPI(
+  id,
+  value,
+  unit="",
+  cls=""
+){
 
-  const el=document.getElementById(id);
+  const el=
+    document.getElementById(id);
 
   el.textContent=
     Number.isFinite(value)
       ? `${format(value)}${unit}`
       : "—";
 
-  el.className="kpi-value "+cls;
+  el.className=
+    "kpi-value "+cls;
+
 }
+
+
+function colorRange(
+  id,
+  value,
+  min,
+  max
+){
+
+  const el=
+    document.getElementById(id);
+
+  el.className=
+    "kpi-value";
+
+  if(
+    value<min ||
+    value>max
+  ){
+
+    el.classList.add("warn");
+
+  }
+  else{
+
+    el.classList.add("good");
+
+  }
+
+}
+
 
 function updateKPIs(r){
 
-  setKPI("kpiSHUseful",r.shUseful," K");
+  setKPI(
+    "kpiSHUseful",
+    r.shUseful,
+    " K"
+  );
 
-  setKPI("kpiSHTotal",r.shTotal," K");
+  setKPI(
+    "kpiSHTotal",
+    r.shTotal,
+    " K"
+  );
 
-  setKPI("kpiSC",r.sc," K");
+  setKPI(
+    "kpiSC",
+    r.sc,
+    " K"
+  );
 
-  setKPI("kpiSHLine",r.shLine," K");
+  setKPI(
+    "kpiSHLine",
+    r.shLine,
+    " K"
+  );
 
-  setKPI("kpiPower",r.electricalPower," kW");
+  setKPI(
+    "kpiPower",
+    r.electricalPower,
+    " kW"
+  );
 
-  setKPI("kpiQ",r.qEvap,"");
+  setKPI(
+    "kpiQ",
+    r.qEvap
+  );
 
-  setKPI("kpiWork",r.work,"");
+  setKPI(
+    "kpiWork",
+    r.work
+  );
 
-  setKPI("kpiCOP",r.COP,"");
+  setKPI(
+    "kpiCOP",
+    r.COP
+  );
 
-  setKPI("kpiPR",r.PR,"");
+  setKPI(
+    "kpiPR",
+    r.PR
+  );
 
-  setKPI("kpiApproach",r.approach," K");
+  setKPI(
+    "kpiApproach",
+    r.approach,
+    " K"
+  );
 
-  setKPI("kpiDescTemp",r.tDesc," °C");
+  setKPI(
+    "kpiDescTemp",
+    r.tDesc,
+    " °C"
+  );
 
-  setKPI("kpiDescSH",r.dischargeSH," K");
+  setKPI(
+    "kpiDescSH",
+    r.dischargeSH,
+    " K"
+  );
 
-  /* colores */
 
   colorRange(
     "kpiSHUseful",
@@ -1957,6 +4049,7 @@ function updateKPIs(r){
     r.ref.shRange[1]
   );
 
+
   colorRange(
     "kpiSC",
     r.sc,
@@ -1964,33 +4057,37 @@ function updateKPIs(r){
     r.ref.scRange[1]
   );
 
-  const desc=document.getElementById("kpiDescTemp");
 
-  desc.className="kpi-value";
+  const desc=
+    document.getElementById(
+      "kpiDescTemp"
+    );
 
-  if(r.tDesc>=r.ref.tAlarm){
+  desc.className=
+    "kpi-value";
+
+
+  if(
+    r.tDesc>=
+    r.ref.tAlarm
+  ){
+
     desc.classList.add("bad");
+
   }
-  else if(r.tDesc>=95){
+  else if(
+    r.tDesc>=95
+  ){
+
     desc.classList.add("warn");
+
   }
   else{
+
     desc.classList.add("good");
+
   }
-}
 
-function colorRange(id,v,min,max){
-
-  const el=document.getElementById(id);
-
-  el.className="kpi-value";
-
-  if(v<min || v>max){
-    el.classList.add("warn");
-  }
-  else{
-    el.classList.add("good");
-  }
 }
 
 
@@ -2000,26 +4097,58 @@ function colorRange(id,v,min,max){
 
 function updateDiagnostic(d){
 
-  const title=document.getElementById("diagnosticTitle");
+  document.getElementById(
+    "diagnosticTitle"
+  ).textContent=
+    d.title;
 
-  title.textContent=d.title;
 
-  title.className="diagnostic-title";
+  const list=
+    document.getElementById(
+      "diagnosticList"
+    );
 
-  const list=document.getElementById("diagnosticList");
 
   list.innerHTML="";
 
-  d.findings.forEach(item=>{
 
-    const li=document.createElement("li");
+  d.findings.forEach(
+    item=>{
 
-    li.textContent=item;
+      const li=
+        document.createElement(
+          "li"
+        );
+
+      li.textContent=
+        item;
+
+      list.appendChild(li);
+
+    }
+  );
+
+
+  if(!d.findings.length){
+
+    const li=
+      document.createElement(
+        "li"
+      );
+
+    li.textContent=
+      "No se detecta un patrón anómalo dominante con las mediciones introducidas.";
 
     list.appendChild(li);
-  });
 
-  const box=document.querySelector(".diagnostic");
+  }
+
+
+  const box=
+    document.getElementById(
+      "diagnosticBox"
+    );
+
 
   box.style.borderLeftColor=
     d.severity==="bad"
@@ -2028,142 +4157,216 @@ function updateDiagnostic(d){
         ? "var(--warn)"
         : "var(--good)";
 
-  if(!d.findings.length){
 
-    list.innerHTML=
-      "<li>No se detecta un patrón anómalo dominante con estas mediciones.</li>";
-  }
+  document.getElementById(
+    "diagnosticText"
+  ).textContent=
+    "Resultado orientativo basado en la correlación de las mediciones de campo. Confirmar cualquier intervención con las condiciones reales y especificaciones del fabricante.";
 
-  document.getElementById("diagnosticText").textContent=
-    "El resultado es orientativo. Confirme el patrón con temperatura ambiente, condiciones de carga, estado del evaporador, condensador, ventiladores y especificaciones del fabricante.";
 }
 
 
 /* =========================================================
-   DATOS DE INGENIERIA
+   DATOS INGENIERIA
    ========================================================= */
 
 function updateEngineering(r){
 
-  document.getElementById("dRef").textContent=
+  document.getElementById(
+    "dRef"
+  ).textContent=
     r.refName;
 
-  document.getElementById("dPEvap").textContent=
+
+  document.getElementById(
+    "dPEvap"
+  ).textContent=
     `${format(r.pEvap)} barA`;
 
-  document.getElementById("dPCond").textContent=
+
+  document.getElementById(
+    "dPCond"
+  ).textContent=
     `${format(r.pCond)} barA`;
 
-  document.getElementById("dTEvap").textContent=
+
+  document.getElementById(
+    "dTEvap"
+  ).textContent=
     `${format(r.evap.tDew)} °C`;
 
-  document.getElementById("dTCond").textContent=
+
+  document.getElementById(
+    "dTCond"
+  ).textContent=
     `${format(r.cond.tDew)} °C`;
 
-  document.getElementById("dh1").textContent=
+
+  document.getElementById(
+    "dh1"
+  ).textContent=
     `${format(r.h1)} kJ/kg`;
 
-  document.getElementById("dh2").textContent=
+
+  document.getElementById(
+    "dh2"
+  ).textContent=
     `${format(r.h2)} kJ/kg`;
 
-  document.getElementById("dh3").textContent=
+
+  document.getElementById(
+    "dh3"
+  ).textContent=
     `${format(r.h3)} kJ/kg`;
 
-  document.getElementById("dh4").textContent=
+
+  document.getElementById(
+    "dh4"
+  ).textContent=
     `${format(r.h4)} kJ/kg`;
 
-  document.getElementById("dGlide").textContent=
+
+  document.getElementById(
+    "dGlide"
+  ).textContent=
     `${format(r.ref.glide)} K`;
+
 }
 
 
 /* =========================================================
-   GRAFICO MOLLIER
+   MOLLIER
    ========================================================= */
 
 function drawChart(r){
 
-  const ref=r.ref;
-  const dome=ref.dome;
+  const dome=
+    r.ref.dome;
+
 
   const p=[];
   const hL=[];
   const hV=[];
-  const tB=[];
-  const tD=[];
 
-  dome.forEach(row=>{
-    p.push(row[0]);
-    tB.push(row[1]);
-    tD.push(row[2]);
-    hL.push(row[3]);
-    hV.push(row[4]);
-  });
+
+  dome.forEach(
+    row=>{
+
+      p.push(row[0]);
+      hL.push(row[3]);
+      hV.push(row[4]);
+
+    }
+  );
+
 
   const traces=[];
+
 
   /* LIQUID */
 
   traces.push({
+
     x:hL,
     y:p,
+
     mode:"lines",
+
     name:"Líquido",
+
     line:{
       width:3
     },
+
     hovertemplate:
-      "h=%{x:.0f} kJ/kg<br>P=%{y:.2f} barA<extra>Líquido</extra>"
+      "h=%{x:.1f} kJ/kg<br>"+
+      "P=%{y:.2f} barA"+
+      "<extra>Líquido</extra>"
+
   });
+
 
   /* VAPOR */
 
   traces.push({
+
     x:hV,
     y:p,
+
     mode:"lines",
+
     name:"Vapor",
+
     line:{
       width:3
     },
+
     hovertemplate:
-      "h=%{x:.0f} kJ/kg<br>P=%{y:.2f} barA<extra>Vapor</extra>"
+      "h=%{x:.1f} kJ/kg<br>"+
+      "P=%{y:.2f} barA"+
+      "<extra>Vapor</extra>"
+
   });
 
-  /* QUALITY */
 
-  for(let q=.1;q<1;q+=.1){
+  /* CALIDAD */
+
+  for(
+    let q=.1;
+    q<1;
+    q+=.1
+  ){
 
     const x=[];
     const y=[];
 
-    for(let i=0;i<dome.length;i++){
+
+    for(
+      let i=0;
+      i<dome.length;
+      i++
+    ){
 
       x.push(
-        hL[i]+q*(hV[i]-hL[i])
+        hL[i]+
+        q*
+        (hV[i]-hL[i])
       );
 
-      y.push(p[i]);
+      y.push(
+        p[i]
+      );
+
     }
 
+
     traces.push({
+
       x,
       y,
+
       mode:"lines",
-      name:`x=${q.toFixed(1)}`,
+
       line:{
         width:1,
         dash:"dot"
       },
-      opacity:.45,
+
+      opacity:.35,
+
       showlegend:false,
+
       hoverinfo:"skip"
+
     });
+
   }
+
 
   /* CICLO */
 
   traces.push({
+
     x:[
       r.h1,
       r.h2,
@@ -2171,6 +4374,7 @@ function drawChart(r){
       r.h4,
       r.h1
     ],
+
     y:[
       r.pEvap,
       r.pCond,
@@ -2178,90 +4382,115 @@ function drawChart(r){
       r.pEvap,
       r.pEvap
     ],
-    mode:"lines+markers",
+
+    mode:
+      "lines+markers",
+
     name:"Ciclo",
+
     line:{
       width:3
     },
+
     marker:{
-      size:8
+      size:9
     },
+
     hovertemplate:
-      "h=%{x:.1f} kJ/kg<br>P=%{y:.2f} barA<extra>Ciclo</extra>"
+      "h=%{x:.1f} kJ/kg<br>"+
+      "P=%{y:.2f} barA"+
+      "<extra>Ciclo</extra>"
+
   });
 
-  /* PUNTOS */
 
-  const pointNames=["1","2","3","4"];
-
-  const pointTexts=[
-    `1 · Succión<br>T ${format(r.tSuct)} °C<br>SH ${format(r.shTotal)} K`,
-    `2 · Descarga<br>T ${format(r.tDesc)} °C`,
-    `3 · Líquido<br>SC ${format(r.sc)} K`,
-    `4 · Entrada evaporador`
-  ];
+  /* ESTADOS */
 
   traces.push({
-    x:[r.h1,r.h2,r.h3,r.h4],
-    y:[r.pEvap,r.pCond,r.pCond,r.pEvap],
-    mode:"text+markers",
-    name:"Estados",
-    text:pointNames,
+
+    x:[
+      r.h1,
+      r.h2,
+      r.h3,
+      r.h4
+    ],
+
+    y:[
+      r.pEvap,
+      r.pCond,
+      r.pCond,
+      r.pEvap
+    ],
+
+    mode:
+      "markers+text",
+
+    text:[
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+
     textposition:[
       "bottom right",
       "top right",
       "top left",
       "bottom left"
     ],
+
     marker:{
-      size:10
+      size:11
     },
-    hovertext:pointTexts,
+
+    hovertext:[
+
+      `1 · Entrada compresor · T ${format(r.tSuct)} °C · SH ${format(r.shTotal)} K`,
+
+      `2 · Descarga compresor · T ${format(r.tDesc)} °C`,
+
+      `3 · Salida condensador · SC ${format(r.sc)} K`,
+
+      "4 · Entrada evaporador"
+
+    ],
+
     hoverinfo:"text",
+
     showlegend:false
+
   });
 
-  let xmin=Math.min(...hL)*.95;
-  let xmax=Math.max(...hV)*1.03;
 
-  let ymin=Math.min(...p)*.9;
-  let ymax=Math.max(...p)*1.08;
+  /* ESCALA */
 
-  if(zoomActive){
+  const xmin=
+    Math.min(...hL)*.96;
 
-    xmin=Math.max(
-      Math.min(r.h4,r.h1,r.h3)*.92,
-      Math.min(...hL)
-    );
+  const xmax=
+    Math.max(...hV)*1.03;
 
-    xmax=Math.min(
-      Math.max(r.h1,r.h2,r.h3,r.h4)*1.08,
-      Math.max(...hV)
-    );
+  const ymin=
+    Math.min(...p)*.9;
 
-    ymin=Math.max(
-      Math.min(r.pEvap,r.pCond)*.7,
-      Math.min(...p)
-    );
+  const ymax=
+    Math.max(...p)*1.08;
 
-    ymax=Math.min(
-      Math.max(r.pEvap,r.pCond)*1.5,
-      Math.max(...p)
-    );
-  }
 
   const layout={
 
     margin:{
-      l:45,
-      r:8,
+      l:52,
+      r:12,
       t:10,
-      b:45
+      b:48
     },
 
-    paper_bgcolor:"#09151e",
+    paper_bgcolor:
+      "#09151e",
 
-    plot_bgcolor:"#09151e",
+    plot_bgcolor:
+      "#09151e",
 
     font:{
       color:"#cbd8e1",
@@ -2270,241 +4499,550 @@ function drawChart(r){
 
     showlegend:false,
 
+    dragmode:
+      "zoom",
+
     xaxis:{
+
       title:{
-        text:"Entalpía h (kJ/kg)",
-        font:{size:10}
+        text:
+          "Entalpía h (kJ/kg)",
+        font:{
+          size:10
+        }
       },
-      gridcolor:"#1a2c38",
+
+      gridcolor:
+        "#1a2c38",
+
       zeroline:false,
-      range:[xmin,xmax]
+
+      range:[
+        xmin,
+        xmax
+      ]
+
     },
 
     yaxis:{
+
       title:{
-        text:"Presión (barA)",
-        font:{size:10}
+        text:
+          "Presión (barA)",
+        font:{
+          size:10
+        }
       },
+
       type:"log",
-      gridcolor:"#1a2c38",
+
+      gridcolor:
+        "#1a2c38",
+
       zeroline:false,
+
       range:[
         Math.log10(ymin),
         Math.log10(ymax)
       ]
-    },
 
-    hovermode:"closest"
+    }
+
   };
+
+
+  const config={
+
+    responsive:true,
+
+    displaylogo:false,
+
+    scrollZoom:false,
+
+    doubleClick:
+      "reset",
+
+    displayModeBar:true,
+
+    modeBarButtonsToRemove:[
+
+      "select2d",
+      "lasso2d",
+      "autoScale2d"
+
+    ]
+
+  };
+
 
   Plotly.newPlot(
     "phChart",
     traces,
     layout,
-    {
-      responsive:true,
-      displaylogo:false,
-      modeBarButtonsToRemove:[
-        "lasso2d",
-        "select2d"
-      ]
-    }
+    config
   );
+
 }
 
 
 /* =========================================================
-   ZOOM
+   RESET GRAFICA
    ========================================================= */
-
-function toggleZoom(){
-
-  if(!lastResult){
-    return;
-  }
-
-  zoomActive=!zoomActive;
-
-  drawChart(lastResult);
-}
 
 function resetChart(){
 
-  zoomActive=false;
-
   if(lastResult){
-    drawChart(lastResult);
+
+    drawChart(
+      lastResult
+    );
+
   }
+
 }
 
 
 /* =========================================================
-   GUARDAR LOCAL
+   DESCARGAR GRAFICA HD
    ========================================================= */
 
-const SAVE_FIELDS=[
-  "empresa",
-  "fiscal",
-  "tecnico",
-  "marca",
-  "modelo",
-  "capacidad",
-  "capUnidad",
-  "refrigerante",
-  "presUnidad",
-  "tempUnidad",
-  "succion",
-  "descarga",
-  "evapOut",
-  "suctTemp",
-  "liqTemp",
-  "descTemp",
-  "voltaje",
-  "amperaje"
-];
-
-function saveData(){
-
-  const data={};
-
-  SAVE_FIELDS.forEach(id=>{
-    const el=document.getElementById(id);
-
-    if(el){
-      data[id]=el.value;
-    }
-  });
-
-  localStorage.setItem(
-    "monitorHVAC_v21",
-    JSON.stringify(data)
-  );
-
-  document.getElementById("systemStatus").textContent="Guardado";
-
-  setTimeout(()=>{
-    document.getElementById("systemStatus").textContent="Listo";
-  },1500);
-}
-
-function loadData(){
-
-  const raw=localStorage.getItem("monitorHVAC_v21");
-
-  if(!raw){
-    alert("No hay datos guardados.");
-    return;
-  }
-
-  const data=JSON.parse(raw);
-
-  SAVE_FIELDS.forEach(id=>{
-
-    const el=document.getElementById(id);
-
-    if(el && data[id]!==undefined){
-      el.value=data[id];
-    }
-  });
-
-  updateUnits();
-
-  document.getElementById("systemStatus").textContent="Cargado";
-
-  setTimeout(()=>{
-    document.getElementById("systemStatus").textContent="Listo";
-  },1500);
-}
-
-function clearData(){
-
-  if(!confirm("¿Borrar las mediciones actuales?")){
-    return;
-  }
-
-  SAVE_FIELDS.forEach(id=>{
-
-    const el=document.getElementById(id);
-
-    if(!el) return;
-
-    if(el.tagName==="SELECT"){
-      el.selectedIndex=0;
-    }
-    else{
-      el.value="";
-    }
-  });
-
-  lastResult=null;
-
-  document.getElementById("systemStatus").textContent="Limpiado";
-
-  document.getElementById("kpiStatus").textContent=
-    "Esperando mediciones";
-
-  document.querySelectorAll(".kpi-value").forEach(el=>{
-    el.textContent="—";
-    el.className="kpi-value";
-  });
-
-  document.getElementById("diagnosticTitle").textContent=
-    "Introduzca las mediciones";
-
-  document.getElementById("diagnosticText").textContent=
-    "La aplicación correlacionará presiones y temperaturas para identificar patrones compatibles con carga, alimentación del evaporador, restricciones, condensación y esfuerzo del compresor.";
-
-  document.getElementById("diagnosticList").innerHTML="";
-
-  Plotly.purge("phChart");
-}
-
-
-/* =========================================================
-   PDF
-   ========================================================= */
-
-function generatePDF(){
+function downloadGraph(){
 
   if(!lastResult){
-    alert("Primero realice un análisis.");
+
+    alert(
+      "Primero realice el análisis."
+    );
+
     return;
+
   }
 
-  const element=document.getElementById("report");
 
-  const opt={
+  Plotly.downloadImage(
+    "phChart",
+    {
 
-    margin:6,
+      format:"png",
+
+      filename:
+        `Mollier_${lastResult.refName}`,
+
+      width:1800,
+
+      height:1100,
+
+      scale:3
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   REPORTE PDF
+   ========================================================= */
+
+function textValue(
+  id
+){
+
+  const el=
+    document.getElementById(id);
+
+  if(!el)
+    return "—";
+
+  return(
+    el.value||
+    el.textContent||
+    "—"
+  );
+
+}
+
+
+function updatePDFData(
+  r,
+  d
+){
+
+  /* FECHA */
+
+  const now=
+    new Date();
+
+
+  document.getElementById(
+    "pdfDate"
+  ).textContent=
+    now.toLocaleString(
+      "es-ES",
+      {
+        dateStyle:"short",
+        timeStyle:"short"
+      }
+    );
+
+
+  /* ADMINISTRATIVO */
+
+  document.getElementById(
+    "pdfEmpresa"
+  ).textContent=
+    textValue("empresa");
+
+  document.getElementById(
+    "pdfFiscal"
+  ).textContent=
+    textValue("fiscal");
+
+  document.getElementById(
+    "pdfTecnico"
+  ).textContent=
+    textValue("tecnico");
+
+
+  /* EQUIPO */
+
+  document.getElementById(
+    "pdfMarca"
+  ).textContent=
+    textValue("marca");
+
+  document.getElementById(
+    "pdfModelo"
+  ).textContent=
+    textValue("modelo");
+
+  document.getElementById(
+    "pdfRef"
+  ).textContent=
+    r.refName;
+
+
+  const capacidad=
+    textValue("capacidad");
+
+
+  document.getElementById(
+    "pdfCapacidad"
+  ).textContent=
+    capacidad==="—"
+      ? "—"
+      : `${capacidad} ${textValue("capUnidad")}`;
+
+
+  document.getElementById(
+    "pdfPresUnit"
+  ).textContent=
+    textValue("presUnidad");
+
+
+  document.getElementById(
+    "pdfTempUnit"
+  ).textContent=
+    textValue("tempUnidad")==="F"
+      ? "°F"
+      : "°C";
+
+
+  /* MEDICIONES */
+
+  const pu=
+    textValue("presUnidad");
+
+  const tu=
+    textValue("tempUnidad")==="F"
+      ? "°F"
+      : "°C";
+
+
+  document.getElementById(
+    "pdfSuccion"
+  ).textContent=
+    `${textValue("succion")} ${pu}`;
+
+
+  document.getElementById(
+    "pdfDescarga"
+  ).textContent=
+    `${textValue("descarga")} ${pu}`;
+
+
+  document.getElementById(
+    "pdfEvapOut"
+  ).textContent=
+    `${textValue("evapOut")} ${tu}`;
+
+
+  document.getElementById(
+    "pdfSuctTemp"
+  ).textContent=
+    `${textValue("suctTemp")} ${tu}`;
+
+
+  document.getElementById(
+    "pdfLiqTemp"
+  ).textContent=
+    `${textValue("liqTemp")} ${tu}`;
+
+
+  document.getElementById(
+    "pdfDescTemp"
+  ).textContent=
+    `${textValue("descTemp")} ${tu}`;
+
+
+  document.getElementById(
+    "pdfVoltaje"
+  ).textContent=
+    `${textValue("voltaje")} V`;
+
+
+  document.getElementById(
+    "pdfAmperaje"
+  ).textContent=
+    `${textValue("amperaje")} A`;
+
+
+  /* INDICADORES */
+
+  document.getElementById(
+    "pdfSHUseful"
+  ).textContent=
+    `${format(r.shUseful)} K`;
+
+
+  document.getElementById(
+    "pdfSHTotal"
+  ).textContent=
+    `${format(r.shTotal)} K`;
+
+
+  document.getElementById(
+    "pdfSC"
+  ).textContent=
+    `${format(r.sc)} K`;
+
+
+  document.getElementById(
+    "pdfSHLine"
+  ).textContent=
+    `${format(r.shLine)} K`;
+
+
+  document.getElementById(
+    "pdfPR"
+  ).textContent=
+    format(r.PR,2);
+
+
+  document.getElementById(
+    "pdfApproach"
+  ).textContent=
+    `${format(r.approach)} K`;
+
+
+  document.getElementById(
+    "pdfDescTempC"
+  ).textContent=
+    `${format(r.tDesc)} °C`;
+
+
+  document.getElementById(
+    "pdfDescSH"
+  ).textContent=
+    `${format(r.dischargeSH)} K`;
+
+
+  document.getElementById(
+    "pdfPower"
+  ).textContent=
+    Number.isFinite(r.electricalPower)
+      ? `${format(r.electricalPower)} kW`
+      : "No calculada";
+
+
+  document.getElementById(
+    "pdfCOP"
+  ).textContent=
+    Number.isFinite(r.COP)
+      ? format(r.COP,2)
+      : "—";
+
+
+  /* DIAGNOSTICO */
+
+  document.getElementById(
+    "pdfDiagnosticTitle"
+  ).textContent=
+    d.title;
+
+
+  document.getElementById(
+    "pdfDiagnosticText"
+  ).textContent=
+    "La evaluación se basa en la correlación de presiones, temperaturas y parámetros calculados. El resultado representa un patrón compatible y debe verificarse antes de realizar una intervención."
+
+
+  const list=
+    document.getElementById(
+      "pdfDiagnosticList"
+    );
+
+
+  list.innerHTML="";
+
+
+  if(d.findings.length){
+
+    d.findings.forEach(
+      item=>{
+
+        const li=
+          document.createElement(
+            "li"
+          );
+
+        li.textContent=
+          item;
+
+        list.appendChild(
+          li
+        );
+
+      }
+    );
+
+  }
+  else{
+
+    const li=
+      document.createElement(
+        "li"
+      );
+
+    li.textContent=
+      "No se detectó un patrón anómalo dominante con las mediciones introducidas.";
+
+    list.appendChild(
+      li
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   GENERAR PDF
+   ========================================================= */
+
+async function generatePDF(){
+
+  if(!lastResult){
+
+    alert(
+      "Primero pulse Analizar."
+    );
+
+    return;
+
+  }
+
+
+  const report=
+    document.getElementById(
+      "pdfReport"
+    );
+
+
+  /*
+    Se hace visible únicamente durante
+    la captura para garantizar que
+    html2canvas pueda renderizarlo.
+  */
+
+  report.style.display="block";
+
+
+  const options={
+
+    margin:0,
 
     filename:
-      "Reporte_HVAC_"+new Date().toISOString().slice(0,10)+".pdf",
+      `Reporte_HVAC_${new Date()
+        .toISOString()
+        .slice(0,10)}.pdf`,
 
     image:{
+
       type:"jpeg",
-      quality:.95
+
+      quality:.96
+
     },
 
     html2canvas:{
-      scale:1.5,
-      backgroundColor:"#071018"
+
+      scale:2,
+
+      useCORS:true,
+
+      backgroundColor:
+        "#ffffff"
+
     },
 
     jsPDF:{
+
       unit:"mm",
+
       format:"a4",
-      orientation:"portrait"
+
+      orientation:
+        "portrait",
+
+      compress:true
+
     },
 
     pagebreak:{
-      mode:["css","legacy"]
+
+      mode:[
+        "css",
+        "legacy"
+      ]
+
     }
+
   };
 
-  html2pdf()
-    .set(opt)
-    .from(element)
-    .save();
+
+  try{
+
+    await html2pdf()
+      .set(options)
+      .from(report)
+      .save();
+
+  }
+
+  catch(error){
+
+    console.error(error);
+
+    alert(
+      "No fue posible generar el PDF."
+    );
+
+  }
+
+
+  report.style.display="none";
+
 }
 
 
@@ -2514,44 +5052,54 @@ function generatePDF(){
 
 window.currentAmbient=30;
 
-async function getWeather(){
 
-  /*
-    Ubicación de respaldo de ejemplo.
-    Si falla la consulta se conserva 30 °C.
-  */
+async function getWeather(){
 
   try{
 
     const lat=11.7;
     const lon=-70.2;
 
+
     const url=
       `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m`;
 
-    const response=await fetch(url);
 
-    if(!response.ok){
-      throw new Error("weather");
-    }
+    const response=
+      await fetch(url);
 
-    const data=await response.json();
+
+    if(!response.ok)
+      throw new Error(
+        "Weather error"
+      );
+
+
+    const data=
+      await response.json();
+
 
     if(
       data &&
       data.current &&
-      Number.isFinite(data.current.temperature_2m)
+      Number.isFinite(
+        data.current.temperature_2m
+      )
     ){
 
       window.currentAmbient=
         data.current.temperature_2m;
+
     }
 
   }
+
   catch(e){
 
     window.currentAmbient=30;
+
   }
+
 }
 
 
@@ -2561,38 +5109,88 @@ async function getWeather(){
 
 document
   .getElementById("presUnidad")
-  .addEventListener("change",updateUnits);
+  .addEventListener(
+    "change",
+    updateUnits
+  );
+
 
 document
   .getElementById("tempUnidad")
-  .addEventListener("change",updateUnits);
+  .addEventListener(
+    "change",
+    updateUnits
+  );
+
 
 document
   .getElementById("refrigerante")
-  .addEventListener("change",()=>{
-
-    if(lastResult){
-      calculate();
+  .addEventListener(
+    "change",
+    ()=>{
+      if(lastResult){
+        calculate();
+      }
     }
-  });
+  );
 
 
-SAVE_FIELDS.forEach(id=>{
+/*
+  Si el técnico modifica una medición,
+  el sistema indica que debe volver a analizar.
+*/
 
-  const el=document.getElementById(id);
+const inputIds=[
 
-  if(!el) return;
+  "empresa",
+  "fiscal",
+  "tecnico",
+  "marca",
+  "modelo",
+  "capacidad",
 
-  el.addEventListener("input",()=>{
+  "succion",
+  "descarga",
 
-    document.getElementById("systemStatus").textContent=
-      "Cambios sin analizar";
-  });
-});
+  "evapOut",
+  "suctTemp",
+  "liqTemp",
+  "descTemp",
+
+  "voltaje",
+  "amperaje"
+
+];
+
+
+inputIds.forEach(
+  id=>{
+
+    const el=
+      document.getElementById(id);
+
+    if(!el)
+      return;
+
+
+    el.addEventListener(
+      "input",
+      ()=>{
+
+        document.getElementById(
+          "systemStatus"
+        ).textContent=
+          "Cambios sin analizar";
+
+      }
+    );
+
+  }
+);
 
 
 /* =========================================================
-   INICIALIZACION
+   INICIO
    ========================================================= */
 
 updateUnits();
