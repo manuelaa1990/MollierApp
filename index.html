@@ -19,6 +19,7 @@
       width: 100%;
       height: 100%;
       height: 100dvh;
+      overflow-x: hidden;
       overflow-y: auto;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background-color: #0f172a;
@@ -29,9 +30,11 @@
       display: flex;
       flex-direction: column;
       width: 100%;
+      max-width: 100vw;
       min-height: 100dvh;
       padding: 4px;
       gap: 4px;
+      overflow-x: hidden;
     }
 
     .ambient-banner {
@@ -49,7 +52,7 @@
 
     .ambient-banner .weather-info {
       display: flex;
-      gap: 10px;
+      gap: 6px;
       align-items: center;
     }
 
@@ -68,14 +71,16 @@
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 4px;
       flex-shrink: 0;
+      width: 100%;
     }
 
     .card {
       background: #1e293b;
       border: 1px solid #334155;
       border-radius: 6px;
-      padding: 4px 8px;
+      padding: 4px 6px;
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+      width: 100%;
     }
 
     .card h2 {
@@ -164,7 +169,7 @@
       padding: 3px 6px;
       border: none;
       border-radius: 4px;
-      font-size: 0.7rem;
+      font-size: 0.68rem;
       font-weight: 700;
       cursor: pointer;
       display: flex;
@@ -194,7 +199,7 @@
     .kpi-box {
       background-color: #0f172a;
       border-left: 3px solid #38bdf8;
-      padding: 2px 4px;
+      padding: 2px 3px;
       border-radius: 4px;
     }
 
@@ -208,7 +213,7 @@
     }
 
     .kpi-box .value {
-      font-size: 0.70rem;
+      font-size: 0.68rem;
       font-weight: 700;
       color: #f8fafc;
     }
@@ -222,7 +227,7 @@
     }
 
     .diag-item {
-      font-size: 0.65rem;
+      font-size: 0.62rem;
       margin-bottom: 2px;
       line-height: 1.2;
       display: flex;
@@ -235,19 +240,22 @@
       margin-bottom: 0;
     }
 
+    /* AJUSTES DE CONTENCIÓN PARA LA GRÁFICA */
     .chart-card {
       display: flex;
       flex-direction: column;
       width: 100%;
-      flex-grow: 1;
-      padding: 4px 6px;
-      min-height: 220px;
+      max-width: 100vw;
+      padding: 2px;
+      overflow: hidden;
+      box-sizing: border-box;
     }
 
     .chart-container {
       width: 100%;
-      flex-grow: 1;
-      min-height: 180px;
+      max-width: 100%;
+      height: 260px; /* Tamaño optimizado y compacto para pantallas móviles */
+      overflow: hidden;
     }
 
     .alarm-field-active {
@@ -287,7 +295,7 @@
     <!-- BANNER TEMPERATURA AMBIENTE PUNTO FIJO -->
     <div class="ambient-banner" id="bannerAmbiente">
       <div class="weather-info">
-        <span>📍 Punto Fijo (Ref. Web):</span>
+        <span>📍 Punto Fijo:</span>
         <span id="txtTempAmb">Cargando...</span>
       </div>
       <button onclick="obtenerClimaPuntoFijo()">🔄 Actualizar</button>
@@ -444,7 +452,7 @@
     let zonaActivaHabilitada = true;
     let pUnitActual = 'psi';
     let tUnitActual = 'C';
-    let tempAmbientePuntoFijoC = 30.0; // Valor de fallback
+    let tempAmbientePuntoFijoC = 30.0;
 
     const P_ATM_BAR = 1.01325;
     const P_ATM_PSI = 14.696;
@@ -558,7 +566,7 @@
         }
       } catch (e) {
         console.error("Error al obtener clima de Punto Fijo:", e);
-        lbl.innerText = "No disponible (30.0 °C por defecto)";
+        lbl.innerText = "No disponible (30.0 °C)";
       }
     }
 
@@ -670,26 +678,24 @@
       const elem = document.getElementById('mollierPlot');
 
       Plotly.relayout(elem, {
-        margin: { l: 45, r: 15, t: 30, b: 35 },
-        'xaxis.title.font.size': 11,
-        'yaxis.title.font.size': 11,
-        'xaxis.tickfont.size': 10,
-        'yaxis.tickfont.size': 10,
-        'title.font.size': 13
+        margin: { l: 30, r: 10, t: 25, b: 30 },
+        'xaxis.title.font.size': 10,
+        'yaxis.title.font.size': 10,
+        'xaxis.tickfont.size': 9,
+        'yaxis.tickfont.size': 9
       }).then(() => {
         Plotly.downloadImage(elem, {
           format: 'png',
-          width: 1200,
-          height: 700,
+          width: 1000,
+          height: 600,
           filename: `Mollier_Campo_${refKey}_${pUnitActual.toUpperCase()}`
         }).then(() => {
           Plotly.relayout(elem, {
-            margin: { l: 25, r: 5, t: 15, b: 20 },
-            'xaxis.title.font.size': 7,
-            'yaxis.title.font.size': 7,
-            'xaxis.tickfont.size': 6,
-            'yaxis.tickfont.size': 6,
-            'title.font.size': 10
+            margin: { l: 18, r: 5, t: 10, b: 18 },
+            'xaxis.title.font.size': 6,
+            'yaxis.title.font.size': 6,
+            'xaxis.tickfont.size': 5.5,
+            'yaxis.tickfont.size': 5.5
           });
         });
       });
@@ -734,7 +740,7 @@
       const traceLiquid = {
         x: liquidX, y: liquidY, fill: 'toself',
         fillcolor: 'rgba(2, 132, 199, 0.22)', line: { color: 'transparent' },
-        name: 'Líquido Subenfriado', showlegend: false, hoverinfo: 'none'
+        name: 'Líquido', showlegend: false, hoverinfo: 'none'
       };
 
       const satX = []; const satY = [];
@@ -744,7 +750,7 @@
       const traceSat = {
         x: satX, y: satY, fill: 'toself',
         fillcolor: 'rgba(16, 185, 129, 0.22)', line: { color: 'transparent' },
-        name: 'Mezcla Saturada', showlegend: false, hoverinfo: 'none'
+        name: 'Mezcla', showlegend: false, hoverinfo: 'none'
       };
 
       const vaporX = []; const vaporY = [];
@@ -755,7 +761,7 @@
       const traceVapor = {
         x: vaporX, y: vaporY, fill: 'toself',
         fillcolor: 'rgba(245, 158, 11, 0.20)', line: { color: 'transparent' },
-        name: 'Vapor Sobrecalentado', showlegend: false, hoverinfo: 'none'
+        name: 'Vapor', showlegend: false, hoverinfo: 'none'
       };
 
       return [traceLiquid, traceSat, traceVapor];
@@ -781,7 +787,7 @@
         y: pVals,
         mode: 'lines',
         name: `Domo ${refData.nombre}`,
-        line: { color: '#38bdf8', width: 2.2, shape: 'spline', smoothing: 1.1 }
+        line: { color: '#38bdf8', width: 2.0, shape: 'spline', smoothing: 1.1 }
       };
     }
 
@@ -802,43 +808,42 @@
         alertas.push(`🔴 <b>ALERTA (T. Líquido ${tLiqC.toFixed(1)}°C):</b> Igual o superior a T. Sat (${tSatCondC.toFixed(1)}°C). Pérdida total de subenfriamiento / Flash Gas.`);
       }
 
-      // EVALUACIÓN AVANZADA DE SUBENFRIAMIENTO SC < 3K (Condensador o Carga)
       if (SC < 3.0 && !alarmaTLiq) {
         if (deltaTCondAmb > 18.0 || rP > refData.rPMax) {
-          alertas.push(`🔴 <b>CONDENSADOR INSUFICIENTE / SUCIO (SC = ${SC.toFixed(1)} K):</b> Subenfriamiento bajo con un ΔT Cond-Amb elevado (${deltaTCondAmb.toFixed(1)} K) y alta presión. Falta de transferencia térmica en condensación (suciedad, fan defectuoso o flujo de aire restringido).`);
+          alertas.push(`🔴 <b>CONDENSADOR INSUFICIENTE / SUCIO (SC = ${SC.toFixed(1)} K):</b> Subenfriamiento bajo con ΔT Cond-Amb elevado (${deltaTCondAmb.toFixed(1)} K) y alta presión. Falta de transferencia térmica en condensación.`);
         } else if (SHTotal > refData.shOptimo[1]) {
-          alertas.push(`🟡 <b>FALTA DE REFRIGERANTE (SC = ${SC.toFixed(1)} K):</b> Subenfriamiento bajo acompañado de Recalentamiento elevado (${SHTotal.toFixed(1)} K). Carga insuficiente de refrigerante.`);
+          alertas.push(`🟡 <b>FALTA DE REFRIGERANTE (SC = ${SC.toFixed(1)} K):</b> Subenfriamiento bajo acompañado de Recalentamiento elevado (${SHTotal.toFixed(1)} K). Carga insuficiente.`);
         } else {
-          alertas.push(`🟡 <b>Subenfriamiento Bajo (< 3.0 K):</b> Subenfriamiento insuficiente (${SC.toFixed(1)} K). Posible baja acumulación de líquido.`);
+          alertas.push(`🟡 <b>Subenfriamiento Bajo (< 3.0 K):</b> Subenfriamiento insuficiente (${SC.toFixed(1)} K).`);
         }
       } else if (SC > refData.scOptimo[1]) {
-        alertas.push(`🔵 <b>Subenfriamiento Alto (> ${refData.scOptimo[1]} K):</b> Exceso de carga o líquido retenido en condensador.`);
+        alertas.push(`🔵 <b>Subenfriamiento Alto (> ${refData.scOptimo[1]} K):</b> Exceso de carga de refrigerante.`);
       }
 
       if (rP > refData.rPMax) {
         alertas.push(`🔴 <b>Relación de Presión Excesiva (rP = ${rP.toFixed(1)} > ${refData.rPMax}):</b> Compresor fuera de envolvente.`);
       } else if (rP < 1.8 && rP > 1.0) {
-        alertas.push(`🟡 <b>Relación de Presión Muy Baja (rP = ${rP.toFixed(1)}):</b> Ineficiencia por desgaste en válvulas o bypass interno.`);
+        alertas.push(`🟡 <b>Relación de Presión Muy Baja (rP = ${rP.toFixed(1)}):</b> Ineficiencia por desgaste o bypass.`);
       }
 
       if (SHUtil < refData.shOptimo[0]) {
-        alertas.push(`🔴 <b>Recalentamiento Útil Crítico (< ${refData.shOptimo[0]} K):</b> Riesgo de inundación del evaporador / retorno líquido.`);
+        alertas.push(`🔴 <b>Recalentamiento Útil Crítico (< ${refData.shOptimo[0]} K):</b> Riesgo de inundación / retorno líquido.`);
       } else if (SHUtil > refData.shOptimo[1]) {
-        alertas.push(`🟡 <b>Recalentamiento Útil Alto (> ${refData.shOptimo[1]} K):</b> Evaporador subalimentado o VXT desajustada.`);
+        alertas.push(`🟡 <b>Recalentamiento Útil Alto (> ${refData.shOptimo[1]} K):</b> Evaporador subalimentado.`);
       }
 
       if ((SHTotal - SHUtil) > 5.0) {
-        alertas.push(`🟠 <b>Ganancia Térmica en Succión Elevada (${(SHTotal - SHUtil).toFixed(1)} K):</b> Pérdida de eficiencia por tubería de succión sin aislamiento adecuado.`);
+        alertas.push(`🟠 <b>Ganancia Térmica en Succión (${(SHTotal - SHUtil).toFixed(1)} K):</b> Aislamiento insuficiente en succión.`);
       }
 
       if (dischargeSuperHeatK < 10.0) {
-        alertas.push(`🔴 <b>Riesgo de Golpe de Líquido (SH Descarga muy bajo: ${dischargeSuperHeatK.toFixed(1)} K):</b> El gas sale con muy poco sobrecalentamiento.`);
+        alertas.push(`🔴 <b>Riesgo Golpe de Líquido (SH Descarga: ${dischargeSuperHeatK.toFixed(1)} K):</b> Poco sobrecalentamiento en descarga.`);
       } else if (dischargeSuperHeatK > 42.0) {
-        alertas.push(`🔴 <b>Compresor Sobrecalentado (SH Descarga excesivo: ${dischargeSuperHeatK.toFixed(1)} K):</b> Exceso de calor en compresión.`);
+        alertas.push(`🔴 <b>Compresor Sobrecalentado (SH Descarga: ${dischargeSuperHeatK.toFixed(1)} K):</b> Exceso de calor.`);
       }
 
       if (refData.esZeotropico && refData.glide > 0.5) {
-        alertas.push(`ℹ️ <b>Mezcla Zeotrópica (Glide ${refData.glide} K):</b> Considere la diferencia de temperatura entre rocío y burbuja.`);
+        alertas.push(`ℹ️ <b>Mezcla Zeotrópica (Glide ${refData.glide} K):</b> Evaluar glide entre rocío y burbuja.`);
       }
 
       return { alertas, alarmaTDesc, alarmaTLiq };
@@ -925,17 +930,11 @@
       const grpLiq = document.getElementById('grpTLiq');
       const panelAlertas = document.getElementById('panelAlertas');
 
-      if (alarmaTDesc) {
-        grpDesc.classList.add('alarm-field-active');
-      } else {
-        grpDesc.classList.remove('alarm-field-active');
-      }
+      if (alarmaTDesc) grpDesc.classList.add('alarm-field-active');
+      else grpDesc.classList.remove('alarm-field-active');
 
-      if (alarmaTLiq) {
-        grpLiq.classList.add('alarm-field-active');
-      } else {
-        grpLiq.classList.remove('alarm-field-active');
-      }
+      if (alarmaTLiq) grpLiq.classList.add('alarm-field-active');
+      else grpLiq.classList.remove('alarm-field-active');
 
       if (alertas.length === 0) {
         panelAlertas.innerHTML = `<div class="diag-item" style="color: #34d399; text-align: left;">✅ <b>Sistema Estable:</b> El equipo con ${refData.nombre} opera dentro de los parámetros previstos.</div>`;
@@ -955,35 +954,37 @@
         x: [h1, h2, h3, h4, h1],
         y: [pSuctPlot, pDescPlot, pDescPlot, pSuctPlot, pSuctPlot],
         mode: 'lines+markers+text',
-        name: 'Ciclo Operativo Real',
-        text: ['1 (Succ)', '2 (Desc)', '3 (Liq)', '4 (Exp)', '1'],
+        name: 'Ciclo Operativo',
+        text: ['1', '2', '3', '4', '1'],
         textposition: 'top center',
-        textfont: { size: 9, color: '#f8fafc' },
-        line: { color: '#ef4444', width: 2.5 },
-        marker: { size: 6, color: '#f59e0b' }
+        textfont: { size: 8, color: '#f8fafc' },
+        line: { color: '#ef4444', width: 2.2 },
+        marker: { size: 5, color: '#f59e0b' }
       };
 
       const domeTrace = getDomeTrace(refData);
 
+      // MARGENES Y REAJUSTE COMPACTO PARA PANTALLAS MÓVILES
       const layout = {
         autosize: true,
-        margin: { l: 25, r: 5, t: 15, b: 20 },
+        margin: { l: 18, r: 5, t: 10, b: 18 },
         paper_bgcolor: '#1e293b',
         plot_bgcolor: '#0f172a',
         showlegend: false,
         xaxis: {
-          title: 'Entalpía Especifica h (kJ/kg)',
-          titlefont: { size: 7, color: '#94a3b8' },
-          tickfont: { size: 6, color: '#cbd5e1' },
+          title: 'h (kJ/kg)',
+          titlefont: { size: 6, color: '#94a3b8' },
+          tickfont: { size: 5.5, color: '#cbd5e1' },
           gridcolor: '#334155',
           zeroline: false,
           range: zonaActivaHabilitada ? [Math.max(h4 - 30, minX), Math.min(h2 + 30, maxX)] : [minX, maxX]
         },
         yaxis: {
-          title: `Presión Absoluta (${pUnits[pUnitActual].label})`,
-          titlefont: { size: 7, color: '#94a3b8' },
-          tickfont: { size: 6, color: '#cbd5e1' },
+          title: `P. Abs (${pUnits[pUnitActual].label})`,
+          titlefont: { size: 6, color: '#94a3b8' },
+          tickfont: { size: 5.5, color: '#cbd5e1' },
           type: 'log',
+          automargin: true,
           gridcolor: '#334155',
           zeroline: false,
           range: zonaActivaHabilitada ? [Math.log10(pSuctPlot * 0.7), Math.log10(pDescPlot * 1.3)] : undefined
@@ -993,7 +994,6 @@
       Plotly.react('mollierPlot', [...zoneTraces, domeTrace, cycleTrace], layout, { responsive: true, displayModeBar: false });
     }
 
-    // Inicialización al cargar la ventana
     window.addEventListener('DOMContentLoaded', () => {
       cargarConfiguracion();
       actualizarEtiquetas();
