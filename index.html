@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Diagramas de Mollier (p-h) Pro - Mediciones y Diagnóstico de Campo</title>
-
+  
   <!-- CDNs necesarios: Plotly para la gráfica y html2pdf para generar el PDF -->
   <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -16,15 +16,13 @@
       padding: 0;
     }
 
-    html,
-    body {
+    html, body {
       width: 100%;
       height: 100%;
       height: 100dvh;
       overflow-x: hidden;
       overflow-y: auto;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
-        sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background-color: #0f172a;
       color: #f8fafc;
     }
@@ -357,17 +355,16 @@
       background-color: #ffffff !important;
       color: #000000 !important;
     }
-    body.generating-pdf .card,
-    body.generating-pdf .prof-header-card,
+    body.generating-pdf .card, 
+    body.generating-pdf .prof-header-card, 
     body.generating-pdf .top-info-bar,
     body.generating-pdf .diag-container,
     body.generating-pdf .kpi-box {
       background-color: #ffffff !important;
       border-color: #cccccc !important;
       color: #000000 !important;
-      box-shadow: none !important;
     }
-    body.generating-pdf input,
+    body.generating-pdf input, 
     body.generating-pdf select {
       background-color: #ffffff !important;
       color: #000000 !important;
@@ -376,23 +373,12 @@
     body.generating-pdf .action-bar {
       display: none !important;
     }
-
-    /* ------ Ajustes adicionales para exportar a PDF: quitar sombras y forzar overflow visible ------ */
-    body.generating-pdf * {
-      box-shadow: none !important;
-      -webkit-box-shadow: none !important;
-    }
-    body.generating-pdf .card,
-    body.generating-pdf .prof-header-card {
-      border: 1px solid #cccccc !important;
-    }
-    body.generating-pdf .chart-container {
-      overflow: visible !important;
-    }
   </style>
 </head>
 <body>
+
   <div class="app-container" id="reporteArea">
+    
     <!-- Barra superior con Fecha, Hora Activa y Clima -->
     <div class="top-info-bar">
       <div class="date-time-box">
@@ -408,34 +394,34 @@
       <div class="prof-grid">
         <div class="input-group">
           <label for="empresaNombre">Empresa</label>
-          <input type="text" id="empresaNombre" value="Servicios Técnicos" oninput="guardarYActualizar()" />
+          <input type="text" id="empresaNombre" value="Servicios Técnicos" oninput="guardarYActualizar()">
         </div>
 
         <div class="input-group">
           <label for="empresaRif">RIF / ID Fiscal</label>
-          <input type="text" id="empresaRif" value="J-00000000-0" oninput="guardarYActualizar()" />
+          <input type="text" id="empresaRif" value="J-00000000-0" oninput="guardarYActualizar()">
         </div>
 
         <div class="input-group">
           <label for="tecnicoNombre">Técnico Evaluante</label>
-          <input type="text" id="tecnicoNombre" value="Téc. Especialista" oninput="guardarYActualizar()" />
+          <input type="text" id="tecnicoNombre" value="Téc. Especialista" oninput="guardarYActualizar()">
         </div>
 
         <div class="input-group">
           <label for="equipoMarca">Marca del Equipo</label>
-          <input type="text" id="equipoMarca" value="Daikin" oninput="guardarYActualizar()" />
+          <input type="text" id="equipoMarca" value="Daikin" oninput="guardarYActualizar()">
         </div>
 
         <div class="input-group">
           <label for="equipoModelo">Modelo</label>
-          <input type="text" id="equipoModelo" value="XL10-2026" oninput="guardarYActualizar()" />
+          <input type="text" id="equipoModelo" value="XL10-2026" oninput="guardarYActualizar()">
         </div>
 
         <div class="input-group">
           <label for="capFrigValue">Cap. Frigorífica</label>
           <div class="cap-input-row">
             <input type="number" id="capFrigValue" value="36000" oninput="guardarYActualizar()" step="1" />
-            <select id="capUnitSelect" onchange="onCapUnitChange()">
+            <select id="capUnitSelect" onchange="guardarYActualizar()">
               <option value="BTU/h" selected>BTU/h</option>
               <option value="kW">kW</option>
               <option value="Ton">Ton</option>
@@ -448,7 +434,7 @@
     <header class="top-panel">
       <div class="card" id="cardDatosCampo">
         <h2><span>Datos de Campo</span></h2>
-
+        
         <div class="config-row">
           <div class="input-group input-group-ref">
             <label for="refSelect">Refrigerante</label>
@@ -492,44 +478,45 @@
         <div class="controls-grid">
           <div class="input-group" id="grpPSuct">
             <label for="pSuct" id="lblPSuct">P. Succión</label>
-            <input type="number" id="pSuct" value="25" step="1" oninput="guardarYActualizar()" />
+            <input type="number" id="pSuct" value="25" step="1" oninput="guardarYActualizar()">
           </div>
 
           <div class="input-group" id="grpPDesc">
             <label for="pDesc" id="lblPDesc">P. Descarga</label>
-            <input type="number" id="pDesc" value="290" step="1" oninput="guardarYActualizar()" />
+            <input type="number" id="pDesc" value="290" step="1" oninput="guardarYActualizar()">
           </div>
 
           <div class="input-group" id="grpTEvapOut">
             <label for="tEvapOut" id="lblTEvapOut">T. Salida Evap</label>
-            <input type="number" id="tEvapOut" value="-12" step="0.5" oninput="guardarYActualizar()" />
+            <input type="number" id="tEvapOut" value="-12" step="0.5" oninput="guardarYActualizar()">
           </div>
 
           <div class="input-group" id="grpTSuct">
             <label for="tSuct" id="lblTSuct">T. Temp Succión</label>
-            <input type="number" id="tSuct" value="-10" step="0.5" oninput="guardarYActualizar()" />
+            <input type="number" id="tSuct" value="-10" step="0.5" oninput="guardarYActualizar()">
           </div>
 
           <div class="input-group" id="grpTLiq">
             <label for="tLiq" id="lblTLiq">T. Tubería Liq</label>
-            <input type="number" id="tLiq" value="45" step="0.5" oninput="guardarYActualizar()" />
+            <input type="number" id="tLiq" value="45" step="0.5" oninput="guardarYActualizar()">
           </div>
 
           <div class="input-group" id="grpTDescReal">
             <label for="tDescReal" id="lblTDescReal">T. Descarga</label>
-            <input type="number" id="tDescReal" value="90" step="1" oninput="guardarYActualizar()" />
+            <input type="number" id="tDescReal" value="90" step="1" oninput="guardarYActualizar()">
           </div>
 
           <div class="input-group">
             <label for="vVolt">Voltaje (V)</label>
-            <input type="number" id="vVolt" value="220" step="1" oninput="guardarYActualizar()" />
+            <input type="number" id="vVolt" value="220" step="1" oninput="guardarYActualizar()">
           </div>
 
           <div class="input-group">
             <label for="iAmp">Amperaje (A)</label>
-            <input type="number" id="iAmp" value="22" step="0.1" oninput="guardarYActualizar()" />
+            <input type="number" id="iAmp" value="22" step="0.1" oninput="guardarYActualizar()">
           </div>
         </div>
+
       </div>
 
       <div class="card" id="cardIndicadores">
@@ -569,8 +556,10 @@
           </div>
         </div>
 
-        <div class="diag-container" id="panelAlertas"></div>
+        <div class="diag-container" id="panelAlertas">
+        </div>
       </div>
+
     </header>
 
     <main class="card chart-card">
@@ -586,254 +575,132 @@
 
       <div id="mollierPlot" class="chart-container"></div>
     </main>
+
   </div>
 
   <script>
-    // Estado global y constantes
     let zonaActivaHabilitada = false;
-    let pUnitActual = "psi";
-    let tUnitActual = "C";
+    let pUnitActual = 'psi';
+    let tUnitActual = 'C';
     let tempAmbientePuntoFijoC = 30.0;
-
-    // Capacidad frigorífica
-    let capUnitActual = "BTU/h";
-    const BTU_PER_KW = 3412.142; // 1 kW = 3412.142 BTU/h
-    const BTU_PER_TON = 12000.0; // 1 Ton = 12000 BTU/h
-    const KW_PER_TON = BTU_PER_TON / BTU_PER_KW; // ≈ 3.5168525
 
     const P_ATM_BAR = 1.01325;
     const P_ATM_PSI = 14.696;
     const P_ATM_KPA = 101.325;
 
     const pUnits = {
-      bar: { factor: 1.0, label: "Bar", atm: P_ATM_BAR },
-      psi: { factor: 14.5038, label: "PSI", atm: P_ATM_PSI },
-      kpa: { factor: 100.0, label: "kPa", atm: P_ATM_KPA },
+      bar: { factor: 1.0, label: 'Bar', atm: P_ATM_BAR },
+      psi: { factor: 14.5038, label: 'PSI', atm: P_ATM_PSI },
+      kpa: { factor: 100.0, label: 'kPa', atm: P_ATM_KPA }
     };
 
     const refrigerantes = {
       R134a: {
-        nombre: "R-134a",
-        criticalP: 40.59,
-        xRange: [150, 480],
-        cpL: 1.42,
-        cpV: 0.95,
-        glide: 0.0,
-        tDescMax: 100,
-        shOptimo: [5, 9],
-        scOptimo: [3, 7],
-        rPMax: 8.0,
-        esZeotropico: false,
+        nombre: "R-134a", criticalP: 40.59, xRange: [150, 480],
+        cpL: 1.42, cpV: 0.95, glide: 0.0, tDescMax: 100, shOptimo: [5, 9], scOptimo: [3, 7], rPMax: 8.0, esZeotropico: false,
         dome: [
-          { p: 0.5, hL: 140.0, hV: 383.0, tSat: -40 },
-          { p: 1.0, hL: 161.0, hV: 389.5, tSat: -26.4 },
-          { p: 2.0, hL: 186.5, hV: 397.0, tSat: -10.1 },
-          { p: 4.0, hL: 213.0, hV: 404.5, tSat: 8.9 },
-          { p: 8.0, hL: 244.0, hV: 412.0, tSat: 31.3 },
-          { p: 15.0, hL: 278.0, hV: 415.5, tSat: 55.2 },
-          { p: 25.0, hL: 318.0, hV: 410.0, tSat: 77.6 },
-          { p: 40.59, hL: 380.0, hV: 380.0, tSat: 101.1 },
-        ],
+          {p: 0.5, hL: 140.0, hV: 383.0, tSat: -40}, {p: 1.0, hL: 161.0, hV: 389.5, tSat: -26.4},
+          {p: 2.0, hL: 186.5, hV: 397.0, tSat: -10.1}, {p: 4.0, hL: 213.0, hV: 404.5, tSat: 8.9},
+          {p: 8.0, hL: 244.0, hV: 412.0, tSat: 31.3},  {p: 15.0, hL: 278.0, hV: 415.5, tSat: 55.2},
+          {p: 25.0, hL: 318.0, hV: 410.0, tSat: 77.6}, {p: 40.59, hL: 380.0, hV: 380.0, tSat: 101.1}
+        ]
       },
       R22: {
-        nombre: "R-22",
-        criticalP: 49.9,
-        xRange: [140, 470],
-        cpL: 1.28,
-        cpV: 0.76,
-        glide: 0.0,
-        tDescMax: 115,
-        shOptimo: [5, 10],
-        scOptimo: [3, 6],
-        rPMax: 7.5,
-        esZeotropico: false,
+        nombre: "R-22", criticalP: 49.9, xRange: [140, 470],
+        cpL: 1.28, cpV: 0.76, glide: 0.0, tDescMax: 115, shOptimo: [5, 10], scOptimo: [3, 6], rPMax: 7.5, esZeotropico: false,
         dome: [
-          { p: 1.0, hL: 158.0, hV: 397.0, tSat: -40.8 },
-          { p: 2.5, hL: 185.0, hV: 403.5, tSat: -20.5 },
-          { p: 5.0, hL: 210.0, hV: 409.0, tSat: -2.3 },
-          { p: 10.0, hL: 238.0, hV: 414.0, tSat: 23.3 },
-          { p: 20.0, hL: 275.0, hV: 415.0, tSat: 52.2 },
-          { p: 35.0, hL: 320.0, hV: 405.0, tSat: 78.4 },
-          { p: 49.9, hL: 392.0, hV: 392.0, tSat: 96.2 },
-        ],
+          {p: 1.0, hL: 158.0, hV: 397.0, tSat: -40.8}, {p: 2.5, hL: 185.0, hV: 403.5, tSat: -20.5},
+          {p: 5.0, hL: 210.0, hV: 409.0, tSat: -2.3},  {p: 10.0, hL: 238.0, hV: 414.0, tSat: 23.3},
+          {p: 20.0, hL: 275.0, hV: 415.0, tSat: 52.2}, {p: 35.0, hL: 320.0, hV: 405.0, tSat: 78.4},
+          {p: 49.9, hL: 392.0, hV: 392.0, tSat: 96.2}
+        ]
       },
       R404A: {
-        nombre: "R-404A",
-        criticalP: 36.8,
-        xRange: [100, 410],
-        cpL: 1.54,
-        cpV: 0.88,
-        glide: 0.8,
-        tDescMax: 90,
-        shOptimo: [4, 8],
-        scOptimo: [4, 8],
-        rPMax: 9.0,
-        esZeotropico: true,
+        nombre: "R-404A", criticalP: 36.8, xRange: [100, 410],
+        cpL: 1.54, cpV: 0.88, glide: 0.8, tDescMax: 90, shOptimo: [4, 8], scOptimo: [4, 8], rPMax: 9.0, esZeotropico: true,
         dome: [
-          { p: 1.0, hL: 128.0, hV: 358.0, tSat: -45.5 },
-          { p: 2.5, hL: 155.0, hV: 365.0, tSat: -26.0 },
-          { p: 6.0, hL: 190.0, hV: 373.0, tSat: 1.0 },
-          { p: 12.0, hL: 222.0, hV: 376.0, tSat: 24.3 },
-          { p: 22.0, hL: 262.0, hV: 368.0, tSat: 49.7 },
-          { p: 36.8, hL: 325.0, hV: 325.0, tSat: 72.1 },
-        ],
+          {p: 1.0, hL: 128.0, hV: 358.0, tSat: -45.5}, {p: 2.5, hL: 155.0, hV: 365.0, tSat: -26.0},
+          {p: 6.0, hL: 190.0, hV: 373.0, tSat: 1.0},   {p: 12.0, hL: 222.0, hV: 376.0, tSat: 24.3},
+          {p: 22.0, hL: 262.0, hV: 368.0, tSat: 49.7}, {p: 36.8, hL: 325.0, hV: 325.0, tSat: 72.1}
+        ]
       },
       R410A: {
-        nombre: "R-410A",
-        criticalP: 49.0,
-        xRange: [120, 460],
-        cpL: 1.68,
-        cpV: 1.12,
-        glide: 0.2,
-        tDescMax: 105,
-        shOptimo: [4, 8],
-        scOptimo: [4, 8],
-        rPMax: 6.0,
-        esZeotropico: true,
+        nombre: "R-410A", criticalP: 49.0, xRange: [120, 460],
+        cpL: 1.68, cpV: 1.12, glide: 0.2, tDescMax: 105, shOptimo: [4, 8], scOptimo: [4, 8], rPMax: 6.0, esZeotropico: true,
         dome: [
-          { p: 1.5, hL: 135.0, hV: 415.0, tSat: -42.0 },
-          { p: 4.0, hL: 175.0, hV: 422.0, tSat: -22.5 },
-          { p: 10.0, hL: 222.0, hV: 426.0, tSat: 4.2 },
-          { p: 20.0, hL: 268.0, hV: 422.0, tSat: 32.1 },
-          { p: 35.0, hL: 320.0, hV: 405.0, tSat: 57.8 },
-          { p: 49.0, hL: 395.0, hV: 395.0, tSat: 72.1 },
-        ],
+          {p: 1.5, hL: 135.0, hV: 415.0, tSat: -42.0}, {p: 4.0, hL: 175.0, hV: 422.0, tSat: -22.5},
+          {p: 10.0, hL: 222.0, hV: 426.0, tSat: 4.2},  {p: 20.0, hL: 268.0, hV: 422.0, tSat: 32.1},
+          {p: 35.0, hL: 320.0, hV: 405.0, tSat: 57.8}, {p: 49.0, hL: 395.0, hV: 395.0, tSat: 72.1}
+        ]
       },
       R32: {
-        nombre: "R-32",
-        criticalP: 57.8,
-        xRange: [140, 560],
-        cpL: 1.90,
-        cpV: 1.25,
-        glide: 0.0,
-        tDescMax: 110,
-        shOptimo: [4, 8],
-        scOptimo: [3, 7],
-        rPMax: 6.5,
-        esZeotropico: false,
+        nombre: "R-32", criticalP: 57.8, xRange: [140, 560],
+        cpL: 1.90, cpV: 1.25, glide: 0.0, tDescMax: 110, shOptimo: [4, 8], scOptimo: [3, 7], rPMax: 6.5, esZeotropico: false,
         dome: [
-          { p: 1.5, hL: 145.0, hV: 502.0, tSat: -43.0 },
-          { p: 5.0, hL: 202.0, hV: 515.0, tSat: -16.0 },
-          { p: 12.0, hL: 255.0, hV: 522.0, tSat: 11.5 },
-          { p: 25.0, hL: 315.0, hV: 518.0, tSat: 41.2 },
-          { p: 45.0, hL: 398.0, hV: 492.0, tSat: 66.8 },
-          { p: 57.8, hL: 470.0, hV: 470.0, tSat: 78.1 },
-        ],
+          {p: 1.5, hL: 145.0, hV: 502.0, tSat: -43.0}, {p: 5.0, hL: 202.0, hV: 515.0, tSat: -16.0},
+          {p: 12.0, hL: 255.0, hV: 522.0, tSat: 11.5}, {p: 25.0, hL: 315.0, hV: 518.0, tSat: 41.2},
+          {p: 45.0, hL: 398.0, hV: 492.0, tSat: 66.8}, {p: 57.8, hL: 470.0, hV: 470.0, tSat: 78.1}
+        ]
       },
       R290: {
-        nombre: "R-290",
-        criticalP: 42.5,
-        xRange: [160, 620],
-        cpL: 2.45,
-        cpV: 1.68,
-        glide: 0.0,
-        tDescMax: 85,
-        shOptimo: [3, 7],
-        scOptimo: [2, 5],
-        rPMax: 8.0,
-        esZeotropico: false,
+        nombre: "R-290", criticalP: 42.5, xRange: [160, 620],
+        cpL: 2.45, cpV: 1.68, glide: 0.0, tDescMax: 85, shOptimo: [3, 7], scOptimo: [2, 5], rPMax: 8.0, esZeotropico: false,
         dome: [
-          { p: 1.0, hL: 190.0, hV: 558.0, tSat: -42.1 },
-          { p: 3.0, hL: 242.0, hV: 572.0, tSat: -21.3 },
-          { p: 7.0, hL: 298.0, hV: 585.0, tSat: 12.8 },
-          { p: 15.0, hL: 362.0, hV: 588.0, tSat: 42.1 },
-          { p: 30.0, hL: 450.0, hV: 565.0, tSat: 76.5 },
-          { p: 42.5, hL: 560.0, hV: 560.0, tSat: 96.7 },
-        ],
+          {p: 1.0, hL: 190.0, hV: 558.0, tSat: -42.1}, {p: 3.0, hL: 242.0, hV: 572.0, tSat: -21.3},
+          {p: 7.0, hL: 298.0, hV: 585.0, tSat: 12.8},  {p: 15.0, hL: 362.0, hV: 588.0, tSat: 42.1},
+          {p: 30.0, hL: 450.0, hV: 565.0, tSat: 76.5}, {p: 42.5, hL: 560.0, hV: 560.0, tSat: 96.7}
+        ]
       },
       R600a: {
-        nombre: "R-600a",
-        criticalP: 36.5,
-        xRange: [180, 610],
-        cpL: 2.38,
-        cpV: 1.52,
-        glide: 0.0,
-        tDescMax: 85,
-        shOptimo: [3, 7],
-        scOptimo: [2, 5],
-        rPMax: 8.5,
-        esZeotropico: false,
+        nombre: "R-600a", criticalP: 36.5, xRange: [180, 610],
+        cpL: 2.38, cpV: 1.52, glide: 0.0, tDescMax: 85, shOptimo: [3, 7], scOptimo: [2, 5], rPMax: 8.5, esZeotropico: false,
         dome: [
-          { p: 0.8, hL: 195.0, hV: 540.0, tSat: -19.5 },
-          { p: 2.0, hL: 240.0, hV: 558.0, tSat: 8.2 },
-          { p: 5.0, hL: 295.0, hV: 575.0, tSat: 38.0 },
-          { p: 12.0, hL: 368.0, hV: 580.0, tSat: 71.3 },
-          { p: 25.0, hL: 460.0, hV: 552.0, tSat: 110.1 },
-          { p: 36.5, hL: 540.0, hV: 540.0, tSat: 134.7 },
-        ],
+          {p: 0.8, hL: 195.0, hV: 540.0, tSat: -19.5}, {p: 2.0, hL: 240.0, hV: 558.0, tSat: 8.2},
+          {p: 5.0, hL: 295.0, hV: 575.0, tSat: 38.0},  {p: 12.0, hL: 368.0, hV: 580.0, tSat: 71.3},
+          {p: 25.0, hL: 460.0, hV: 552.0, tSat: 110.1},{p: 36.5, hL: 540.0, hV: 540.0, tSat: 134.7}
+        ]
       },
       R507A: {
-        nombre: "R-507A",
-        criticalP: 37.1,
-        xRange: [100, 410],
-        cpL: 1.52,
-        cpV: 0.89,
-        glide: 0.0,
-        tDescMax: 90,
-        shOptimo: [4, 8],
-        scOptimo: [4, 8],
-        rPMax: 9.0,
-        esZeotropico: false,
+        nombre: "R-507A", criticalP: 37.1, xRange: [100, 410],
+        cpL: 1.52, cpV: 0.89, glide: 0.0, tDescMax: 90, shOptimo: [4, 8], scOptimo: [4, 8], rPMax: 9.0, esZeotropico: false,
         dome: [
-          { p: 1.0, hL: 125.0, hV: 355.0, tSat: -46.1 },
-          { p: 3.0, hL: 160.0, hV: 364.0, tSat: -20.2 },
-          { p: 7.0, hL: 192.0, hV: 370.0, tSat: 4.8 },
-          { p: 15.0, hL: 232.0, hV: 366.0, tSat: 31.2 },
-          { p: 26.0, hL: 275.0, hV: 352.0, tSat: 55.4 },
-          { p: 37.1, hL: 320.0, hV: 320.0, tSat: 70.6 },
-        ],
+          {p: 1.0, hL: 125.0, hV: 355.0, tSat: -46.1}, {p: 3.0, hL: 160.0, hV: 364.0, tSat: -20.2},
+          {p: 7.0, hL: 192.0, hV: 370.0, tSat: 4.8},   {p: 15.0, hL: 232.0, hV: 366.0, tSat: 31.2},
+          {p: 26.0, hL: 275.0, hV: 352.0, tSat: 55.4}, {p: 37.1, hL: 320.0, hV: 320.0, tSat: 70.6}
+        ]
       },
       R407C: {
-        nombre: "R-407C",
-        criticalP: 46.3,
-        xRange: [130, 470],
-        cpL: 1.50,
-        cpV: 0.92,
-        glide: 4.8,
-        tDescMax: 105,
-        shOptimo: [5, 9],
-        scOptimo: [3, 7],
-        rPMax: 8.0,
-        esZeotropico: true,
+        nombre: "R-407C", criticalP: 46.3, xRange: [130, 470],
+        cpL: 1.50, cpV: 0.92, glide: 4.8, tDescMax: 105, shOptimo: [5, 9], scOptimo: [3, 7], rPMax: 8.0, esZeotropico: true,
         dome: [
-          { p: 1.0, hL: 142.0, hV: 405.0, tSat: -41.2 },
-          { p: 3.0, hL: 178.0, hV: 413.0, tSat: -18.1 },
-          { p: 7.0, hL: 212.0, hV: 418.0, tSat: 8.5 },
-          { p: 15.0, hL: 252.0, hV: 417.0, tSat: 38.2 },
-          { p: 30.0, hL: 310.0, hV: 402.0, tSat: 67.4 },
-          { p: 46.3, hL: 410.0, hV: 410.0, tSat: 86.0 },
-        ],
-      },
+          {p: 1.0, hL: 142.0, hV: 405.0, tSat: -41.2}, {p: 3.0, hL: 178.0, hV: 413.0, tSat: -18.1},
+          {p: 7.0, hL: 212.0, hV: 418.0, tSat: 8.5},   {p: 15.0, hL: 252.0, hV: 417.0, tSat: 38.2},
+          {p: 30.0, hL: 310.0, hV: 402.0, tSat: 67.4}, {p: 46.3, hL: 410.0, hV: 410.0, tSat: 86.0}
+        ]
+      }
     };
 
-    // Reloj y clima
     function actualizarReloj() {
       const ahora = new Date();
-      const opciones = {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: true,
+      const opciones = { 
+        year: 'numeric', month: '2-digit', day: '2-digit', 
+        hour: '2-digit', minute: '2-digit', second: '2-digit', 
+        hour12: true 
       };
-      document.getElementById("txtFechaHora").innerText = ahora.toLocaleString("es-VE", opciones);
+      document.getElementById('txtFechaHora').innerText = ahora.toLocaleString('es-VE', opciones);
     }
 
     function convertirTemp(tempC) {
-      if (tUnitActual === "F") {
-        return (tempC * 9) / 5 + 32;
+      if (tUnitActual === 'F') {
+        return (tempC * 9/5) + 32;
       }
       return tempC;
     }
 
     async function obtenerClimaPuntoFijo() {
-      const lbl = document.getElementById("txtTempAmb");
+      const lbl = document.getElementById('txtTempAmb');
       try {
-        const res = await fetch(
-          "https://api.open-meteo.com/v1/forecast?latitude=11.7&longitude=-70.2&current_weather=true"
-        );
+        const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=11.7&longitude=-70.2&current_weather=true');
         const data = await res.json();
         if (data && data.current_weather) {
           tempAmbientePuntoFijoC = data.current_weather.temperature;
@@ -849,36 +716,35 @@
     }
 
     function actualizarEtiquetas() {
-      document.getElementById("lblPSuct").innerText = `P. Succión (${pUnits[pUnitActual].label})`;
-      document.getElementById("lblPDesc").innerText = `P. Descarga (${pUnits[pUnitActual].label})`;
-      document.getElementById("lblTEvapOut").innerText = `T. Salida Evap (°${tUnitActual})`;
-      document.getElementById("lblTSuct").innerText = `T. Succ Tubo (°${tUnitActual})`;
-      document.getElementById("lblTLiq").innerText = `T. Liq Tubo (°${tUnitActual})`;
-      document.getElementById("lblTDescReal").innerText = `T. Desc (°${tUnitActual})`;
+      document.getElementById('lblPSuct').innerText = `P. Succión (${pUnits[pUnitActual].label})`;
+      document.getElementById('lblPDesc').innerText = `P. Descarga (${pUnits[pUnitActual].label})`;
+      document.getElementById('lblTEvapOut').innerText = `T. Salida Evap (°${tUnitActual})`;
+      document.getElementById('lblTSuct').innerText = `T. Succ Tubo (°${tUnitActual})`;
+      document.getElementById('lblTLiq').innerText = `T. Liq Tubo (°${tUnitActual})`;
+      document.getElementById('lblTDescReal').innerText = `T. Desc (°${tUnitActual})`;
     }
 
-    // Conversión de unidades de presión y temperatura
     function cambiarUnidades() {
-      const nuevaPUnit = document.getElementById("pUnitSelect").value;
-      const nuevaTUnit = document.getElementById("tUnitSelect").value;
+      const nuevaPUnit = document.getElementById('pUnitSelect').value;
+      const nuevaTUnit = document.getElementById('tUnitSelect').value;
 
       const pFactorViejo = pUnits[pUnitActual].factor;
       const pFactorNuevo = pUnits[nuevaPUnit].factor;
 
-      ["pSuct", "pDesc"].forEach((id) => {
+      ['pSuct', 'pDesc'].forEach(id => {
         const elem = document.getElementById(id);
         const valBar = parseFloat(elem.value) / pFactorViejo;
-        elem.value = (valBar * pFactorNuevo).toFixed(nuevaPUnit === "psi" ? 0 : 1);
+        elem.value = (valBar * pFactorNuevo).toFixed(nuevaPUnit === 'psi' ? 0 : 1);
       });
 
       if (tUnitActual !== nuevaTUnit) {
-        ["tEvapOut", "tSuct", "tLiq", "tDescReal"].forEach((id) => {
+        ['tEvapOut', 'tSuct', 'tLiq', 'tDescReal'].forEach(id => {
           const elem = document.getElementById(id);
           let val = parseFloat(elem.value);
-          if (nuevaTUnit === "F") {
-            elem.value = (val * 9 / 5 + 32).toFixed(1);
+          if (nuevaTUnit === 'F') {
+            elem.value = (val * 9/5 + 32).toFixed(1);
           } else {
-            elem.value = ((val - 32) * 5 / 9).toFixed(1);
+            elem.value = ((val - 32) * 5/9).toFixed(1);
           }
         });
       }
@@ -897,138 +763,83 @@
     }
 
     function actualizarEstadoBotonZoom() {
-      const btn = document.getElementById("btnZonaActiva");
-      btn.innerText = `🔍 Zoom Zona Activa: ${zonaActivaHabilitada ? "ON" : "OFF"}`;
-      btn.classList.toggle("active", zonaActivaHabilitada);
-    }
-
-    // Conversión de capacidad frigorífica: pivote a BTU/h
-    function convertirCapacidad(valor, fromUnit, toUnit) {
-      if (isNaN(valor)) return valor;
-      let valorBTU;
-      switch (fromUnit) {
-        case "BTU/h":
-          valorBTU = valor;
-          break;
-        case "kW":
-          valorBTU = valor * BTU_PER_KW;
-          break;
-        case "Ton":
-          valorBTU = valor * BTU_PER_TON;
-          break;
-        default:
-          valorBTU = valor;
-      }
-      switch (toUnit) {
-        case "BTU/h":
-          return valorBTU;
-        case "kW":
-          return valorBTU / BTU_PER_KW;
-        case "Ton":
-          return valorBTU / BTU_PER_TON;
-        default:
-          return valorBTU;
-      }
-    }
-
-    function onCapUnitChange() {
-      const select = document.getElementById("capUnitSelect");
-      const newUnit = select.value;
-      const input = document.getElementById("capFrigValue");
-      let val = parseFloat(input.value);
-      if (isNaN(val)) {
-        capUnitActual = newUnit;
-        guardarYActualizar();
-        return;
-      }
-      const converted = convertirCapacidad(val, capUnitActual, newUnit);
-      if (newUnit === "BTU/h") input.value = Math.round(converted);
-      else input.value = converted.toFixed(2);
-      capUnitActual = newUnit;
-      guardarYActualizar();
+      const btn = document.getElementById('btnZonaActiva');
+      btn.innerText = `🔍 Zoom Zona Activa: ${zonaActivaHabilitada ? 'ON' : 'OFF'}`;
+      btn.classList.toggle('active', zonaActivaHabilitada);
     }
 
     function guardarConfiguracion() {
       const data = {
-        empresaNombre: document.getElementById("empresaNombre").value,
-        empresaRif: document.getElementById("empresaRif").value,
-        tecnicoNombre: document.getElementById("tecnicoNombre").value,
-        equipoMarca: document.getElementById("equipoMarca").value,
-        equipoModelo: document.getElementById("equipoModelo").value,
-        capFrigValue: document.getElementById("capFrigValue").value,
-        capFrigUnit: document.getElementById("capUnitSelect").value,
-        refSelect: document.getElementById("refSelect").value,
-        pUnitSelect: document.getElementById("pUnitSelect").value,
-        tUnitSelect: document.getElementById("tUnitSelect").value,
-        pSuct: document.getElementById("pSuct").value,
-        pDesc: document.getElementById("pDesc").value,
-        tEvapOut: document.getElementById("tEvapOut").value,
-        tSuct: document.getElementById("tSuct").value,
-        tLiq: document.getElementById("tLiq").value,
-        tDescReal: document.getElementById("tDescReal").value,
-        vVolt: document.getElementById("vVolt").value,
-        iAmp: document.getElementById("iAmp").value,
-        zonaActivaHabilitada: zonaActivaHabilitada,
+        empresaNombre: document.getElementById('empresaNombre').value,
+        empresaRif: document.getElementById('empresaRif').value,
+        tecnicoNombre: document.getElementById('tecnicoNombre').value,
+        equipoMarca: document.getElementById('equipoMarca').value,
+        equipoModelo: document.getElementById('equipoModelo').value,
+        // Nuevo: guardamos valor numérico y unidad por separado
+        capFrigValue: document.getElementById('capFrigValue').value,
+        capFrigUnit: document.getElementById('capUnitSelect').value,
+        refSelect: document.getElementById('refSelect').value,
+        pUnitSelect: document.getElementById('pUnitSelect').value,
+        tUnitSelect: document.getElementById('tUnitSelect').value,
+        pSuct: document.getElementById('pSuct').value,
+        pDesc: document.getElementById('pDesc').value,
+        tEvapOut: document.getElementById('tEvapOut').value,
+        tSuct: document.getElementById('tSuct').value,
+        tLiq: document.getElementById('tLiq').value,
+        tDescReal: document.getElementById('tDescReal').value,
+        vVolt: document.getElementById('vVolt').value,
+        iAmp: document.getElementById('iAmp').value,
+        zonaActivaHabilitada: zonaActivaHabilitada
       };
-      localStorage.setItem("mollier_app_report_data", JSON.stringify(data));
+      localStorage.setItem('mollier_app_report_data', JSON.stringify(data));
     }
 
     function cargarConfiguracion() {
-      const saved = localStorage.getItem("mollier_app_report_data");
+      const saved = localStorage.getItem('mollier_app_report_data');
       if (saved) {
         try {
           const data = JSON.parse(saved);
-          if (data.empresaNombre !== undefined)
-            document.getElementById("empresaNombre").value = data.empresaNombre;
-          if (data.empresaRif !== undefined) document.getElementById("empresaRif").value = data.empresaRif;
-          if (data.tecnicoNombre !== undefined)
-            document.getElementById("tecnicoNombre").value = data.tecnicoNombre;
-          if (data.equipoMarca !== undefined) document.getElementById("equipoMarca").value = data.equipoMarca;
-          if (data.equipoModelo !== undefined) document.getElementById("equipoModelo").value = data.equipoModelo;
+          if (data.empresaNombre !== undefined) document.getElementById('empresaNombre').value = data.empresaNombre;
+          if (data.empresaRif !== undefined) document.getElementById('empresaRif').value = data.empresaRif;
+          if (data.tecnicoNombre !== undefined) document.getElementById('tecnicoNombre').value = data.tecnicoNombre;
+          if (data.equipoMarca !== undefined) document.getElementById('equipoMarca').value = data.equipoMarca;
+          if (data.equipoModelo !== undefined) document.getElementById('equipoModelo').value = data.equipoModelo;
 
           // Compatibilidad: si existe capFrigValue lo usamos; si solo existe el antiguo capFrigNominal intentamos parsearlo
           if (data.capFrigValue !== undefined) {
-            document.getElementById("capFrigValue").value = data.capFrigValue;
+            document.getElementById('capFrigValue').value = data.capFrigValue;
           } else if (data.capFrigNominal) {
             const s = data.capFrigNominal;
             const m = s.match(/([\d\.,]+)/);
             if (m) {
-              const num = parseFloat(m[1].replace(/,/g, ""));
-              if (!isNaN(num)) document.getElementById("capFrigValue").value = num;
+              const num = parseFloat(m[1].replace(/,/g, ''));
+              if (!isNaN(num)) document.getElementById('capFrigValue').value = num;
             }
           }
           if (data.capFrigUnit !== undefined) {
-            document.getElementById("capUnitSelect").value = data.capFrigUnit;
-            capUnitActual = data.capFrigUnit;
+            document.getElementById('capUnitSelect').value = data.capFrigUnit;
           } else if (data.capFrigNominal) {
             const s = data.capFrigNominal.toLowerCase();
-            if (s.includes("ton")) {
-              document.getElementById("capUnitSelect").value = "Ton";
-              capUnitActual = "Ton";
-            } else if (s.includes("kw")) {
-              document.getElementById("capUnitSelect").value = "kW";
-              capUnitActual = "kW";
-            } else {
-              document.getElementById("capUnitSelect").value = "BTU/h";
-              capUnitActual = "BTU/h";
-            }
+            if (s.includes('ton')) document.getElementById('capUnitSelect').value = 'Ton';
+            else if (s.includes('kw')) document.getElementById('capUnitSelect').value = 'kW';
+            else document.getElementById('capUnitSelect').value = 'BTU/h';
           }
 
-          if (data.refSelect) document.getElementById("refSelect").value = data.refSelect;
-          if (data.pUnitSelect) document.getElementById("pUnitSelect").value = data.pUnitSelect;
-          if (data.tUnitSelect) document.getElementById("tUnitSelect").value = data.tUnitSelect;
-          if (data.pSuct !== undefined) document.getElementById("pSuct").value = data.pSuct;
-          if (data.pDesc !== undefined) document.getElementById("pDesc").value = data.pDesc;
-          if (data.tEvapOut !== undefined) document.getElementById("tEvapOut").value = data.tEvapOut;
-          if (data.tSuct !== undefined) document.getElementById("tSuct").value = data.tSuct;
-          if (data.tLiq !== undefined) document.getElementById("tLiq").value = data.tLiq;
-          if (data.tDescReal !== undefined) document.getElementById("tDescReal").value = data.tDescReal;
-          if (data.vVolt !== undefined) document.getElementById("vVolt").value = data.vVolt;
-          if (data.iAmp !== undefined) document.getElementById("iAmp").value = data.iAmp;
+          if (data.refSelect) document.getElementById('refSelect').value = data.refSelect;
+          if (data.pUnitSelect) document.getElementById('pUnitSelect').value = data.pUnitSelect;
+          if (data.tUnitSelect) document.getElementById('tUnitSelect').value = data.tUnitSelect;
+          if (data.pSuct !== undefined) document.getElementById('pSuct').value = data.pSuct;
+          if (data.pDesc !== undefined) document.getElementById('pDesc').value = data.pDesc;
+          if (data.tEvapOut !== undefined) document.getElementById('tEvapOut').value = data.tEvapOut;
+          if (data.tSuct !== undefined) document.getElementById('tSuct').value = data.tSuct;
+          if (data.tLiq !== undefined) document.getElementById('tLiq').value = data.tLiq;
+          if (data.tDescReal !== undefined) document.getElementById('tDescReal').value = data.tDescReal;
+          if (data.vVolt !== undefined) document.getElementById('vVolt').value = data.vVolt;
+          if (data.iAmp !== undefined) document.getElementById('iAmp').value = data.iAmp;
           if (data.zonaActivaHabilitada !== undefined) zonaActivaHabilitada = data.zonaActivaHabilitada;
 
-          pUnitActual = document.getElementById("pUnitSelect").value;
-          tUnitActual = document.getElementById("tUnitSelect").value;
+          pUnitActual = document.getElementById('pUnitSelect').value;
+          tUnitActual = document.getElementById('tUnitSelect').value;
           actualizarEstadoBotonZoom();
         } catch (e) {
           console.error("Error al cargar datos", e);
@@ -1041,94 +852,21 @@
       actualizarTodo();
     }
 
-    // PDF: exportar todo en UNA sola página A4
-    async function descargarPDFReporte() {
-      const element = document.getElementById("reporteArea");
-      const chartDiv = document.getElementById("mollierPlot");
+    function descargarPDFReporte() {
+      const element = document.getElementById('reporteArea');
+      document.body.classList.add('generating-pdf');
 
-      // Guardar estilos originales para revertir
-      const origChartWidth = chartDiv.style.width || "";
-      const origChartHeight = chartDiv.style.height || "";
-      const origTransform = element.style.transform || "";
-      const origTransformOrigin = element.style.transformOrigin || "";
-
-      // Forzamos colores claros y quitar sombras
-      document.body.classList.add("generating-pdf");
-
-      // Expandimos la gráfica para mejor resolución en la captura
-      const exportChartWidth = 900; // px
-      const exportChartHeight = 700; // px
-      chartDiv.style.width = exportChartWidth + "px";
-      chartDiv.style.height = exportChartHeight + "px";
-
-      // Forzamos relayout de Plotly a fondo blanco y texto negro para exportación
-      try {
-        await Plotly.relayout("mollierPlot", {
-          paper_bgcolor: "#ffffff",
-          plot_bgcolor: "#ffffff",
-          width: exportChartWidth,
-          height: exportChartHeight,
-          font: { color: "#000000" },
-          "xaxis.titlefont.color": "#000000",
-          "xaxis.tickfont.color": "#000000",
-          "yaxis.titlefont.color": "#000000",
-          "yaxis.tickfont.color": "#000000",
-          "yaxis.gridcolor": "#dddddd",
-        });
-      } catch (e) {
-        // si falla, seguimos de todas formas
-        console.warn("Plotly relayout falló:", e);
-      }
-
-      // A4 en píxeles CSS (aprox. 96 DPI)
-      const A4_WIDTH_PX = Math.round((210 / 25.4) * 96); // ≈ 794
-      const A4_HEIGHT_PX = Math.round((297 / 25.4) * 96); // ≈ 1123
-
-      // Medimos tamaño del elemento después de expandir la gráfica
-      // Usamos getBoundingClientRect para tamaño en CSS pixels
-      await new Promise((r) => setTimeout(r, 250)); // dejar que se re-renderice
-      const rect = element.getBoundingClientRect();
-      const elemW = rect.width;
-      const elemH = rect.height;
-
-      // Calculamos factor de escala para que todo quepa en una sola página A4
-      const scale = Math.min(A4_WIDTH_PX / elemW, A4_HEIGHT_PX / elemH, 1);
-
-      // Aplicamos transform para encajar en una sola página
-      element.style.transformOrigin = "top left";
-      element.style.transform = `scale(${scale})`;
-
-      // Esperamos un instante para que transform se aplique
-      await new Promise((r) => setTimeout(r, 220));
-
-      // Opciones de html2pdf: background blanco, scale razonable para buena resolución
       const opt = {
-        margin: [5, 5, 5, 5],
-        filename: `Reporte_Tecnico_${document.getElementById("equipoMarca").value}_${document.getElementById("equipoModelo").value}.pdf`,
-        image: { type: "jpeg", quality: 0.98 },
-        html2canvas: { scale: Math.max(2, window.devicePixelRatio || 2), useCORS: true, backgroundColor: "#ffffff", logging: false },
-        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+        margin:       [5, 5, 5, 5],
+        filename:     `Reporte_Tecnico_${document.getElementById('equipoMarca').value}_${document.getElementById('equipoModelo').value}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, logging: false },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
 
-      try {
-        // Generar y guardar PDF
-        await html2pdf().set(opt).from(element).save();
-      } catch (err) {
-        console.error("Error generando PDF:", err);
-      } finally {
-        // Revertir transform y tamaños
-        element.style.transform = origTransform;
-        element.style.transformOrigin = origTransformOrigin;
-        chartDiv.style.width = origChartWidth;
-        chartDiv.style.height = origChartHeight;
-        document.body.classList.remove("generating-pdf");
-
-        // Volvemos a dibujar la gráfica con el layout normal
-        // damos un pequeño delay y luego actualizamos para restaurar colores y tamaño
-        setTimeout(() => {
-          actualizarTodo();
-        }, 300);
-      }
+      html2pdf().set(opt).from(element).save().then(() => {
+        document.body.classList.remove('generating-pdf');
+      });
     }
 
     function getPropAtP(refData, pBarAbs) {
@@ -1137,16 +875,16 @@
       if (pBarAbs >= refData.criticalP) return dome[dome.length - 1];
 
       for (let i = 0; i < dome.length - 1; i++) {
-        if (pBarAbs >= dome[i].p && pBarAbs <= dome[i + 1].p) {
+        if (pBarAbs >= dome[i].p && pBarAbs <= dome[i+1].p) {
           const logP = Math.log(pBarAbs);
           const logP1 = Math.log(dome[i].p);
-          const logP2 = Math.log(dome[i + 1].p);
+          const logP2 = Math.log(dome[i+1].p);
           const factor = (logP - logP1) / (logP2 - logP1);
 
           return {
-            hL: dome[i].hL + factor * (dome[i + 1].hL - dome[i].hL),
-            hV: dome[i].hV + factor * (dome[i + 1].hV - dome[i].hV),
-            tSat: dome[i].tSat + factor * (dome[i + 1].tSat - dome[i].tSat),
+            hL: dome[i].hL + factor * (dome[i+1].hL - dome[i].hL),
+            hV: dome[i].hV + factor * (dome[i+1].hV - dome[i].hV),
+            tSat: dome[i].tSat + factor * (dome[i+1].tSat - dome[i].tSat)
           };
         }
       }
@@ -1157,9 +895,9 @@
       const f = pUnits[pUnitActual].factor;
       const dome = refData.dome;
 
-      const pVals = dome.map((pt) => pt.p * f);
-      const hLVals = dome.map((pt) => pt.hL);
-      const hVVals = dome.map((pt) => pt.hV);
+      const pVals = dome.map(pt => pt.p * f);
+      const hLVals = dome.map(pt => pt.hL);
+      const hVVals = dome.map(pt => pt.hV);
 
       const pTop = pVals[pVals.length - 1];
       const pBot = pVals[0];
@@ -1172,56 +910,30 @@
       }
 
       const traceLiquid = {
-        x: liquidX,
-        y: liquidY,
-        fill: "toself",
-        fillcolor: "rgba(2, 132, 199, 0.22)",
-        line: { color: "transparent" },
-        name: "Líquido",
-        showlegend: false,
-        hoverinfo: "none",
+        x: liquidX, y: liquidY, fill: 'toself',
+        fillcolor: 'rgba(2, 132, 199, 0.22)', line: { color: 'transparent' },
+        name: 'Líquido', showlegend: false, hoverinfo: 'none'
       };
 
-      const satX = [];
-      const satY = [];
-      for (let i = 0; i < dome.length; i++) {
-        satX.push(hLVals[i]);
-        satY.push(pVals[i]);
-      }
-      for (let i = dome.length - 1; i >= 0; i--) {
-        satX.push(hVVals[i]);
-        satY.push(pVals[i]);
-      }
+      const satX = []; const satY = [];
+      for (let i = 0; i < dome.length; i++) { satX.push(hLVals[i]); satY.push(pVals[i]); }
+      for (let i = dome.length - 1; i >= 0; i--) { satX.push(hVVals[i]); satY.push(pVals[i]); }
 
       const traceSat = {
-        x: satX,
-        y: satY,
-        fill: "toself",
-        fillcolor: "rgba(16, 185, 129, 0.22)",
-        line: { color: "transparent" },
-        name: "Mezcla",
-        showlegend: false,
-        hoverinfo: "none",
+        x: satX, y: satY, fill: 'toself',
+        fillcolor: 'rgba(16, 185, 129, 0.22)', line: { color: 'transparent' },
+        name: 'Mezcla', showlegend: false, hoverinfo: 'none'
       };
 
-      const vaporX = [];
-      const vaporY = [];
-      for (let i = 0; i < dome.length; i++) {
-        vaporX.push(hVVals[i]);
-        vaporY.push(pVals[i]);
-      }
+      const vaporX = []; const vaporY = [];
+      for (let i = 0; i < dome.length; i++) { vaporX.push(hVVals[i]); vaporY.push(pVals[i]); }
       vaporX.push(maxX, maxX);
       vaporY.push(pTop, pBot);
 
       const traceVapor = {
-        x: vaporX,
-        y: vaporY,
-        fill: "toself",
-        fillcolor: "rgba(245, 158, 11, 0.20)",
-        line: { color: "transparent" },
-        name: "Vapor",
-        showlegend: false,
-        hoverinfo: "none",
+        x: vaporX, y: vaporY, fill: 'toself',
+        fillcolor: 'rgba(245, 158, 11, 0.20)', line: { color: 'transparent' },
+        name: 'Vapor', showlegend: false, hoverinfo: 'none'
       };
 
       return [traceLiquid, traceSat, traceVapor];
@@ -1233,7 +945,7 @@
       const tempsText = [];
       const f = pUnits[pUnitActual].factor;
 
-      refData.dome.forEach((pt) => {
+      refData.dome.forEach(pt => {
         hVals.push(pt.hL);
         pVals.push(pt.p * f);
         tempsText.push(`${convertirTemp(pt.tSat).toFixed(1)} °${tUnitActual}`);
@@ -1248,31 +960,19 @@
       return {
         x: hVals,
         y: pVals,
-        mode: "lines+markers",
+        mode: 'lines+markers',
         name: `Domo ${refData.nombre}`,
-        line: { color: "#38bdf8", width: 2.0, shape: "spline", smoothing: 1.1 },
-        marker: { size: 4, color: "#38bdf8" },
-        hovertemplate:
-          `<b>Domo Sat. (${refData.nombre})</b><br>` +
-          `Temp Sat: %{text}<br>` +
-          `P: %{y:.1f} ${pUnits[pUnitActual].label}<br>` +
-          `h: %{x:.1f} kJ/kg<extra></extra>`,
-        text: tempsText,
+        line: { color: '#38bdf8', width: 2.0, shape: 'spline', smoothing: 1.1 },
+        marker: { size: 4, color: '#38bdf8' },
+        hovertemplate: `<b>Domo Sat. (${refData.nombre})</b><br>` +
+                       `Temp Sat: %{text}<br>` +
+                       `P: %{y:.1f} ${pUnits[pUnitActual].label}<br>` +
+                       `h: %{x:.1f} kJ/kg<extra></extra>`,
+        text: tempsText
       };
     }
 
-    function evaluarDiagnostico(
-      refData,
-      rP,
-      tDescRealC,
-      tLiqC,
-      tSatCondC,
-      SHUtil,
-      SHTotal,
-      SC,
-      dischargeSuperHeatK,
-      tempAmbienteC
-    ) {
+    function evaluarDiagnostico(refData, rP, tDescRealC, tLiqC, tSatCondC, SHUtil, SHTotal, SC, dischargeSuperHeatK, tempAmbienteC) {
       const alertas = [];
       let alarmaTDesc = false;
       let alarmaTLiq = false;
@@ -1281,27 +981,19 @@
 
       if (tDescRealC > refData.tDescMax) {
         alarmaTDesc = true;
-        alertas.push(
-          `🔴 <b>CRÍTICO (T. Descarga ${tDescRealC.toFixed(0)}°C):</b> Supera el límite de ${refData.tDescMax}°C para ${refData.nombre}.`
-        );
+        alertas.push(`🔴 <b>CRÍTICO (T. Descarga ${tDescRealC.toFixed(0)}°C):</b> Supera el límite de ${refData.tDescMax}°C para ${refData.nombre}.`);
       }
 
       if (tLiqC >= tSatCondC) {
         alarmaTLiq = true;
-        alertas.push(
-          `🔴 <b>ALERTA (T. Líquido ${tLiqC.toFixed(1)}°C):</b> Sin Subenfriamiento (T. Líquido ≥ T. Sat ${tSatCondC.toFixed(1)}°C). Riesgo de Flash Gas.`
-        );
+        alertas.push(`🔴 <b>ALERTA (T. Líquido ${tLiqC.toFixed(1)}°C):</b> Sin Subenfriamiento (T. Líquido ≥ T. Sat ${tSatCondC.toFixed(1)}°C). Riesgo de Flash Gas.`);
       }
 
       if (SC < 3.0 && !alarmaTLiq) {
         if (deltaTCondAmb > 18.0 || rP > refData.rPMax) {
-          alertas.push(
-            `🔴 <b>CONDENSADOR SUCIO (SC = ${SC.toFixed(1)} K):</b> Subenfriamiento bajo con ΔT Cond-Amb elevado (${deltaTCondAmb.toFixed(1)} K).`
-          );
+          alertas.push(`🔴 <b>CONDENSADOR SUCIO (SC = ${SC.toFixed(1)} K):</b> Subenfriamiento bajo con ΔT Cond-Amb elevado (${deltaTCondAmb.toFixed(1)} K).`);
         } else if (SHTotal > refData.shOptimo[1]) {
-          alertas.push(
-            `🟡 <b>FALTA DE REFRIGERANTE (SC = ${SC.toFixed(1)} K):</b> Subenfriamiento bajo y Recalentamiento elevado (${SHTotal.toFixed(1)} K).`
-          );
+          alertas.push(`🟡 <b>FALTA DE REFRIGERANTE (SC = ${SC.toFixed(1)} K):</b> Subenfriamiento bajo y Recalentamiento elevado (${SHTotal.toFixed(1)} K).`);
         } else {
           alertas.push(`🟡 <b>Subenfriamiento Bajo (< 3.0 K):</b> Subenfriamiento insuficiente (${SC.toFixed(1)} K).`);
         }
@@ -1310,9 +1002,7 @@
       }
 
       if (rP > refData.rPMax) {
-        alertas.push(
-          `🔴 <b>Relación de Presión Excesiva (rP = ${rP.toFixed(1)} > ${refData.rPMax}):</b> Compresor fuera de rango.`
-        );
+        alertas.push(`🔴 <b>Relación de Presión Excesiva (rP = ${rP.toFixed(1)} > ${refData.rPMax}):</b> Compresor fuera de rango.`);
       }
 
       if (SHUtil < refData.shOptimo[0]) {
@@ -1325,41 +1015,41 @@
     }
 
     function actualizarTodo() {
-      const refKey = document.getElementById("refSelect").value;
+      const refKey = document.getElementById('refSelect').value;
       const refData = refrigerantes[refKey];
       const pf = pUnits[pUnitActual].factor;
 
-      let pSuctInput = parseFloat(document.getElementById("pSuct").value);
-      let pDescInput = parseFloat(document.getElementById("pDesc").value);
+      let pSuctInput = parseFloat(document.getElementById('pSuct').value);
+      let pDescInput = parseFloat(document.getElementById('pDesc').value);
 
       if (isNaN(pSuctInput)) pSuctInput = 25;
       if (isNaN(pDescInput)) pDescInput = 290;
 
-      const barFactor = pUnitActual === "psi" ? 14.5038 : pUnitActual === "kpa" ? 100 : 1.0;
+      const barFactor = (pUnitActual === 'psi') ? 14.5038 : ((pUnitActual === 'kpa') ? 100 : 1.0);
       const atmBar = 1.01325;
 
-      const pSuctBarAbs = Math.max(pSuctInput / barFactor + atmBar, 0.2);
-      const pDescBarAbs = Math.min(pDescInput / barFactor + atmBar, refData.criticalP - 0.2);
+      const pSuctBarAbs = Math.max((pSuctInput / barFactor) + atmBar, 0.2);
+      const pDescBarAbs = Math.min((pDescInput / barFactor) + atmBar, refData.criticalP - 0.2);
 
-      let tEvapOutVal = parseFloat(document.getElementById("tEvapOut").value) || -12;
-      let tSuctVal = parseFloat(document.getElementById("tSuct").value) || -10;
-      let tLiqVal = parseFloat(document.getElementById("tLiq").value) || 45;
-      let tDescRealVal = parseFloat(document.getElementById("tDescReal").value) || 90;
+      let tEvapOutVal = parseFloat(document.getElementById('tEvapOut').value) || -12;
+      let tSuctVal = parseFloat(document.getElementById('tSuct').value) || -10;
+      let tLiqVal = parseFloat(document.getElementById('tLiq').value) || 45;
+      let tDescRealVal = parseFloat(document.getElementById('tDescReal').value) || 90;
 
       let tEvapOutC = tEvapOutVal;
       let tSuctC = tSuctVal;
       let tLiqC = tLiqVal;
       let tDescRealC = tDescRealVal;
 
-      if (tUnitActual === "F") {
-        tEvapOutC = (tEvapOutVal - 32) * (5 / 9);
-        tSuctC = (tSuctVal - 32) * (5 / 9);
-        tLiqC = (tLiqVal - 32) * (5 / 9);
-        tDescRealC = (tDescRealVal - 32) * (5 / 9);
+      if (tUnitActual === 'F') {
+        tEvapOutC = (tEvapOutVal - 32) * 5/9;
+        tSuctC = (tSuctVal - 32) * 5/9;
+        tLiqC = (tLiqVal - 32) * 5/9;
+        tDescRealC = (tDescRealVal - 32) * 5/9;
       }
 
-      const vVolt = parseFloat(document.getElementById("vVolt").value) || 220;
-      const iAmp = parseFloat(document.getElementById("iAmp").value) || 0;
+      const vVolt = parseFloat(document.getElementById('vVolt').value) || 220;
+      const iAmp = parseFloat(document.getElementById('iAmp').value) || 0;
       const pKw = (vVolt * iAmp * 0.9) / 1000.0;
 
       const propEvap = getPropAtP(refData, pSuctBarAbs);
@@ -1372,51 +1062,49 @@
 
       const deltaTCondAmb = propCond.tSat - tempAmbientePuntoFijoC;
 
-      const h1 = propEvap.hV + superHeatTotalK * refData.cpV;
-      const h3 = propCond.hL - subCoolK * refData.cpL;
-      const h4 = h3;
+      const h1 = propEvap.hV + (superHeatTotalK * refData.cpV);
+      const h3 = propCond.hL - (subCoolK * refData.cpL);
+      const h4 = h3; 
 
       const qn = h1 - h4;
 
       const rP = pDescBarAbs / pSuctBarAbs;
-      const deltaH_isentropico = h1 * 0.15 * Math.log(rP);
+      const deltaH_isentropico = h1 * 0.15 * Math.log(rP); 
       const deltaT_superheat_desc = Math.max(tDescRealC - propCond.tSat, 0);
-      const h2_termico = propCond.hV + deltaT_superheat_desc * refData.cpV;
+      const h2_termico = propCond.hV + (deltaT_superheat_desc * refData.cpV);
 
       const h2 = Math.max(h1 + deltaH_isentropico, h2_termico);
 
       const w = h2 - h1;
-      const cop = w > 0 ? qn / w : 0;
+      const cop = w > 0 ? (qn / w) : 0;
 
-      document.getElementById("kpiSHUtil").innerText = `${superHeatUtilK.toFixed(1)} K`;
-      document.getElementById("kpiSHTotal").innerText = `${superHeatTotalK.toFixed(1)} K`;
-      document.getElementById("kpiSC").innerText = `${subCoolK.toFixed(1)} K`;
-      document.getElementById("kpiKW").innerText = `${pKw.toFixed(2)} kW`;
-      document.getElementById("kpiqn").innerText = `${qn.toFixed(1)} kJ/kg`;
-      document.getElementById("kpiw").innerText = `${w.toFixed(1)} kJ/kg`;
-      document.getElementById("kpicop").innerText = cop.toFixed(2);
-      document.getElementById("kpiDeltaAmb").innerText = `${deltaTCondAmb.toFixed(1)} K`;
+      document.getElementById('kpiSHUtil').innerText = `${superHeatUtilK.toFixed(1)} K`;
+      document.getElementById('kpiSHTotal').innerText = `${superHeatTotalK.toFixed(1)} K`;
+      document.getElementById('kpiSC').innerText = `${subCoolK.toFixed(1)} K`;
+      document.getElementById('kpiKW').innerText = `${pKw.toFixed(2)} kW`;
+      document.getElementById('kpiqn').innerText = `${qn.toFixed(1)} kJ/kg`;
+      document.getElementById('kpiw').innerText = `${w.toFixed(1)} kJ/kg`;
+      document.getElementById('kpicop').innerText = cop.toFixed(2);
+      document.getElementById('kpiDeltaAmb').innerText = `${deltaTCondAmb.toFixed(1)} K`;
 
-      const {
-        alertas,
-        alarmaTDesc,
-        alarmaTLiq
-      } = evaluarDiagnostico(refData, rP, tDescRealC, tLiqC, propCond.tSat, superHeatUtilK, superHeatTotalK, subCoolK, dischargeSuperHeatK, tempAmbientePuntoFijoC);
+      const { alertas, alarmaTDesc, alarmaTLiq } = evaluarDiagnostico(
+        refData, rP, tDescRealC, tLiqC, propCond.tSat, superHeatUtilK, superHeatTotalK, subCoolK, dischargeSuperHeatK, tempAmbientePuntoFijoC
+      );
+      
+      const grpDesc = document.getElementById('grpTDescReal');
+      const grpLiq = document.getElementById('grpTLiq');
+      const panelAlertas = document.getElementById('panelAlertas');
 
-      const grpDesc = document.getElementById("grpTDescReal");
-      const grpLiq = document.getElementById("grpTLiq");
-      const panelAlertas = document.getElementById("panelAlertas");
+      if (alarmaTDesc) grpDesc.classList.add('alarm-field-active');
+      else grpDesc.classList.remove('alarm-field-active');
 
-      if (alarmaTDesc) grpDesc.classList.add("alarm-field-active");
-      else grpDesc.classList.remove("alarm-field-active");
-
-      if (alarmaTLiq) grpLiq.classList.add("alarm-field-active");
-      else grpLiq.classList.remove("alarm-field-active");
+      if (alarmaTLiq) grpLiq.classList.add('alarm-field-active');
+      else grpLiq.classList.remove('alarm-field-active');
 
       if (alertas.length === 0) {
         panelAlertas.innerHTML = `<div class="diag-item" style="color: #34d399; text-align: left;">✅ <b>Sistema Estable:</b> El equipo con ${refData.nombre} opera dentro de los parámetros previstos.</div>`;
       } else {
-        panelAlertas.innerHTML = alertas.map((a) => `<div class="diag-item" style="color: #cbd5e1;">${a}</div>`).join("");
+        panelAlertas.innerHTML = alertas.map(a => `<div class="diag-item" style="color: #cbd5e1;">${a}</div>`).join('');
       }
 
       const pSuctPlot = pSuctBarAbs * pf;
@@ -1435,21 +1123,18 @@
       const cycleTrace = {
         x: [h1, h2, h3, h4, h1],
         y: [pSuctPlot, pDescPlot, pDescPlot, pSuctPlot, pSuctPlot],
-        mode: "lines+markers+text",
-        name: "Ciclo Operativo",
-        text: ["1", "2", "3", "4", "1"],
-        textposition: "top center",
-        textfont: { size: 8, color: "#f8fafc" },
-        line: { color: "#ef4444", width: 2.2 },
-        marker: { size: 6, color: "#f59e0b" },
-        hovertemplate:
-          "<b>Punto %{text} del Ciclo</b><br>" +
-          "Temp: %{customdata}<br>" +
-          "P: %{y:.1f} " +
-          pUnits[pUnitActual].label +
-          "<br>" +
-          "h: %{x:.1f} kJ/kg<extra></extra>",
-        customdata: [t1Str, t2Str, t3Str, t4Str, t1Str],
+        mode: 'lines+markers+text',
+        name: 'Ciclo Operativo',
+        text: ['1', '2', '3', '4', '1'],
+        textposition: 'top center',
+        textfont: { size: 8, color: '#f8fafc' },
+        line: { color: '#ef4444', width: 2.2 },
+        marker: { size: 6, color: '#f59e0b' },
+        hovertemplate: '<b>Punto %{text} del Ciclo</b><br>' +
+                       'Temp: %{customdata}<br>' +
+                       'P: %{y:.1f} ' + pUnits[pUnitActual].label + '<br>' +
+                       'h: %{x:.1f} kJ/kg<extra></extra>',
+        customdata: [t1Str, t2Str, t3Str, t4Str, t1Str]
       };
 
       const domeTrace = getDomeTrace(refData);
@@ -1457,30 +1142,41 @@
       const layout = {
         autosize: true,
         margin: { l: 22, r: 10, t: 10, b: 22 },
-        paper_bgcolor: "#1e293b",
-        plot_bgcolor: "#0f172a",
+        paper_bgcolor: '#1e293b',
+        plot_bgcolor: '#0f172a',
         showlegend: false,
         xaxis: {
-          title: "h (kJ/kg)",
-          titlefont: { size: 7, color: "#94a3b8" },
-          tickfont: { size: 6.5, color: "#cbd5e1" },
-          gridcolor: "#334155",
+          title: 'h (kJ/kg)',
+          titlefont: { size: 7, color: '#94a3b8' },
+          tickfont: { size: 6.5, color: '#cbd5e1' },
+          gridcolor: '#334155',
           zeroline: false,
           autorange: !zonaActivaHabilitada,
-          range: zonaActivaHabilitada ? [Math.max(h4 - 25, minX), Math.min(h2 + 25, maxX)] : undefined,
+          range: zonaActivaHabilitada ? [Math.max(h4 - 25, minX), Math.min(h2 + 25, maxX)] : undefined
         },
         yaxis: {
           title: `P. Abs (${pUnits[pUnitActual].label})`,
-          titlefont: { size: 7, color: "#94a3b8" },
-          tickfont: { size: 6.5, color: "#cbd5e1" },
-          type: "log",
+          titlefont: { size: 7, color: '#94a3b8' },
+          tickfont: { size: 6.5, color: '#cbd5e1' },
+          type: 'log',
           automargin: true,
-          gridcolor: "#334155",
+          gridcolor: '#334155',
           zeroline: false,
           autorange: !zonaActivaHabilitada,
-          range: zonaActivaHabilitada ? [Math.log10(pSuctPlot * 0.75), Math.log10(pDescPlot * 1.25)] : undefined,
-        },
+          range: zonaActivaHabilitada ? [Math.log10(pSuctPlot * 0.75), Math.log10(pDescPlot * 1.25)] : undefined
+        }
       };
 
-      // Dibujar o actualizar Plotly
-      Plotly.react("mollierPlot",*
+      Plotly.react('mollierPlot', [...zoneTraces, domeTrace, cycleTrace], layout, { responsive: true, displayModeBar: false });
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      cargarConfiguracion();
+      actualizarEtiquetas();
+      actualizarReloj();
+      setInterval(actualizarReloj, 1000);
+      obtenerClimaPuntoFijo();
+    });
+  </script>
+</body>
+</html>
