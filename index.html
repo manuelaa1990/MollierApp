@@ -34,6 +34,35 @@
       gap: 4px;
     }
 
+    .ambient-banner {
+      background: #1e293b;
+      border: 1px solid #38bdf8;
+      border-radius: 6px;
+      padding: 4px 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.72rem;
+      color: #38bdf8;
+      font-weight: bold;
+    }
+
+    .ambient-banner .weather-info {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .ambient-banner button {
+      background: #0284c7;
+      border: none;
+      color: white;
+      padding: 2px 6px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.65rem;
+    }
+
     .top-panel {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -157,7 +186,7 @@
 
     .results-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 3px;
       margin-bottom: 4px;
     }
@@ -170,7 +199,7 @@
     }
 
     .kpi-box .label {
-      font-size: 0.52rem;
+      font-size: 0.50rem;
       color: #94a3b8;
       display: block;
       white-space: nowrap;
@@ -179,12 +208,11 @@
     }
 
     .kpi-box .value {
-      font-size: 0.74rem;
+      font-size: 0.70rem;
       font-weight: 700;
       color: #f8fafc;
     }
 
-    /* --- CONTENEDOR DE ALERTAS EXPANDIBLE SIN SCROLL --- */
     .diag-container {
       background-color: #0f172a;
       border: 1px solid #334155;
@@ -207,7 +235,6 @@
       margin-bottom: 0;
     }
 
-    /* --- TARJETA DE GRÁFICA FLEXIBLE (OCUPA TODO EL ESPACIO RESTANTE) --- */
     .chart-card {
       display: flex;
       flex-direction: column;
@@ -257,6 +284,15 @@
 
   <div class="app-container">
     
+    <!-- BANNER TEMPERATURA AMBIENTE PUNTO FIJO -->
+    <div class="ambient-banner" id="bannerAmbiente">
+      <div class="weather-info">
+        <span>📍 Punto Fijo (Ref. Web):</span>
+        <span id="txtTempAmb">Cargando...</span>
+      </div>
+      <button onclick="obtenerClimaPuntoFijo()">🔄 Actualizar</button>
+    </div>
+
     <header class="top-panel">
       <div class="card" id="cardDatosCampo">
         <h2><span>Datos de Campo</span></h2>
@@ -312,8 +348,13 @@
             <input type="number" id="pDesc" value="290" step="1" oninput="guardarYActualizar()">
           </div>
 
+          <div class="input-group" id="grpTEvapOut">
+            <label for="tEvapOut" id="lblTEvapOut">T. Salida Evap</label>
+            <input type="number" id="tEvapOut" value="-12" step="0.5" oninput="guardarYActualizar()">
+          </div>
+
           <div class="input-group" id="grpTSuct">
-            <label for="tSuct" id="lblTSuct">T. Tubería Succ</label>
+            <label for="tSuct" id="lblTSuct">T. Temp Succión</label>
             <input type="number" id="tSuct" value="-10" step="0.5" oninput="guardarYActualizar()">
           </div>
 
@@ -344,11 +385,15 @@
         <h2>Indicadores y Diagnóstico</h2>
         <div class="results-grid">
           <div class="kpi-box" style="border-left-color: #38bdf8;">
-            <span class="label">Recalent.</span>
-            <span class="value" id="kpiSH">0.0 K</span>
+            <span class="label">SH Útil (Evap)</span>
+            <span class="value" id="kpiSHUtil">0.0 K</span>
+          </div>
+          <div class="kpi-box" style="border-left-color: #0284c7;">
+            <span class="label">SH Total (Succ)</span>
+            <span class="value" id="kpiSHTotal">0.0 K</span>
           </div>
           <div class="kpi-box" style="border-left-color: #10b981;">
-            <span class="label">Subenfriam.</span>
+            <span class="label">Subenfriam. (SC)</span>
             <span class="value" id="kpiSC">0.0 K</span>
           </div>
           <div class="kpi-box" style="border-left-color: #f59e0b;">
@@ -366,6 +411,10 @@
           <div class="kpi-box" style="border-left-color: #ec4899;">
             <span class="label">COP Estimado</span>
             <span class="value" id="kpicop">0.0</span>
+          </div>
+          <div class="kpi-box" style="border-left-color: #64748b;">
+            <span class="label">ΔT Cond - Amb</span>
+            <span class="value" id="kpiDeltaAmb">0.0 K</span>
           </div>
         </div>
 
@@ -395,6 +444,7 @@
     let zonaActivaHabilitada = true;
     let pUnitActual = 'psi';
     let tUnitActual = 'C';
+    let tempAmbientePuntoFijoC = 30.0; // Valor de fallback
 
     const P_ATM_BAR = 1.01325;
     const P_ATM_PSI = 14.696;
@@ -489,11 +539,35 @@
       }
     };
 
+    async function obtenerClimaPuntoFijo() {
+      const lbl = document.getElementById('txtTempAmb');
+      lbl.innerText = "Consultando...";
+      try {
+        const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=11.7&longitude=-70.2&current_weather=true');
+        const data = await res.json();
+        if (data && data.current_weather) {
+          tempAmbientePuntoFijoC = data.current_weather.temperature;
+          let tempMostrar = tempAmbientePuntoFijoC;
+          if (tUnitActual === 'F') {
+            tempMostrar = (tempAmbientePuntoFijoC * 9/5) + 32;
+          }
+          lbl.innerText = `${tempMostrar.toFixed(1)} °${tUnitActual}`;
+          guardarYActualizar();
+        } else {
+          lbl.innerText = "Error de datos";
+        }
+      } catch (e) {
+        console.error("Error al obtener clima de Punto Fijo:", e);
+        lbl.innerText = "No disponible (30.0 °C por defecto)";
+      }
+    }
+
     function actualizarEtiquetas() {
       document.getElementById('lblPSuct').innerText = `P. Succión (${pUnits[pUnitActual].label})`;
       document.getElementById('lblPDesc').innerText = `P. Descarga (${pUnits[pUnitActual].label})`;
-      document.getElementById('lblTSuct').innerText = `T. Succ (°${tUnitActual})`;
-      document.getElementById('lblTLiq').innerText = `T. Liq (°${tUnitActual})`;
+      document.getElementById('lblTEvapOut').innerText = `T. Salida Evap (°${tUnitActual})`;
+      document.getElementById('lblTSuct').innerText = `T. Succ Tubo (°${tUnitActual})`;
+      document.getElementById('lblTLiq').innerText = `T. Liq Tubo (°${tUnitActual})`;
       document.getElementById('lblTDescReal').innerText = `T. Desc (°${tUnitActual})`;
     }
 
@@ -511,7 +585,7 @@
       });
 
       if (tUnitActual !== nuevaTUnit) {
-        ['tSuct', 'tLiq', 'tDescReal'].forEach(id => {
+        ['tEvapOut', 'tSuct', 'tLiq', 'tDescReal'].forEach(id => {
           const elem = document.getElementById(id);
           let val = parseFloat(elem.value);
           if (nuevaTUnit === 'F') {
@@ -526,7 +600,7 @@
       tUnitActual = nuevaTUnit;
 
       actualizarEtiquetas();
-      guardarYActualizar();
+      obtenerClimaPuntoFijo();
     }
 
     function toggleZonaActiva() {
@@ -548,6 +622,7 @@
         tUnitSelect: document.getElementById('tUnitSelect').value,
         pSuct: document.getElementById('pSuct').value,
         pDesc: document.getElementById('pDesc').value,
+        tEvapOut: document.getElementById('tEvapOut').value,
         tSuct: document.getElementById('tSuct').value,
         tLiq: document.getElementById('tLiq').value,
         tDescReal: document.getElementById('tDescReal').value,
@@ -568,6 +643,7 @@
           if (data.tUnitSelect) document.getElementById('tUnitSelect').value = data.tUnitSelect;
           if (data.pSuct !== undefined) document.getElementById('pSuct').value = data.pSuct;
           if (data.pDesc !== undefined) document.getElementById('pDesc').value = data.pDesc;
+          if (data.tEvapOut !== undefined) document.getElementById('tEvapOut').value = data.tEvapOut;
           if (data.tSuct !== undefined) document.getElementById('tSuct').value = data.tSuct;
           if (data.tLiq !== undefined) document.getElementById('tLiq').value = data.tLiq;
           if (data.tDescReal !== undefined) document.getElementById('tDescReal').value = data.tDescReal;
@@ -589,12 +665,10 @@
       actualizarTodo();
     }
 
-    // --- CORRECCIÓN DE DESCARGA PNG PARA QUE SALGA CON EJES Y COMPLETA ---
     function descargarGrafica() {
       const refKey = document.getElementById('refSelect').value;
       const elem = document.getElementById('mollierPlot');
 
-      // Forzar un layout robusto de alta calidad para la exportación de imagen
       Plotly.relayout(elem, {
         margin: { l: 45, r: 15, t: 30, b: 35 },
         'xaxis.title.font.size': 11,
@@ -609,7 +683,6 @@
           height: 700,
           filename: `Mollier_Campo_${refKey}_${pUnitActual.toUpperCase()}`
         }).then(() => {
-          // Restaurar márgenes compactos de pantalla tras la descarga
           Plotly.relayout(elem, {
             margin: { l: 25, r: 5, t: 15, b: 20 },
             'xaxis.title.font.size': 7,
@@ -712,10 +785,12 @@
       };
     }
 
-    function evaluarDiagnostico(refData, rP, tDescRealC, tLiqC, tSatCondC, SH, SC, dischargeSuperHeatK) {
+    function evaluarDiagnostico(refData, rP, tDescRealC, tLiqC, tSatCondC, SHUtil, SHTotal, SC, dischargeSuperHeatK, tempAmbienteC) {
       const alertas = [];
       let alarmaTDesc = false;
       let alarmaTLiq = false;
+
+      const deltaTCondAmb = tSatCondC - tempAmbienteC;
 
       if (tDescRealC > refData.tDescMax) {
         alarmaTDesc = true;
@@ -724,37 +799,42 @@
 
       if (tLiqC >= tSatCondC) {
         alarmaTLiq = true;
-        alertas.push(`🔴 <b>ALERTA (T. Líquido ${tLiqC.toFixed(1)}°C):</b> Igual o superior a T. Sat (${tSatCondC.toFixed(1)}°C). Pérdida de subenfriamiento / Flash Gas.`);
+        alertas.push(`🔴 <b>ALERTA (T. Líquido ${tLiqC.toFixed(1)}°C):</b> Igual o superior a T. Sat (${tSatCondC.toFixed(1)}°C). Pérdida total de subenfriamiento / Flash Gas.`);
       }
 
-      if (rP > refData.rPMax) {
-        alertas.push(`🔴 <b>Relación de Presión Excesiva (rP = ${rP.toFixed(1)} > ${refData.rPMax}):</b> Compresor fuera de envolvente. Condensador sucio o restricción.`);
-      } else if (rP < 1.8 && rP > 1.0) {
-        alertas.push(`🟡 <b>Relación de Presión Muy Baja (rP = ${rP.toFixed(1)}):</b> Ineficiencia por desgaste en válvulas o bypass interno.`);
-      }
-
-      if (SH < refData.shOptimo[0]) {
-        alertas.push(`🔴 <b>Recalentamiento Crítico (< ${refData.shOptimo[0]} K):</b> Riesgo de retorno de líquido al compresor.`);
-      } else if (SH > refData.shOptimo[1]) {
-        alertas.push(`🟡 <b>Recalentamiento Alto (> ${refData.shOptimo[1]} K):</b> Evaporador subalimentado o falta de carga.`);
-      }
-
-      if (SC < refData.scOptimo[0] && !alarmaTLiq) {
-        alertas.push(`🟡 <b>Subenfriamiento Bajo (< ${refData.scOptimo[0]} K):</b> Falta de refrigerante o baja transferencia en condensador.`);
+      // EVALUACIÓN AVANZADA DE SUBENFRIAMIENTO SC < 3K (Condensador o Carga)
+      if (SC < 3.0 && !alarmaTLiq) {
+        if (deltaTCondAmb > 18.0 || rP > refData.rPMax) {
+          alertas.push(`🔴 <b>CONDENSADOR INSUFICIENTE / SUCIO (SC = ${SC.toFixed(1)} K):</b> Subenfriamiento bajo con un ΔT Cond-Amb elevado (${deltaTCondAmb.toFixed(1)} K) y alta presión. Falta de transferencia térmica en condensación (suciedad, fan defectuoso o flujo de aire restringido).`);
+        } else if (SHTotal > refData.shOptimo[1]) {
+          alertas.push(`🟡 <b>FALTA DE REFRIGERANTE (SC = ${SC.toFixed(1)} K):</b> Subenfriamiento bajo acompañado de Recalentamiento elevado (${SHTotal.toFixed(1)} K). Carga insuficiente de refrigerante.`);
+        } else {
+          alertas.push(`🟡 <b>Subenfriamiento Bajo (< 3.0 K):</b> Subenfriamiento insuficiente (${SC.toFixed(1)} K). Posible baja acumulación de líquido.`);
+        }
       } else if (SC > refData.scOptimo[1]) {
         alertas.push(`🔵 <b>Subenfriamiento Alto (> ${refData.scOptimo[1]} K):</b> Exceso de carga o líquido retenido en condensador.`);
       }
 
-      if (dischargeSuperHeatK < 10.0) {
-        alertas.push(`🔴 <b>Riesgo de Golpe de Líquido (SH Descarga muy bajo: ${dischargeSuperHeatK.toFixed(1)} K):</b> El gas sale con muy poco sobrecalentamiento respecto al condensador.`);
-      } else if (dischargeSuperHeatK > 42.0) {
-        alertas.push(`🔴 <b>Compresor Sobrecalentado (SH Descarga excesivo: ${dischargeSuperHeatK.toFixed(1)} K):</b> Exceso de calor en compresión.`);
+      if (rP > refData.rPMax) {
+        alertas.push(`🔴 <b>Relación de Presión Excesiva (rP = ${rP.toFixed(1)} > ${refData.rPMax}):</b> Compresor fuera de envolvente.`);
+      } else if (rP < 1.8 && rP > 1.0) {
+        alertas.push(`🟡 <b>Relación de Presión Muy Baja (rP = ${rP.toFixed(1)}):</b> Ineficiencia por desgaste en válvulas o bypass interno.`);
       }
 
-      if (SH > 11.0 && SC > 7.5) {
-        alertas.push(`🟠 <b>Posible Sobredimensionamiento (Capacidad Excesiva):</b> SH alto (${SH.toFixed(1)} K) y SC elevado (${SC.toFixed(1)} K).`);
-      } else if (rP > (refData.rPMax * 0.9) && SH > 10.0) {
-        alertas.push(`🟠 <b>Alerta de Desbalance Térmico:</b> Relación de presión elevada con alto recalentamiento.`);
+      if (SHUtil < refData.shOptimo[0]) {
+        alertas.push(`🔴 <b>Recalentamiento Útil Crítico (< ${refData.shOptimo[0]} K):</b> Riesgo de inundación del evaporador / retorno líquido.`);
+      } else if (SHUtil > refData.shOptimo[1]) {
+        alertas.push(`🟡 <b>Recalentamiento Útil Alto (> ${refData.shOptimo[1]} K):</b> Evaporador subalimentado o VXT desajustada.`);
+      }
+
+      if ((SHTotal - SHUtil) > 5.0) {
+        alertas.push(`🟠 <b>Ganancia Térmica en Succión Elevada (${(SHTotal - SHUtil).toFixed(1)} K):</b> Pérdida de eficiencia por tubería de succión sin aislamiento adecuado.`);
+      }
+
+      if (dischargeSuperHeatK < 10.0) {
+        alertas.push(`🔴 <b>Riesgo de Golpe de Líquido (SH Descarga muy bajo: ${dischargeSuperHeatK.toFixed(1)} K):</b> El gas sale con muy poco sobrecalentamiento.`);
+      } else if (dischargeSuperHeatK > 42.0) {
+        alertas.push(`🔴 <b>Compresor Sobrecalentado (SH Descarga excesivo: ${dischargeSuperHeatK.toFixed(1)} K):</b> Exceso de calor en compresión.`);
       }
 
       if (refData.esZeotropico && refData.glide > 0.5) {
@@ -781,15 +861,18 @@
       const pSuctBarAbs = Math.max((pSuctInput / barFactor) + atmBar, 0.2);
       const pDescBarAbs = Math.min((pDescInput / barFactor) + atmBar, refData.criticalP - 0.2);
 
+      let tEvapOutVal = parseFloat(document.getElementById('tEvapOut').value) || -12;
       let tSuctVal = parseFloat(document.getElementById('tSuct').value) || -10;
       let tLiqVal = parseFloat(document.getElementById('tLiq').value) || 45;
       let tDescRealVal = parseFloat(document.getElementById('tDescReal').value) || 90;
 
+      let tEvapOutC = tEvapOutVal;
       let tSuctC = tSuctVal;
       let tLiqC = tLiqVal;
       let tDescRealC = tDescRealVal;
 
       if (tUnitActual === 'F') {
+        tEvapOutC = (tEvapOutVal - 32) * 5/9;
         tSuctC = (tSuctVal - 32) * 5/9;
         tLiqC = (tLiqVal - 32) * 5/9;
         tDescRealC = (tDescRealVal - 32) * 5/9;
@@ -802,11 +885,14 @@
       const propEvap = getPropAtP(refData, pSuctBarAbs);
       const propCond = getPropAtP(refData, pDescBarAbs);
 
-      const superHeatK = Math.max(tSuctC - propEvap.tSat, 0);
+      const superHeatUtilK = Math.max(tEvapOutC - propEvap.tSat, 0);
+      const superHeatTotalK = Math.max(tSuctC - propEvap.tSat, 0);
       const subCoolK = Math.max(propCond.tSat - tLiqC, 0);
       const dischargeSuperHeatK = Math.max(tDescRealC - propCond.tSat, 0);
 
-      const h1 = propEvap.hV + (superHeatK * refData.cpV);
+      const deltaTCondAmb = propCond.tSat - tempAmbientePuntoFijoC;
+
+      const h1 = propEvap.hV + (superHeatTotalK * refData.cpV);
       const h3 = propCond.hL - (subCoolK * refData.cpL);
       const h4 = h3; 
 
@@ -822,15 +908,17 @@
       const w = h2 - h1;
       const cop = w > 0 ? (qn / w) : 0;
 
-      document.getElementById('kpiSH').innerText = `${superHeatK.toFixed(1)} K`;
+      document.getElementById('kpiSHUtil').innerText = `${superHeatUtilK.toFixed(1)} K`;
+      document.getElementById('kpiSHTotal').innerText = `${superHeatTotalK.toFixed(1)} K`;
       document.getElementById('kpiSC').innerText = `${subCoolK.toFixed(1)} K`;
       document.getElementById('kpiKW').innerText = `${pKw.toFixed(2)} kW`;
       document.getElementById('kpiqn').innerText = `${qn.toFixed(1)} kJ/kg`;
       document.getElementById('kpiw').innerText = `${w.toFixed(1)} kJ/kg`;
       document.getElementById('kpicop').innerText = cop.toFixed(2);
+      document.getElementById('kpiDeltaAmb').innerText = `${deltaTCondAmb.toFixed(1)} K`;
 
       const { alertas, alarmaTDesc, alarmaTLiq } = evaluarDiagnostico(
-        refData, rP, tDescRealC, tLiqC, propCond.tSat, superHeatK, subCoolK, dischargeSuperHeatK
+        refData, rP, tDescRealC, tLiqC, propCond.tSat, superHeatUtilK, superHeatTotalK, subCoolK, dischargeSuperHeatK, tempAmbientePuntoFijoC
       );
       
       const grpDesc = document.getElementById('grpTDescReal');
@@ -868,100 +956,48 @@
         y: [pSuctPlot, pDescPlot, pDescPlot, pSuctPlot, pSuctPlot],
         mode: 'lines+markers+text',
         name: 'Ciclo Operativo Real',
-        text: ['1 (Succ)', '2 (Desc)', '3 (Liq)', '4 (Evap)', ''],
-        textposition: ['bottom right', 'top right', 'top left', 'bottom left', ''],
-        textfont: { color: '#ffffff', size: 7 },
-        line: { color: '#f43f5e', width: 2 },
-        marker: { size: 3, color: '#f59e0b' }
+        text: ['1 (Succ)', '2 (Desc)', '3 (Liq)', '4 (Exp)', '1'],
+        textposition: 'top center',
+        textfont: { size: 9, color: '#f8fafc' },
+        line: { color: '#ef4444', width: 2.5 },
+        marker: { size: 6, color: '#f59e0b' }
       };
 
-      const cycleFillTrace = {
-        x: [h1, h2, h3, h4],
-        y: [pSuctPlot, pDescPlot, pDescPlot, pSuctPlot],
-        fill: 'toself',
-        fillcolor: 'rgba(244, 63, 94, 0.22)',
-        line: { color: 'transparent' },
-        name: 'Área del Ciclo',
-        showlegend: false,
-        hoverinfo: 'none'
-      };
-
-      const traces = [...zoneTraces, getDomeTrace(refData), cycleFillTrace, cycleTrace];
-
-      let xRangeFinal, yRangeFinal;
-
-      const maxH_Ciclo = Math.max(h1, h2, h3, h4);
-      const minH_Ciclo = Math.min(h1, h2, h3, h4);
-
-      if (zonaActivaHabilitada) {
-        const hMargin = (maxH_Ciclo - minH_Ciclo) * 0.08;
-        const minPLog = Math.log10(Math.min(pSuctPlot, pDescPlot)) - 0.05;
-        const maxPLog = Math.log10(Math.max(pSuctPlot, pDescPlot)) + 0.05;
-
-        xRangeFinal = [minH_Ciclo - hMargin, maxH_Ciclo + hMargin];
-        yRangeFinal = [minPLog, maxPLog];
-      } else {
-        const pMinDome = refData.dome[0].p * pf;
-        const pMaxDome = refData.criticalP * pf * 1.1;
-
-        xRangeFinal = [minX, maxX];
-        yRangeFinal = [
-          Math.log10(pMinDome * 0.8),
-          Math.log10(pMaxDome)
-        ];
-      }
+      const domeTrace = getDomeTrace(refData);
 
       const layout = {
-        margin: { l: 25, r: 5, t: 15, b: 20 },
         autosize: true,
+        margin: { l: 25, r: 5, t: 15, b: 20 },
         paper_bgcolor: '#1e293b',
         plot_bgcolor: '#0f172a',
-        dragmode: false,
         showlegend: false,
-        title: {
-          text: `Diagrama Mollier p-h (${refData.nombre})`,
-          font: { color: '#f8fafc', size: 10 }
-        },
         xaxis: {
-          title: { text: 'Entalpía (kJ/kg)', font: { color: '#94a3b8', size: 7 } },
-          visible: true,
-          showticklabels: true,
-          tickfont: { color: '#94a3b8', size: 6 },
-          showgrid: true,
+          title: 'Entalpía Especifica h (kJ/kg)',
+          titlefont: { size: 7, color: '#94a3b8' },
+          tickfont: { size: 6, color: '#cbd5e1' },
           gridcolor: '#334155',
-          range: xRangeFinal,
-          fixedrange: true
+          zeroline: false,
+          range: zonaActivaHabilitada ? [Math.max(h4 - 30, minX), Math.min(h2 + 30, maxX)] : [minX, maxX]
         },
         yaxis: {
-          title: { text: `P (${pUnits[pUnitActual].label})`, font: { color: '#94a3b8', size: 7 } },
-          visible: true,
-          showticklabels: true,
-          tickfont: { color: '#94a3b8', size: 6 },
-          showgrid: true,
-          gridcolor: '#334155',
+          title: `Presión Absoluta (${pUnits[pUnitActual].label})`,
+          titlefont: { size: 7, color: '#94a3b8' },
+          tickfont: { size: 6, color: '#cbd5e1' },
           type: 'log',
-          range: yRangeFinal,
-          fixedrange: true
+          gridcolor: '#334155',
+          zeroline: false,
+          range: zonaActivaHabilitada ? [Math.log10(pSuctPlot * 0.7), Math.log10(pDescPlot * 1.3)] : undefined
         }
       };
 
-      const config = {
-        responsive: true,
-        displayModeBar: false,
-        scrollZoom: false
-      };
-
-      Plotly.react('mollierPlot', traces, layout, config);
+      Plotly.react('mollierPlot', [...zoneTraces, domeTrace, cycleTrace], layout, { responsive: true, displayModeBar: false });
     }
 
+    // Inicialización al cargar la ventana
     window.addEventListener('DOMContentLoaded', () => {
       cargarConfiguracion();
       actualizarEtiquetas();
-      actualizarTodo();
-    });
-
-    window.addEventListener('resize', () => {
-      Plotly.Plots.resize('mollierPlot');
+      obtenerClimaPuntoFijo();
     });
   </script>
 </body>
