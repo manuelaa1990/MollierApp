@@ -433,7 +433,7 @@
     <main class="card chart-card">
       <div class="action-bar">
         <button class="btn btn-toggle" id="btnZonaActiva" onclick="toggleZonaActiva()">
-          🔍 Zoom Zona Activa: ON
+          🔍 Zoom Zona Activa: OFF
         </button>
         <button class="btn btn-primary" onclick="descargarGrafica()">
           📷 Descargar PNG
@@ -446,7 +446,8 @@
   </div>
 
   <script>
-    let zonaActivaHabilitada = true;
+    // INICIA ALEJADA AL 100% POR DEFECTO
+    let zonaActivaHabilitada = false;
     let pUnitActual = 'psi';
     let tUnitActual = 'C';
     let tempAmbientePuntoFijoC = 30.0;
@@ -461,7 +462,6 @@
       kpa: { factor: 100.0, label: 'kPa', atm: P_ATM_KPA }
     };
 
-    // DATOS DE DOMO RECALIBRADOS EXACTAMENTE A TABLAS ASHRAE/IIR
     const refrigerantes = {
       R134a: {
         nombre: "R-134a", criticalP: 40.59, xRange: [150, 480],
@@ -702,7 +702,6 @@
       });
     }
 
-    // INTERPOLACIÓN LOGARÍTMICA PRECISA PARA EL DOMO EN EJE LOG
     function getPropAtP(refData, pBarAbs) {
       const dome = refData.dome;
       if (pBarAbs <= dome[0].p) return dome[0];
@@ -809,9 +808,10 @@
         alertas.push(`🔴 <b>CRÍTICO (T. Descarga ${tDescRealC.toFixed(0)}°C):</b> Supera el límite de ${refData.tDescMax}°C para ${refData.nombre}. Riesgo de degradar aceite.`);
       }
 
+      // CAMBIO 1: REDACCIÓN DE LA ALERTA DE LÍQUIDO
       if (tLiqC >= tSatCondC) {
         alarmaTLiq = true;
-        alertas.push(`🔴 <b>ALERTA (T. Líquido ${tLiqC.toFixed(1)}°C):</b> Igual o superior a T. Sat (${tSatCondC.toFixed(1)}°C). Pérdida total de subenfriamiento / Flash Gas.`);
+        alertas.push(`🔴 <b>ALERTA (T. Líquido ${tLiqC.toFixed(1)}°C):</b> Sin Subenfriamiento (T. Líquido ≥ T. Sat ${tSatCondC.toFixed(1)}°C). Riesgo de Flash Gas en la línea.`);
       }
 
       if (SC < 3.0 && !alarmaTLiq) {
@@ -903,7 +903,6 @@
 
       const deltaTCondAmb = propCond.tSat - tempAmbientePuntoFijoC;
 
-      // PUNTOS TÉRMICOS COHERENTES CON EL DOMO
       const h1 = propEvap.hV + (superHeatTotalK * refData.cpV);
       const h3 = propCond.hL - (subCoolK * refData.cpL);
       const h4 = h3; 
@@ -971,28 +970,31 @@
 
       const domeTrace = getDomeTrace(refData);
 
+      // CAMBIO 2: VISTA COMPLETA (100% ALEJADA) POR DEFECTO CON AUTORANGE
       const layout = {
         autosize: true,
-        margin: { l: 18, r: 5, t: 10, b: 18 },
+        margin: { l: 22, r: 10, t: 10, b: 22 },
         paper_bgcolor: '#1e293b',
         plot_bgcolor: '#0f172a',
         showlegend: false,
         xaxis: {
           title: 'h (kJ/kg)',
-          titlefont: { size: 6, color: '#94a3b8' },
-          tickfont: { size: 5.5, color: '#cbd5e1' },
+          titlefont: { size: 7, color: '#94a3b8' },
+          tickfont: { size: 6.5, color: '#cbd5e1' },
           gridcolor: '#334155',
           zeroline: false,
-          range: zonaActivaHabilitada ? [Math.max(h4 - 25, minX), Math.min(h2 + 25, maxX)] : [minX, maxX]
+          autorange: !zonaActivaHabilitada,
+          range: zonaActivaHabilitada ? [Math.max(h4 - 25, minX), Math.min(h2 + 25, maxX)] : undefined
         },
         yaxis: {
           title: `P. Abs (${pUnits[pUnitActual].label})`,
-          titlefont: { size: 6, color: '#94a3b8' },
-          tickfont: { size: 5.5, color: '#cbd5e1' },
+          titlefont: { size: 7, color: '#94a3b8' },
+          tickfont: { size: 6.5, color: '#cbd5e1' },
           type: 'log',
           automargin: true,
           gridcolor: '#334155',
           zeroline: false,
+          autorange: !zonaActivaHabilitada,
           range: zonaActivaHabilitada ? [Math.log10(pSuctPlot * 0.75), Math.log10(pDescPlot * 1.25)] : undefined
         }
       };
