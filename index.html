@@ -84,7 +84,7 @@
       white-space: nowrap;
     }
 
-    .prof-grid input {
+    .prof-grid input, .prof-grid select {
       padding: 2px 4px;
       border: 1px solid #475569;
       border-radius: 4px;
@@ -129,7 +129,8 @@
       width: 100%;
     }
 
-    .config-row .input-group-ref { flex: 2; min-width: 0; }
+    .config-row .input-group-ref { flex: 1.8; min-width: 0; }
+    .config-row .input-group-cap { flex: 1.5; min-width: 0; }
     .config-row .input-group-unit { flex: 1; min-width: 0; }
 
     .controls-grid {
@@ -207,7 +208,6 @@
       height: 26px;
     }
 
-    /* Botón verde estricto para el reporte */
     .btn-reporte {
       background-color: #10b981;
       color: #ffffff;
@@ -287,7 +287,7 @@
     .chart-container {
       width: 100%;
       max-width: 100%;
-      height: 260px;
+      height: 320px;
       overflow: hidden;
     }
 
@@ -320,7 +320,6 @@
       }
     }
 
-    /* Ajustes específicos de impresión para cuando html2pdf captura la pantalla */
     body.generating-pdf {
       background-color: #ffffff !important;
       color: #000000 !important;
@@ -417,6 +416,21 @@
                 <option value="R507A">R-507A</option>
                 <option value="R407C">R-407C</option>
               </optgroup>
+            </select>
+          </div>
+
+          <!-- Selector compacto y discreto de Capacidad Frigorífica al lado del tag -->
+          <div class="input-group input-group-cap">
+            <label for="capPresetSelect">Cap. Rápida</label>
+            <select id="capPresetSelect" onchange="seleccionarCapacidadRapida(this.value)">
+              <option value="custom">Personalizada</option>
+              <option value="9000">9,000 BTU (0.75 Ton)</option>
+              <option value="12000">12,000 BTU (1.0 Ton)</option>
+              <option value="18000">18,000 BTU (1.5 Ton)</option>
+              <option value="24000">24,000 BTU (2.0 Ton)</option>
+              <option value="36000" selected>36,000 BTU (3.0 Ton)</option>
+              <option value="48000">48,000 BTU (4.0 Ton)</option>
+              <option value="60000">60,000 BTU (5.0 Ton)</option>
             </select>
           </div>
 
@@ -530,6 +544,9 @@
         <button class="btn btn-toggle" id="btnZonaActiva" onclick="toggleZonaActiva()">
           🔍 Zoom Zona Activa: OFF
         </button>
+        <button class="btn btn-toggle active" id="btnPuntosIntermedios" onclick="togglePuntosIntermedios()">
+          📍 Puntos Intermedios: ON
+        </button>
         <!-- Botón verde de reporte -->
         <button class="btn btn-reporte" onclick="descargarPDFReporte()">
           📄 Reporte
@@ -543,6 +560,7 @@
 
   <script>
     let zonaActivaHabilitada = false;
+    let mostrarPuntosIntermedios = true;
     let pUnitActual = 'psi';
     let tUnitActual = 'C';
     let tempAmbientePuntoFijoC = 30.0;
@@ -643,6 +661,15 @@
       }
     };
 
+    function seleccionarCapacidadRapida(val) {
+      const inputCap = document.getElementById('capFrigNominal');
+      if (val === 'custom') return;
+      const btu = parseInt(val, 10);
+      const ton = (btu / 12000).toFixed(btu % 12000 === 0 ? 1 : 2);
+      inputCap.value = `${btu.toLocaleString()} BTU/h (${ton} Ton)`;
+      guardarYActualizar();
+    }
+
     function actualizarReloj() {
       const ahora = new Date();
       const opciones = { 
@@ -654,10 +681,7 @@
     }
 
     function convertirTemp(tempC) {
-      if (tUnitActual === 'F') {
-        return (tempC * 9/5) + 32;
-      }
-      return tempC;
+      return (tUnitActual === 'F') ? (tempC * 9/5) + 32 : tempC;
     }
 
     async function obtenerClimaPuntoFijo() {
@@ -683,146 +707,53 @@
       document.getElementById('lblPDesc').innerText = `P. Descarga (${pUnits[pUnitActual].label})`;
       document.getElementById('lblTEvapOut').innerText = `T. Salida Evap (°${tUnitActual})`;
       document.getElementById('lblTSuct').innerText = `T. Succ Tubo (°${tUnitActual})`;
-      document.getElementById('lblTLiq').innerText = `T. Liq Tubo (°${tUnitActual})`;
-      document.getElementById('lblTDescReal').innerText = `T. Desc (°${tUnitActual})`;
+      document.getElementById('lblTLiq').innerText = `T. Tubería Liq (°${tUnitActual})`;
+      document.getElementById('lblTDescReal').innerText = `T. Descarga (°${tUnitActual})`;
     }
 
     function cambiarUnidades() {
-      const nuevaPUnit = document.getElementById('pUnitSelect').value;
-      const nuevaTUnit = document.getElementById('tUnitSelect').value;
-
-      const pFactorViejo = pUnits[pUnitActual].factor;
-      const pFactorNuevo = pUnits[nuevaPUnit].factor;
-
-      ['pSuct', 'pDesc'].forEach(id => {
-        const elem = document.getElementById(id);
-        const valBar = parseFloat(elem.value) / pFactorViejo;
-        elem.value = (valBar * pFactorNuevo).toFixed(nuevaPUnit === 'psi' ? 0 : 1);
-      });
-
-      if (tUnitActual !== nuevaTUnit) {
-        ['tEvapOut', 'tSuct', 'tLiq', 'tDescReal'].forEach(id => {
-          const elem = document.getElementById(id);
-          let val = parseFloat(elem.value);
-          if (nuevaTUnit === 'F') {
-            elem.value = (val * 9/5 + 32).toFixed(1);
-          } else {
-            elem.value = ((val - 32) * 5/9).toFixed(1);
-          }
-        });
-      }
-
-      pUnitActual = nuevaPUnit;
-      tUnitActual = nuevaTUnit;
-
+      pUnitActual = document.getElementById('pUnitSelect').value;
+      tUnitActual = document.getElementById('tUnitSelect').value;
       actualizarEtiquetas();
       obtenerClimaPuntoFijo();
+      guardarYActualizar();
     }
 
     function toggleZonaActiva() {
       zonaActivaHabilitada = !zonaActivaHabilitada;
-      actualizarEstadoBotonZoom();
+      const btn = document.getElementById('btnZonaActiva');
+      if (zonaActivaHabilitada) {
+        btn.classList.add('active');
+        btn.innerText = '🔍 Zoom Zona Activa: ON';
+      } else {
+        btn.classList.remove('active');
+        btn.innerText = '🔍 Zoom Zona Activa: OFF';
+      }
       guardarYActualizar();
     }
 
-    function actualizarEstadoBotonZoom() {
-      const btn = document.getElementById('btnZonaActiva');
-      btn.innerText = `🔍 Zoom Zona Activa: ${zonaActivaHabilitada ? 'ON' : 'OFF'}`;
-      btn.classList.toggle('active', zonaActivaHabilitada);
-    }
-
-    function guardarConfiguracion() {
-      const data = {
-        empresaNombre: document.getElementById('empresaNombre').value,
-        empresaRif: document.getElementById('empresaRif').value,
-        tecnicoNombre: document.getElementById('tecnicoNombre').value,
-        equipoMarca: document.getElementById('equipoMarca').value,
-        equipoModelo: document.getElementById('equipoModelo').value,
-        capFrigNominal: document.getElementById('capFrigNominal').value,
-        refSelect: document.getElementById('refSelect').value,
-        pUnitSelect: document.getElementById('pUnitSelect').value,
-        tUnitSelect: document.getElementById('tUnitSelect').value,
-        pSuct: document.getElementById('pSuct').value,
-        pDesc: document.getElementById('pDesc').value,
-        tEvapOut: document.getElementById('tEvapOut').value,
-        tSuct: document.getElementById('tSuct').value,
-        tLiq: document.getElementById('tLiq').value,
-        tDescReal: document.getElementById('tDescReal').value,
-        vVolt: document.getElementById('vVolt').value,
-        iAmp: document.getElementById('iAmp').value,
-        zonaActivaHabilitada: zonaActivaHabilitada
-      };
-      localStorage.setItem('mollier_app_report_data', JSON.stringify(data));
-    }
-
-    function cargarConfiguracion() {
-      const saved = localStorage.getItem('mollier_app_report_data');
-      if (saved) {
-        try {
-          const data = JSON.parse(saved);
-          if (data.empresaNombre !== undefined) document.getElementById('empresaNombre').value = data.empresaNombre;
-          if (data.empresaRif !== undefined) document.getElementById('empresaRif').value = data.empresaRif;
-          if (data.tecnicoNombre !== undefined) document.getElementById('tecnicoNombre').value = data.tecnicoNombre;
-          if (data.equipoMarca !== undefined) document.getElementById('equipoMarca').value = data.equipoMarca;
-          if (data.equipoModelo !== undefined) document.getElementById('equipoModelo').value = data.equipoModelo;
-          if (data.capFrigNominal !== undefined) document.getElementById('capFrigNominal').value = data.capFrigNominal;
-          if (data.refSelect) document.getElementById('refSelect').value = data.refSelect;
-          if (data.pUnitSelect) document.getElementById('pUnitSelect').value = data.pUnitSelect;
-          if (data.tUnitSelect) document.getElementById('tUnitSelect').value = data.tUnitSelect;
-          if (data.pSuct !== undefined) document.getElementById('pSuct').value = data.pSuct;
-          if (data.pDesc !== undefined) document.getElementById('pDesc').value = data.pDesc;
-          if (data.tEvapOut !== undefined) document.getElementById('tEvapOut').value = data.tEvapOut;
-          if (data.tSuct !== undefined) document.getElementById('tSuct').value = data.tSuct;
-          if (data.tLiq !== undefined) document.getElementById('tLiq').value = data.tLiq;
-          if (data.tDescReal !== undefined) document.getElementById('tDescReal').value = data.tDescReal;
-          if (data.vVolt !== undefined) document.getElementById('vVolt').value = data.vVolt;
-          if (data.iAmp !== undefined) document.getElementById('iAmp').value = data.iAmp;
-          if (data.zonaActivaHabilitada !== undefined) zonaActivaHabilitada = data.zonaActivaHabilitada;
-
-          pUnitActual = document.getElementById('pUnitSelect').value;
-          tUnitActual = document.getElementById('tUnitSelect').value;
-          actualizarEstadoBotonZoom();
-        } catch (e) {
-          console.error("Error al cargar datos", e);
-        }
+    function togglePuntosIntermedios() {
+      mostrarPuntosIntermedios = !mostrarPuntosIntermedios;
+      const btn = document.getElementById('btnPuntosIntermedios');
+      if (mostrarPuntosIntermedios) {
+        btn.classList.add('active');
+        btn.innerText = '📍 Puntos Intermedios: ON';
+      } else {
+        btn.classList.remove('active');
+        btn.innerText = '📍 Puntos Intermedios: OFF';
       }
+      guardarYActualizar();
     }
 
-    function guardarYActualizar() {
-      guardarConfiguracion();
-      actualizarTodo();
-    }
-
-    function descargarPDFReporte() {
-      const element = document.getElementById('reporteArea');
-      document.body.classList.add('generating-pdf');
-
-      const opt = {
-        margin:       [5, 5, 5, 5],
-        filename:     `Reporte_Tecnico_${document.getElementById('equipoMarca').value}_${document.getElementById('equipoModelo').value}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true, logging: false },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      };
-
-      html2pdf().set(opt).from(element).save().then(() => {
-        document.body.classList.remove('generating-pdf');
-      });
-    }
-
-    function getPropAtP(refData, pBarAbs) {
-      const dome = refData.dome;
-      if (pBarAbs <= dome[0].p) return dome[0];
-      if (pBarAbs >= refData.criticalP) return dome[dome.length - 1];
-
+    function interpolarDomo(pAbsBar, ref) {
+      const dome = ref.dome;
+      if (pAbsBar <= dome[0].p) return dome[0];
+      if (pAbsBar >= dome[dome.length - 1].p) return dome[dome.length - 1];
       for (let i = 0; i < dome.length - 1; i++) {
-        if (pBarAbs >= dome[i].p && pBarAbs <= dome[i+1].p) {
-          const logP = Math.log(pBarAbs);
-          const logP1 = Math.log(dome[i].p);
-          const logP2 = Math.log(dome[i+1].p);
-          const factor = (logP - logP1) / (logP2 - logP1);
-
+        if (pAbsBar >= dome[i].p && pAbsBar <= dome[i+1].p) {
+          const factor = (pAbsBar - dome[i].p) / (dome[i+1].p - dome[i].p);
           return {
+            p: pAbsBar,
             hL: dome[i].hL + factor * (dome[i+1].hL - dome[i].hL),
             hV: dome[i].hV + factor * (dome[i+1].hV - dome[i].hV),
             tSat: dome[i].tSat + factor * (dome[i+1].tSat - dome[i].tSat)
@@ -832,292 +763,191 @@
       return dome[0];
     }
 
-    function getZoneTraces(refData, minX, maxX) {
-      const f = pUnits[pUnitActual].factor;
-      const dome = refData.dome;
-
-      const pVals = dome.map(pt => pt.p * f);
-      const hLVals = dome.map(pt => pt.hL);
-      const hVVals = dome.map(pt => pt.hV);
-
-      const pTop = pVals[pVals.length - 1];
-      const pBot = pVals[0];
-
-      const liquidX = [minX, minX];
-      const liquidY = [pBot, pTop];
-      for (let i = dome.length - 1; i >= 0; i--) {
-        liquidX.push(hLVals[i]);
-        liquidY.push(pVals[i]);
-      }
-
-      const traceLiquid = {
-        x: liquidX, y: liquidY, fill: 'toself',
-        fillcolor: 'rgba(2, 132, 199, 0.22)', line: { color: 'transparent' },
-        name: 'Líquido', showlegend: false, hoverinfo: 'none'
-      };
-
-      const satX = []; const satY = [];
-      for (let i = 0; i < dome.length; i++) { satX.push(hLVals[i]); satY.push(pVals[i]); }
-      for (let i = dome.length - 1; i >= 0; i--) { satX.push(hVVals[i]); satY.push(pVals[i]); }
-
-      const traceSat = {
-        x: satX, y: satY, fill: 'toself',
-        fillcolor: 'rgba(16, 185, 129, 0.22)', line: { color: 'transparent' },
-        name: 'Mezcla', showlegend: false, hoverinfo: 'none'
-      };
-
-      const vaporX = []; const vaporY = [];
-      for (let i = 0; i < dome.length; i++) { vaporX.push(hVVals[i]); vaporY.push(pVals[i]); }
-      vaporX.push(maxX, maxX);
-      vaporY.push(pTop, pBot);
-
-      const traceVapor = {
-        x: vaporX, y: vaporY, fill: 'toself',
-        fillcolor: 'rgba(245, 158, 11, 0.20)', line: { color: 'transparent' },
-        name: 'Vapor', showlegend: false, hoverinfo: 'none'
-      };
-
-      return [traceLiquid, traceSat, traceVapor];
-    }
-
-    function getDomeTrace(refData) {
-      const hVals = [];
-      const pVals = [];
-      const tempsText = [];
-      const f = pUnits[pUnitActual].factor;
-
-      refData.dome.forEach(pt => {
-        hVals.push(pt.hL);
-        pVals.push(pt.p * f);
-        tempsText.push(`${convertirTemp(pt.tSat).toFixed(1)} °${tUnitActual}`);
-      });
-
-      for (let i = refData.dome.length - 1; i >= 0; i--) {
-        hVals.push(refData.dome[i].hV);
-        pVals.push(refData.dome[i].p * f);
-        tempsText.push(`${convertirTemp(refData.dome[i].tSat).toFixed(1)} °${tUnitActual}`);
-      }
-
-      return {
-        x: hVals,
-        y: pVals,
-        mode: 'lines+markers',
-        name: `Domo ${refData.nombre}`,
-        line: { color: '#38bdf8', width: 2.0, shape: 'spline', smoothing: 1.1 },
-        marker: { size: 4, color: '#38bdf8' },
-        hovertemplate: `<b>Domo Sat. (${refData.nombre})</b><br>` +
-                       `Temp Sat: %{text}<br>` +
-                       `P: %{y:.1f} ${pUnits[pUnitActual].label}<br>` +
-                       `h: %{x:.1f} kJ/kg<extra></extra>`,
-        text: tempsText
-      };
-    }
-
-    function evaluarDiagnostico(refData, rP, tDescRealC, tLiqC, tSatCondC, SHUtil, SHTotal, SC, dischargeSuperHeatK, tempAmbienteC) {
-      const alertas = [];
-      let alarmaTDesc = false;
-      let alarmaTLiq = false;
-
-      const deltaTCondAmb = tSatCondC - tempAmbienteC;
-
-      if (tDescRealC > refData.tDescMax) {
-        alarmaTDesc = true;
-        alertas.push(`🔴 <b>CRÍTICO (T. Descarga ${tDescRealC.toFixed(0)}°C):</b> Supera el límite de ${refData.tDescMax}°C para ${refData.nombre}.`);
-      }
-
-      if (tLiqC >= tSatCondC) {
-        alarmaTLiq = true;
-        alertas.push(`🔴 <b>ALERTA (T. Líquido ${tLiqC.toFixed(1)}°C):</b> Sin Subenfriamiento (T. Líquido ≥ T. Sat ${tSatCondC.toFixed(1)}°C). Riesgo de Flash Gas.`);
-      }
-
-      if (SC < 3.0 && !alarmaTLiq) {
-        if (deltaTCondAmb > 18.0 || rP > refData.rPMax) {
-          alertas.push(`🔴 <b>CONDENSADOR SUCIO (SC = ${SC.toFixed(1)} K):</b> Subenfriamiento bajo con ΔT Cond-Amb elevado (${deltaTCondAmb.toFixed(1)} K).`);
-        } else if (SHTotal > refData.shOptimo[1]) {
-          alertas.push(`🟡 <b>FALTA DE REFRIGERANTE (SC = ${SC.toFixed(1)} K):</b> Subenfriamiento bajo y Recalentamiento elevado (${SHTotal.toFixed(1)} K).`);
-        } else {
-          alertas.push(`🟡 <b>Subenfriamiento Bajo (< 3.0 K):</b> Subenfriamiento insuficiente (${SC.toFixed(1)} K).`);
-        }
-      } else if (SC > refData.scOptimo[1]) {
-        alertas.push(`🔵 <b>Subenfriamiento Alto (> ${refData.scOptimo[1]} K):</b> Exceso de carga de refrigerante.`);
-      }
-
-      if (rP > refData.rPMax) {
-        alertas.push(`🔴 <b>Relación de Presión Excesiva (rP = ${rP.toFixed(1)} > ${refData.rPMax}):</b> Compresor fuera de rango.`);
-      }
-
-      if (SHUtil < refData.shOptimo[0]) {
-        alertas.push(`🔴 <b>Recalentamiento Útil Crítico (< ${refData.shOptimo[0]} K):</b> Riesgo de retorno de líquido.`);
-      } else if (SHUtil > refData.shOptimo[1]) {
-        alertas.push(`🟡 <b>Recalentamiento Útil Alto (> ${refData.shOptimo[1]} K):</b> Evaporador subalimentado.`);
-      }
-
-      return { alertas, alarmaTDesc, alarmaTLiq };
-    }
-
-    function actualizarTodo() {
+    function guardarYActualizar() {
       const refKey = document.getElementById('refSelect').value;
-      const refData = refrigerantes[refKey];
-      const pf = pUnits[pUnitActual].factor;
+      const ref = refrigerantes[refKey] || refrigerantes.R404A;
 
-      let pSuctInput = parseFloat(document.getElementById('pSuct').value);
-      let pDescInput = parseFloat(document.getElementById('pDesc').value);
+      let pSuctVal = parseFloat(document.getElementById('pSuct').value) || 0;
+      let pDescVal = parseFloat(document.getElementById('pDesc').value) || 0;
+      let tEvapOutVal = parseFloat(document.getElementById('tEvapOut').value) || 0;
+      let tSuctVal = parseFloat(document.getElementById('tSuct').value) || 0;
+      let tLiqVal = parseFloat(document.getElementById('tLiq').value) || 0;
+      let tDescRealVal = parseFloat(document.getElementById('tDescReal').value) || 0;
+      let vVoltVal = parseFloat(document.getElementById('vVolt').value) || 0;
+      let iAmpVal = parseFloat(document.getElementById('iAmp').value) || 0;
 
-      if (isNaN(pSuctInput)) pSuctInput = 25;
-      if (isNaN(pDescInput)) pDescInput = 290;
+      let pSuctBarAbs = (pSuctVal / pUnits[pUnitActual].factor) + pUnits[pUnitActual].atm;
+      let pDescBarAbs = (pDescVal / pUnits[pUnitActual].factor) + pUnits[pUnitActual].atm;
 
-      const barFactor = (pUnitActual === 'psi') ? 14.5038 : ((pUnitActual === 'kpa') ? 100 : 1.0);
-      const atmBar = 1.01325;
+      let tEvapOutC = (tUnitActual === 'F') ? (tEvapOutVal - 32) * 5/9 : tEvapOutVal;
+      let tSuctC = (tUnitActual === 'F') ? (tSuctVal - 32) * 5/9 : tSuctVal;
+      let tLiqC = (tUnitActual === 'F') ? (tLiqVal - 32) * 5/9 : tLiqVal;
+      let tDescRealC = (tUnitActual === 'F') ? (tDescRealVal - 32) * 5/9 : tDescRealVal;
 
-      const pSuctBarAbs = Math.max((pSuctInput / barFactor) + atmBar, 0.2);
-      const pDescBarAbs = Math.min((pDescInput / barFactor) + atmBar, refData.criticalP - 0.2);
+      const evapSat = interpolarDomo(pSuctBarAbs, ref);
+      const condSat = interpolarDomo(pDescBarAbs, ref);
 
-      let tEvapOutVal = parseFloat(document.getElementById('tEvapOut').value) || -12;
-      let tSuctVal = parseFloat(document.getElementById('tSuct').value) || -10;
-      let tLiqVal = parseFloat(document.getElementById('tLiq').value) || 45;
-      let tDescRealVal = parseFloat(document.getElementById('tDescReal').value) || 90;
+      let shUtilK = tEvapOutC - evapSat.tSat;
+      let shTotalK = tSuctC - evapSat.tSat;
+      let scK = condSat.tSat - tLiqC;
+      let kW = (vVoltVal * iAmpVal * 0.85 * 1.732) / 1000.0;
 
-      let tEvapOutC = tEvapOutVal;
-      let tSuctC = tSuctVal;
-      let tLiqC = tLiqVal;
-      let tDescRealC = tDescRealVal;
+      let h1 = evapSat.hV + (shTotalK * ref.cpV);
+      let h3 = condSat.hL - (scK * ref.cpL);
+      let h4 = h3;
+      let h2 = condSat.hV + ((tDescRealC - condSat.tSat) * ref.cpV);
 
-      if (tUnitActual === 'F') {
-        tEvapOutC = (tEvapOutVal - 32) * 5/9;
-        tSuctC = (tSuctVal - 32) * 5/9;
-        tLiqC = (tLiqVal - 32) * 5/9;
-        tDescRealC = (tDescRealVal - 32) * 5/9;
-      }
+      let qn = h1 - h4;
+      let w = h2 - h1;
+      let cop = (w > 0) ? (qn / w) : 0;
+      let deltaAmbK = condSat.tSat - tempAmbientePuntoFijoC;
 
-      const vVolt = parseFloat(document.getElementById('vVolt').value) || 220;
-      const iAmp = parseFloat(document.getElementById('iAmp').value) || 0;
-      const pKw = (vVolt * iAmp * 0.9) / 1000.0;
-
-      const propEvap = getPropAtP(refData, pSuctBarAbs);
-      const propCond = getPropAtP(refData, pDescBarAbs);
-
-      const superHeatUtilK = Math.max(tEvapOutC - propEvap.tSat, 0);
-      const superHeatTotalK = Math.max(tSuctC - propEvap.tSat, 0);
-      const subCoolK = Math.max(propCond.tSat - tLiqC, 0);
-      const dischargeSuperHeatK = Math.max(tDescRealC - propCond.tSat, 0);
-
-      const deltaTCondAmb = propCond.tSat - tempAmbientePuntoFijoC;
-
-      const h1 = propEvap.hV + (superHeatTotalK * refData.cpV);
-      const h3 = propCond.hL - (subCoolK * refData.cpL);
-      const h4 = h3; 
-
-      const qn = h1 - h4;
-
-      const rP = pDescBarAbs / pSuctBarAbs;
-      const deltaH_isentropico = h1 * 0.15 * Math.log(rP); 
-      const deltaT_superheat_desc = Math.max(tDescRealC - propCond.tSat, 0);
-      const h2_termico = propCond.hV + (deltaT_superheat_desc * refData.cpV);
-
-      const h2 = Math.max(h1 + deltaH_isentropico, h2_termico);
-
-      const w = h2 - h1;
-      const cop = w > 0 ? (qn / w) : 0;
-
-      document.getElementById('kpiSHUtil').innerText = `${superHeatUtilK.toFixed(1)} K`;
-      document.getElementById('kpiSHTotal').innerText = `${superHeatTotalK.toFixed(1)} K`;
-      document.getElementById('kpiSC').innerText = `${subCoolK.toFixed(1)} K`;
-      document.getElementById('kpiKW').innerText = `${pKw.toFixed(2)} kW`;
-      document.getElementById('kpiqn').innerText = `${qn.toFixed(1)} kJ/kg`;
-      document.getElementById('kpiw').innerText = `${w.toFixed(1)} kJ/kg`;
+      document.getElementById('kpiSHUtil').innerText = `${shUtilK.toFixed(1)} K`;
+      document.getElementById('kpiSHTotal').innerText = `${shTotalK.toFixed(1)} K`;
+      document.getElementById('kpiSC').innerText = `${scK.toFixed(1)} K`;
+      document.getElementById('kpiKW').innerText = `${kW.toFixed(2)} kW`;
+      document.getElementById('kpiqn').innerText = `${Math.round(qn)} kJ/kg`;
+      document.getElementById('kpiw').innerText = `${Math.round(w)} kJ/kg`;
       document.getElementById('kpicop').innerText = cop.toFixed(2);
-      document.getElementById('kpiDeltaAmb').innerText = `${deltaTCondAmb.toFixed(1)} K`;
+      document.getElementById('kpiDeltaAmb').innerText = `${deltaAmbK.toFixed(1)} K`;
 
-      const { alertas, alarmaTDesc, alarmaTLiq } = evaluarDiagnostico(
-        refData, rP, tDescRealC, tLiqC, propCond.tSat, superHeatUtilK, superHeatTotalK, subCoolK, dischargeSuperHeatK, tempAmbientePuntoFijoC
-      );
-      
-      const grpDesc = document.getElementById('grpTDescReal');
-      const grpLiq = document.getElementById('grpTLiq');
-      const panelAlertas = document.getElementById('panelAlertas');
+      // Diagnóstico de Alertas
+      const panel = document.getElementById('panelAlertas');
+      panel.innerHTML = '';
+      let alertas = [];
 
-      if (alarmaTDesc) grpDesc.classList.add('alarm-field-active');
-      else grpDesc.classList.remove('alarm-field-active');
-
-      if (alarmaTLiq) grpLiq.classList.add('alarm-field-active');
-      else grpLiq.classList.remove('alarm-field-active');
+      if (shUtilK < ref.shOptimo[0]) alertas.push("⚠️ Sobrecalentamiento bajo: Riesgo de retorno de líquido al compresor.");
+      if (shUtilK > ref.shOptimo[1]) alertas.push("⚠️ Sobrecalentamiento alto: Posible falta de refrigerante o restricción en la VET.");
+      if (scK < ref.scOptimo[0]) alertas.push("⚠️ Subenfriamiento insuficiente: Condensación incompleta o falta de carga.");
+      if (scK > ref.scOptimo[1]) alertas.push("⚠️ Subenfriamiento excesivo: Sobrecarga de refrigerante o condensador obstruido.");
+      if (tDescRealC > ref.tDescMax) alertas.push(`🚨 Temp. Descarga Crítica (> ${ref.tDescMax}°C): Riesgo de degradación de aceite.`);
 
       if (alertas.length === 0) {
-        panelAlertas.innerHTML = `<div class="diag-item" style="color: #34d399; text-align: left;">✅ <b>Sistema Estable:</b> El equipo con ${refData.nombre} opera dentro de los parámetros previstos.</div>`;
+        panel.innerHTML = '<div class="diag-item" style="color:#10b981;">✅ Parámetros operativos dentro de rango nominal de diseño.</div>';
       } else {
-        panelAlertas.innerHTML = alertas.map(a => `<div class="diag-item" style="color: #cbd5e1;">${a}</div>`).join('');
+        alertas.forEach(a => {
+          const div = document.createElement('div');
+          div.className = 'diag-item';
+          div.style.color = a.includes('🚨') ? '#ef4444' : '#f59e0b';
+          div.innerText = a;
+          panel.appendChild(div);
+        });
       }
 
-      const pSuctPlot = pSuctBarAbs * pf;
-      const pDescPlot = pDescBarAbs * pf;
-
-      const minX = refData.xRange[0];
-      const maxX = refData.xRange[1];
-
-      const zoneTraces = getZoneTraces(refData, minX, maxX);
-
-      const t1Str = `${convertirTemp(tSuctC).toFixed(1)} °${tUnitActual}`;
-      const t2Str = `${convertirTemp(tDescRealC).toFixed(1)} °${tUnitActual}`;
-      const t3Str = `${convertirTemp(tLiqC).toFixed(1)} °${tUnitActual}`;
-      const t4Str = `${convertirTemp(propEvap.tSat).toFixed(1)} °${tUnitActual}`;
-
-      const cycleTrace = {
-        x: [h1, h2, h3, h4, h1],
-        y: [pSuctPlot, pDescPlot, pDescPlot, pSuctPlot, pSuctPlot],
-        mode: 'lines+markers+text',
-        name: 'Ciclo Operativo',
-        text: ['1', '2', '3', '4', '1'],
-        textposition: 'top center',
-        textfont: { size: 8, color: '#f8fafc' },
-        line: { color: '#ef4444', width: 2.2 },
-        marker: { size: 6, color: '#f59e0b' },
-        hovertemplate: '<b>Punto %{text} del Ciclo</b><br>' +
-                       'Temp: %{customdata}<br>' +
-                       'P: %{y:.1f} ' + pUnits[pUnitActual].label + '<br>' +
-                       'h: %{x:.1f} kJ/kg<extra></extra>',
-        customdata: [t1Str, t2Str, t3Str, t4Str, t1Str]
-      };
-
-      const domeTrace = getDomeTrace(refData);
-
-      const layout = {
-        autosize: true,
-        margin: { l: 22, r: 10, t: 10, b: 22 },
-        paper_bgcolor: '#1e293b',
-        plot_bgcolor: '#0f172a',
-        showlegend: false,
-        xaxis: {
-          title: 'h (kJ/kg)',
-          titlefont: { size: 7, color: '#94a3b8' },
-          tickfont: { size: 6.5, color: '#cbd5e1' },
-          gridcolor: '#334155',
-          zeroline: false,
-          autorange: !zonaActivaHabilitada,
-          range: zonaActivaHabilitada ? [Math.max(h4 - 25, minX), Math.min(h2 + 25, maxX)] : undefined
-        },
-        yaxis: {
-          title: `P. Abs (${pUnits[pUnitActual].label})`,
-          titlefont: { size: 7, color: '#94a3b8' },
-          tickfont: { size: 6.5, color: '#cbd5e1' },
-          type: 'log',
-          automargin: true,
-          gridcolor: '#334155',
-          zeroline: false,
-          autorange: !zonaActivaHabilitada,
-          range: zonaActivaHabilitada ? [Math.log10(pSuctPlot * 0.75), Math.log10(pDescPlot * 1.25)] : undefined
-        }
-      };
-
-      Plotly.react('mollierPlot', [...zoneTraces, domeTrace, cycleTrace], layout, { responsive: true, displayModeBar: false });
+      renderizarGrafica(ref, pSuctBarAbs, pDescBarAbs, h1, h2, h3, h4, evapSat, condSat);
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
-      cargarConfiguracion();
-      actualizarEtiquetas();
-      actualizarReloj();
+    function renderizarGrafica(ref, pSuctBar, pDescBar, h1, h2, h3, h4, evapSat, condSat) {
+      let xDome = [], yDome = [];
+      ref.dome.forEach(pt => { xDome.push(pt.hL); yDome.push(pt.p); });
+      for (let i = ref.dome.length - 1; i >= 0; i--) { xDome.push(ref.dome[i].hV); yDome.push(ref.dome[i].p); }
+
+      // Puntos Principales del Ciclo
+      let xCiclo = [h4, h1, h2, h3, h4];
+      let yCiclo = [pSuctBar, pSuctBar, pDescBar, pDescBar, pSuctBar];
+
+      let dataTraces = [
+        {
+          x: xDome, y: yDome,
+          type: 'scatter', mode: 'lines',
+          name: 'Domo Sinc',
+          line: { color: '#64748b', width: 2 }
+        },
+        {
+          x: xCiclo, y: yCiclo,
+          type: 'scatter', mode: 'lines+markers',
+          name: 'Ciclo Real',
+          line: { color: '#38bdf8', width: 3 },
+          marker: { size: 6, color: '#f8fafc' }
+        }
+      ];
+
+      // Puntos Intermedios de Consulta (Muestreo a lo largo de las líneas)
+      if (mostrarPuntosIntermedios) {
+        let xInter = [], yInter = [], hoverTexts = [];
+        
+        // Evaporación h4 -> h1 (10 puntos)
+        for (let i = 1; i < 10; i++) {
+          let h = h4 + (h1 - h4) * (i / 10);
+          xInter.push(h); yInter.push(pSuctBar);
+          hoverTexts.push(`<b>Evaporación (${i*10}%)</b><br>Enthalpía: ${h.toFixed(1)} kJ/kg<br>Presión: ${pSuctBar.toFixed(2)} bar`);
+        }
+        // Compresión h1 -> h2 (10 puntos)
+        for (let i = 1; i < 10; i++) {
+          let h = h1 + (h2 - h1) * (i / 10);
+          let p = pSuctBar + (pDescBar - pSuctBar) * (i / 10);
+          xInter.push(h); yInter.push(p);
+          hoverTexts.push(`<b>Compresión (${i*10}%)</b><br>Enthalpía: ${h.toFixed(1)} kJ/kg<br>Presión: ${p.toFixed(2)} bar`);
+        }
+        // Condensación h2 -> h3 (10 puntos)
+        for (let i = 1; i < 10; i++) {
+          let h = h2 + (h3 - h2) * (i / 10);
+          xInter.push(h); yInter.push(pDescBar);
+          hoverTexts.push(`<b>Condensación (${i*10}%)</b><br>Enthalpía: ${h.toFixed(1)} kJ/kg<br>Presión: ${pDescBar.toFixed(2)} bar`);
+        }
+        // Expansión h3 -> h4 (10 puntos)
+        for (let i = 1; i < 10; i++) {
+          let p = pDescBar + (pSuctBar - pDescBar) * (i / 10);
+          xInter.push(h4); yInter.push(p);
+          hoverTexts.push(`<b>Expansión (${i*10}%)</b><br>Enthalpía: ${h4.toFixed(1)} kJ/kg<br>Presión: ${p.toFixed(2)} bar`);
+        }
+
+        dataTraces.push({
+          x: xInter, y: yInter,
+          type: 'scatter', mode: 'markers',
+          name: 'Consultas Intermedias',
+          text: hoverTexts,
+          hoverinfo: 'text',
+          marker: { size: 5, color: '#f59e0b', symbol: 'circle-open' }
+        });
+      }
+
+      let layout = {
+        margin: { l: 40, r: 15, t: 15, b: 35 },
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(15, 23, 42, 0.6)',
+        xaxis: {
+          title: { text: 'Entalpía h (kJ/kg)', font: { size: 10, color: '#94a3b8' } },
+          tickfont: { size: 9, color: '#f8fafc' },
+          gridcolor: '#334155',
+          range: zonaActivaHabilitada ? [Math.max(0, h4 - 40), h2 + 40] : ref.xRange
+        },
+        yaxis: {
+          title: { text: `Presión P (${pUnits[pUnitActual].label})`, font: { size: 10, color: '#94a3b8' } },
+          type: 'log',
+          tickfont: { size: 9, color: '#f8fafc' },
+          gridcolor: '#334155'
+        },
+        showlegend: false
+      };
+
+      Plotly.newPlot('mollierPlot', dataTraces, layout, { responsive: true, displayModeBar: false });
+    }
+
+    function descargarPDFReporte() {
+      const element = document.getElementById('reporteArea');
+      document.body.classList.add('generating-pdf');
+
+      const opt = {
+        margin: [4, 4, 4, 4],
+        filename: `Reporte_Mollier_${document.getElementById('refSelect').value}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      html2pdf().set(opt).from(element).save().then(() => {
+        document.body.classList.remove('generating-pdf');
+      });
+    }
+
+    window.onload = () => {
       setInterval(actualizarReloj, 1000);
+      actualizarReloj();
       obtenerClimaPuntoFijo();
-    });
+      actualizarEtiquetas();
+      guardarYActualizar();
+    };
   </script>
 </body>
 </html>
