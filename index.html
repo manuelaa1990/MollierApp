@@ -446,7 +446,6 @@
   </div>
 
   <script>
-    // INICIA ALEJADA AL 100% POR DEFECTO
     let zonaActivaHabilitada = false;
     let pUnitActual = 'psi';
     let tUnitActual = 'C';
@@ -548,6 +547,13 @@
       }
     };
 
+    function convertirTemp(tempC) {
+      if (tUnitActual === 'F') {
+        return (tempC * 9/5) + 32;
+      }
+      return tempC;
+    }
+
     async function obtenerClimaPuntoFijo() {
       const lbl = document.getElementById('txtTempAmb');
       lbl.innerText = "Consultando...";
@@ -556,10 +562,7 @@
         const data = await res.json();
         if (data && data.current_weather) {
           tempAmbientePuntoFijoC = data.current_weather.temperature;
-          let tempMostrar = tempAmbientePuntoFijoC;
-          if (tUnitActual === 'F') {
-            tempMostrar = (tempAmbientePuntoFijoC * 9/5) + 32;
-          }
+          let tempMostrar = convertirTemp(tempAmbientePuntoFijoC);
           lbl.innerText = `${tempMostrar.toFixed(1)} °${tUnitActual}`;
           guardarYActualizar();
         } else {
@@ -772,27 +775,39 @@
       return [traceLiquid, traceSat, traceVapor];
     }
 
+    // DOME DE SATURACIÓN CON TEMPERATURA EN PUNTOS
     function getDomeTrace(refData) {
       const hVals = [];
       const pVals = [];
+      const tempsText = [];
       const f = pUnits[pUnitActual].factor;
 
+      // Rama de Líquido Saturado
       refData.dome.forEach(pt => {
         hVals.push(pt.hL);
         pVals.push(pt.p * f);
+        tempsText.push(`${convertirTemp(pt.tSat).toFixed(1)} °${tUnitActual}`);
       });
 
+      // Rama de Vapor Saturado
       for (let i = refData.dome.length - 1; i >= 0; i--) {
         hVals.push(refData.dome[i].hV);
         pVals.push(refData.dome[i].p * f);
+        tempsText.push(`${convertirTemp(refData.dome[i].tSat).toFixed(1)} °${tUnitActual}`);
       }
 
       return {
         x: hVals,
         y: pVals,
-        mode: 'lines',
+        mode: 'lines+markers',
         name: `Domo ${refData.nombre}`,
-        line: { color: '#38bdf8', width: 2.0, shape: 'spline', smoothing: 1.1 }
+        line: { color: '#38bdf8', width: 2.0, shape: 'spline', smoothing: 1.1 },
+        marker: { size: 4, color: '#38bdf8' },
+        hovertemplate: `<b>Domo Sat. (${refData.nombre})</b><br>` +
+                       `Temp Sat: %{text}<br>` +
+                       `P: %{y:.1f} ${pUnits[pUnitActual].label}<br>` +
+                       `h: %{x:.1f} kJ/kg<extra></extra>`,
+        text: tempsText
       };
     }
 
@@ -808,7 +823,6 @@
         alertas.push(`🔴 <b>CRÍTICO (T. Descarga ${tDescRealC.toFixed(0)}°C):</b> Supera el límite de ${refData.tDescMax}°C para ${refData.nombre}. Riesgo de degradar aceite.`);
       }
 
-      // CAMBIO 1: REDACCIÓN DE LA ALERTA DE LÍQUIDO
       if (tLiqC >= tSatCondC) {
         alarmaTLiq = true;
         alertas.push(`🔴 <b>ALERTA (T. Líquido ${tLiqC.toFixed(1)}°C):</b> Sin Subenfriamiento (T. Líquido ≥ T. Sat ${tSatCondC.toFixed(1)}°C). Riesgo de Flash Gas en la línea.`);
@@ -956,6 +970,12 @@
 
       const zoneTraces = getZoneTraces(refData, minX, maxX);
 
+      // TEMPERATURAS EN PUNTOS OPERATIVOS CUALQUIERA SEA LA UNIDAD
+      const t1Str = `${convertirTemp(tSuctC).toFixed(1)} °${tUnitActual}`;
+      const t2Str = `${convertirTemp(tDescRealC).toFixed(1)} °${tUnitActual}`;
+      const t3Str = `${convertirTemp(tLiqC).toFixed(1)} °${tUnitActual}`;
+      const t4Str = `${convertirTemp(propEvap.tSat).toFixed(1)} °${tUnitActual}`;
+
       const cycleTrace = {
         x: [h1, h2, h3, h4, h1],
         y: [pSuctPlot, pDescPlot, pDescPlot, pSuctPlot, pSuctPlot],
@@ -965,12 +985,16 @@
         textposition: 'top center',
         textfont: { size: 8, color: '#f8fafc' },
         line: { color: '#ef4444', width: 2.2 },
-        marker: { size: 5, color: '#f59e0b' }
+        marker: { size: 6, color: '#f59e0b' },
+        hovertemplate: '<b>Punto %{text} del Ciclo</b><br>' +
+                       'Temp: %{customdata}<br>' +
+                       'P: %{y:.1f} ' + pUnits[pUnitActual].label + '<br>' +
+                       'h: %{x:.1f} kJ/kg<extra></extra>',
+        customdata: [t1Str, t2Str, t3Str, t4Str, t1Str]
       };
 
       const domeTrace = getDomeTrace(refData);
 
-      // CAMBIO 2: VISTA COMPLETA (100% ALEJADA) POR DEFECTO CON AUTORANGE
       const layout = {
         autosize: true,
         margin: { l: 22, r: 10, t: 10, b: 22 },
