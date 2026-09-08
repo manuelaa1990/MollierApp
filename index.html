@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Monitor HVAC/R V2.9</title>
+<title>Monitor HVAC/R V3.1 · búsqueda automática</title>
 <link rel="icon" type="image/svg+xml" href="icono.svg">
 <link rel="apple-touch-icon" href="icono.png">
 <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
@@ -35,7 +35,7 @@ details summary{cursor:pointer;list-style:none;font-size:12px;font-weight:800;co
 .small{font-size:9px;color:var(--muted)}ul{margin:5px 0 5px 17px;padding:0}li{margin:3px 0;font-size:10px}
 .compare-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.compare-item{background:#0a151e;border:1px solid var(--border);border-radius:7px;padding:7px;font-size:10px}.compare-item b{display:block;font-size:8px;color:var(--muted);margin-bottom:2px}
 .search-row{display:flex;gap:5px}.search-row input{flex:1}
-.search-code{display:flex;align-items:stretch}.search-code input{min-width:0;border-radius:7px 0 0 7px}.search-icon{width:38px;padding:0;border-radius:0 7px 7px 0;background:#163044;color:#dceaf5;border:1px solid #29404f;border-left:0;font-size:19px;line-height:1}.search-icon:active{background:#20445d}.compressor-result{margin-top:7px}.compressor-result .compare-grid{margin-top:0}
+.search-code{display:flex;align-items:stretch}.search-code input{min-width:0;border-radius:7px 0 0 7px}.search-icon{width:38px;padding:0;border-radius:0 7px 7px 0;background:#163044;color:#dceaf5;border:1px solid #29404f;border-left:0;font-size:19px;line-height:1}.search-icon:active{background:#20445d}.compressor-result{margin-top:7px}.compressor-result a{word-break:break-word}.compressor-result .compare-grid{margin-top:0}.envelope-box{margin-top:7px;padding:8px;border:1px solid #29404f;border-radius:8px;background:#09141d}.envelope-title{font-size:10px;font-weight:900;color:#39b7ff;margin-bottom:5px}.envelope-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.envelope-item{background:#0a151e;border:1px solid #203542;border-radius:7px;padding:6px;font-size:10px}.envelope-item b{display:block;font-size:8px;color:#91a5b5;margin-bottom:2px}.envelope-ok{color:#58d69d;font-weight:900}.envelope-warn{color:#ffc857;font-weight:900}.envelope-danger{color:#ff6577;font-weight:900}.ashrae-table{width:100%;border-collapse:collapse;font-size:8px;margin-top:6px}.ashrae-table th,.ashrae-table td{border:1px solid #203542;padding:4px;text-align:left}.ashrae-table th{color:#91a5b5;font-weight:800}.envelope-note{font-size:8px;color:#91a5b5;margin-top:5px;line-height:1.35}
 #plot{width:100%;height:600px;border-radius:8px;overflow:hidden}.chart-actions{display:flex;gap:5px}.chart-actions button{padding:6px 8px;font-size:9px}
 #pdfReport{display:none}.pdf-page{background:#fff;color:#17202a;padding:12mm;font-family:Arial,sans-serif;font-size:10px}.pdf-title{font-size:19px;font-weight:800}.pdf-sub{font-size:9px;color:#647586}.pdf-section-title{margin-top:12px;background:#eaf0f5;padding:5px;font-weight:800;font-size:10px}.pdf-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:0 10px}.pdf-item{padding:4px 0;border-bottom:1px solid #dce3e8}.pdf-label{font-size:8px;color:#667887}.pdf-value{font-weight:700}.pdf-finding{padding:6px;margin:5px 0;border-left:3px solid #e1a63b;background:#f8f4e9}
 footer{text-align:center;color:var(--muted);font-size:8px;padding:5px 0 12px}
@@ -52,7 +52,7 @@ footer{text-align:center;color:var(--muted);font-size:8px;padding:5px 0 12px}
 <div class="app">
 
 <header class="topbar">
-  <div class="brand"><h1>MONITOR HVAC/R <span>V2.9</span></h1><small>Asistente técnico de diagnóstico de campo</small></div>
+  <div class="brand"><h1>MONITOR HVAC/R <span>V3.1</span></h1><small>Asistente técnico de diagnóstico de campo</small></div>
   <div class="status"><i class="status-dot" id="statusDot"></i><span id="systemStatus">Listo</span></div>
 </header>
 
@@ -83,6 +83,7 @@ footer{text-align:center;color:var(--muted);font-size:8px;padding:5px 0 12px}
   <div class="field"><label>Unidad de temperatura</label><select id="tempUnidad"><option value="C">°C</option><option value="F">°F</option></select></div>
   <div class="field"><label>Tipo de equipo</label><select id="type"><option>Split</option><option>Mini Split</option><option>Unidad paquete</option><option>Refrigeración comercial</option><option>Cámara frigorífica</option><option>Chiller</option><option>Congelación</option><option>Otro</option></select></div>
   <div class="field"><label>Dispositivo de expansión</label><select id="expansion"><option value="TXV">Válvula TXV / termostática</option><option value="EEV">Válvula electrónica EEV</option><option value="CAP">Tubo capilar</option><option value="ORIFICE">Orificio / pistón fijo</option><option value="MANUAL">Válvula de expansión manual</option><option value="UNKNOWN">No identificado</option></select></div>
+  <div class="field"><label>Aplicación de trabajo</label><select id="applicationMode"><option value="AUTO">Automática por condición de evaporación</option><option value="LBP">LBP · Baja contrapresión</option><option value="MBP">MBP · Media contrapresión</option><option value="HBP">HBP · Alta contrapresión</option></select></div>
 </div>
 </section>
 
@@ -135,7 +136,7 @@ footer{text-align:center;color:var(--muted);font-size:8px;padding:5px 0 12px}
 </section>
 
 <section class="card">
-<div class="section-title"><h2>6. DIAGNÓSTICO</h2><span class="hint">patrones compatibles</span></div>
+<div class="section-title"><h2>6. DIAGNÓSTICO</h2><span class="hint">patrones + envelope del compresor</span></div>
 <div id="findings"><div class="alert">Complete las mediciones y pulse ANALIZAR.</div></div>
 <details><summary>Posibles causas</summary><ul id="causes"><li>Datos insuficientes.</li></ul></details>
 <div style="height:5px"></div>
@@ -154,13 +155,13 @@ footer{text-align:center;color:var(--muted);font-size:8px;padding:5px 0 12px}
 <div class="small">Arrastre para desplazarse, pellizque/toque para zoom y doble toque para restablecer. La campana completa permanece visible.</div>
 </section>
 
-<footer>Monitor HVAC/R V2.9 · Herramienta de apoyo para técnicos · Verificar siempre con placa y documentación del fabricante.</footer>
+<footer>Monitor HVAC/R V3.1 · Herramienta de apoyo para técnicos · Verificar siempre con placa y documentación del fabricante.</footer>
 </div>
 
 <div id="pdfReport">
 <div class="pdf-page">
 <div class="pdf-title">REPORTE TÉCNICO HVAC/R</div>
-<div class="pdf-sub">Monitor HVAC/R V2.9 · <span id="pdfDate"></span></div>
+<div class="pdf-sub">Monitor HVAC/R V3.1 · <span id="pdfDate"></span></div>
 
 <div class="pdf-section-title">1. DATOS ADMINISTRATIVOS</div><div class="pdf-grid" id="pdfAdmin"></div>
 <div class="pdf-section-title">2. DATOS DEL EQUIPO</div><div class="pdf-grid" id="pdfEquipo"></div>
@@ -173,6 +174,10 @@ footer{text-align:center;color:var(--muted);font-size:8px;padding:5px 0 12px}
 </div>
 
 <script>
+// Si el HTML se publica separado del servidor, se puede definir esta URL antes de este script.
+// Ejemplo: window.COMPRESSOR_SEARCH_API = "https://tu-servidor.example.com/api/compressor-search";
+window.COMPRESSOR_SEARCH_API = window.COMPRESSOR_SEARCH_API || '/api/compressor-search';
+// V3.1: la API debe devolver envelope verificado y condiciones ASHRAE cuando existan en las fuentes.
 const ATM=1.01325; // bar, presión atmosférica estándar usada para convertir manométrica→absoluta
 
 // P/T de respaldo: valores de referencia de tablas publicadas. El motor intenta usar CoolProp/HEOS primero.
@@ -192,11 +197,46 @@ const FLUID={R410A:'R410A',R32:'R32',R134a:'R134a',R22:'R22',R407C:'R407C',R404A
 
 
 const COMPRESSORS=[
-{m:"Copeland",model:"ZP36K5E",ref:"R410A",rla:7.4,volt:"208–230 V",hz:"60 Hz",phase:"1Φ",cap:3.5,type:"Scroll"},
-{m:"Copeland",model:"ZP42K5E",ref:"R410A",rla:8.8,volt:"208–230 V",hz:"60 Hz",phase:"1Φ",cap:4.1,type:"Scroll"},
-{m:"Copeland",model:"ZP51K5E",ref:"R410A",rla:10.5,volt:"208–230 V",hz:"60 Hz",phase:"1Φ",cap:5.0,type:"Scroll"},
-{m:"Copeland",model:"ZB26KCE",ref:"R404A/R507A",rla:5.8,volt:"208–230 V",hz:"60 Hz",phase:"1Φ",cap:2.5,type:"Scroll"}
+{m:"Copeland",model:"ZP36K5E",ref:"R410A",rla:7.4,volt:"208–230 V",hz:"60 Hz",phase:"1Φ",cap:3.5,type:"Scroll",source:"Base técnica local"},
+{m:"Copeland",model:"ZP42K5E",ref:"R410A",rla:8.8,volt:"208–230 V",hz:"60 Hz",phase:"1Φ",cap:4.1,type:"Scroll",source:"Base técnica local"},
+{m:"Copeland",model:"ZP51K5E",ref:"R410A",rla:10.5,volt:"208–230 V",hz:"60 Hz",phase:"1Φ",cap:5.0,type:"Scroll",source:"Base técnica local"},
+{m:"Copeland",model:"ZB26KCE",ref:"R404A/R507A",rla:5.8,volt:"208–230 V",hz:"60 Hz",phase:"1Φ",cap:2.5,type:"Scroll",source:"Base técnica local"},
+{m:"GMCC",model:"PA118M1C-3FZU",ref:"R410A",rla:5.4,volt:"208–230 V",hz:"60 Hz",phase:"1Φ",cap:3.390,type:"Rotativo",lra:27,displacement:11.8,power:1.125,cop:3.01,capacityBTU:11567,source:"GMCC / catálogo de compresores"}
 ];
+function normalizeCode(v){return String(v||'').toUpperCase().replace(/[\s_\-\.\/]/g,'');}
+const SEARCH_API_URL = window.COMPRESSOR_SEARCH_API || '/api/compressor-search';
+
+function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+function fmtRemote(v,unit=''){return v===null||v===undefined||v===''?'—':esc(v)+(unit?' '+unit:'');}
+function remoteCompressorCard(data){
+ const vn=num('vnom'),an=num('anom'),cap=capKW(num('capacity'),text('capacityUnit'));
+ const local={m:data.manufacturer||'Web',model:data.model||text('compressorCode'),ref:data.refrigerant||'',rla:Number(data.RLA_A)||null,volt:data.voltage||'',hz:data.frequency||'',phase:data.phase||'',cap:Number(data.capacity_kW)||null,type:data.type||'',lra:Number(data.LRA_A)||null,displacement:Number(data.displacement_cm3_rev)||null,power:Number(data.power_kW)||null,cop:Number(data.COP)||null,capacityBTU:Number(data.capacity_BTUh)||null,source:'Búsqueda web automática',raw:data,envelope:data.envelope||{application_class:data.application_envelope,max_discharge_C:data.max_discharge_C}};
+ selectedCompressor=local;
+ const e=compareCompressorElectrical(local,vn,an);
+ let rows=[['Fabricante / modelo',`${esc(local.m)} — ${esc(local.model)}`],['Refrigerante',esc(local.ref||'—')],['Tipo',esc(local.type||'—')],['Tensión ficha',esc(local.volt||'—')],['Frecuencia',esc(local.hz||'—')],['Fase',esc(local.phase||'—')],['RLA ficha',local.rla!=null?local.rla+' A':'—'],['LRA ficha',local.lra!=null?local.lra+' A':'—'],['Capacidad ref.',local.cap!=null?local.cap+' kW':'—'],['Desplazamiento',local.displacement!=null?local.displacement+' cm³/rev':'—'],['Potencia',local.power!=null?local.power+' kW':'—'],['COP ficha',local.cop!=null?local.cop+' W/W':'—'],['Voltaje nominal ingresado',vn==null?'—':vn+' V'],['Comparación voltaje',`<span class="${e.vClass}">${e.vStatus}</span>`],['Amperaje nominal ingresado',an==null?'—':an.toFixed(1)+' A'],['Comparación amperaje',`<span class="${e.aClass}">${e.aStatus}</span>`]];
+ if(cap!==null&&local.cap)rows.push(['Capacidad ingresada',cap.toFixed(2)+' kW '+(Math.abs(cap-local.cap)/local.cap>.2?'⚠ revisar':'✓ compatible')]);
+ if(local.capacityBTU)rows.push(['Capacidad ficha',local.capacityBTU.toLocaleString('es-ES')+' BTU/h']);
+ const box=$('compressorResult');
+ box.innerHTML=`<div class="alert ok"><b>✓ COMPRESOR ENCONTRADO EN INTERNET</b>${esc(data.summary||'Ficha técnica consolidada mediante búsqueda web.')}</div><div class="small" style="margin-bottom:4px"><b>FICHA CONSOLIDADA</b> · confianza: ${esc(data.confidence||'no determinada')}</div><div class="compare-grid">${rows.map(v=>`<div class="compare-item"><b>${v[0]}</b>${v[1]}</div>`).join('')}</div>${(data.conflicts||[]).length?`<div class="alert"><b>Discrepancias entre fuentes</b><ul>${data.conflicts.map(c=>`<li><b>${esc(c.field)}:</b> ${esc(c.values)} — ${esc(c.comment)}</li>`).join('')}</ul></div>`:''}${lastResult?envelopeCard(local,lastResult):'<div class="envelope-box"><div class="envelope-title">ENVELOPE DEL COMPRESOR</div><div class="envelope-note">Pulse ANALIZAR para comparar las condiciones reales con el envelope encontrado.</div></div>'}<div class="small" style="margin-top:6px"><b>Fuentes consultadas</b></div><div class="small">${(data.sources||[]).map(x=>`<div>• <a href="${esc(x.url)}" target="_blank" rel="noopener" style="color:#39b7ff">${esc(x.title||x.url)}</a> <span style="color:#91a5b5">(${esc(x.kind||'web')})</span></div>`).join('')||'No se recibieron enlaces directos.'}</div><div class="small" style="margin-top:6px">No se consideran límites válidos los datos que no estén respaldados por documentación técnica. Confirmar siempre la variante exacta.</div>`;
+}
+
+async function webSearchCompressor(q){
+ const box=$('compressorResult');
+ if(!box)return;
+ box.innerHTML=`<div class="alert"><b>🔎 BUSCANDO ${esc(q)}</b>Consultando fuentes web y consolidando datos técnicos. Esto puede tardar unos segundos…</div>`;
+ try{
+   const res=await fetch(SEARCH_API_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:q,brand:text('modelBrand'),refrigerant:text('ref')})});
+   const data=await res.json().catch(()=>({}));
+   if(!res.ok)throw new Error(data.error||`HTTP ${res.status}`);
+   if(!data.found){box.innerHTML=`<div class="alert"><b>Referencia no confirmada</b>No se encontró una ficha técnica suficientemente confiable para <strong>${esc(q)}</strong>. Revisa el código de placa.</div>`;selectedCompressor=null;return;}
+   remoteCompressorCard(data);
+ }catch(err){
+   selectedCompressor=null;
+   const query=encodeURIComponent('"'+q+'" compressor datasheet PDF');
+   box.innerHTML=`<div class="alert"><b>⚠ Búsqueda automática no disponible</b>${esc(err.message)}<br><span class="small">El servidor V3.1 no está conectado o no tiene configurada la API. Puedes abrir una búsqueda manual mientras se configura.</span></div><div class="actions" style="margin-top:5px"><button type="button" class="secondary" onclick="window.open('https://www.google.com/search?q=${query}','_blank','noopener')">BUSCAR EN GOOGLE</button></div>`;
+ }
+}
+
 
 let lastResult=null;
 let selectedCompressor=null;
@@ -289,6 +329,7 @@ async function calculate(){
  const shEv=teo===null?null:teo-tev,shTot=ts===null?null:ts-tev,shLine=shEv!==null&&shTot!==null?shTot-shEv:null;
  const sc=tl===null?null:tcond-tl,dtAir=tra!==null&&tsa!==null?tra-tsa:null,dtCond=amb!==null?tcond-amb:null;
  const ratio=pd/ps,vDev=vm!==null&&vn>0?(vm-vn)/vn*100:null,iPct=am!==null&&an>0?am/an*100:null;
+ const envelopeEval=selectedCompressor?evaluateEnvelope(selectedCompressor,{tev,tcond,td,ratio}):null;
  const findings=[],causes=new Set(),next=[];
  const add=(title,detail,cs,ns,level)=>{findings.push({title,detail,level});(cs||[]).forEach(x=>causes.add(x));(ns||[]).forEach(x=>next.push(x))};
  if(state1&&state3){
@@ -309,6 +350,11 @@ async function calculate(){
  if(shEv!==null&&shEv>=expRule.shMin&&shEv<=expRule.shMax)next.push(`Superheat ${fmt(shEv,1)} K dentro de la referencia orientativa para ${expRule.name} (${expRule.shMin}–${expRule.shMax} K).`);
  if(td!==null&&td>95)add("Temperatura de descarga elevada","La temperatura de descarga merece correlación con superheat y condensación.",["Superheat alto","Condensación elevada","Carga insuficiente"],["Verificar superheat total y enfriamiento del compresor."],"review");
  if(td!==null&&td>=107)add("Temperatura de descarga crítica","Valor que requiere atención inmediata y comparación con el límite específico del compresor.",["Sobrecalentamiento severo","Enfriamiento insuficiente"],["Consultar ficha del compresor antes de continuar."],"critical");
+ if(envelopeEval&&envelopeEval.checks.some(c=>c.ok===false)){
+   const bad=envelopeEval.checks.filter(c=>c.ok===false).map(c=>c.detail).join(' · ');
+   add("Condición fuera del envelope del compresor",`Una o más condiciones quedan fuera de los límites recuperados de la ficha: ${bad}`,['Envelope del fabricante','Aplicación no compatible','Condición de operación'],['Confirmar el envelope oficial y evitar operar fuera de sus límites.'],"review");
+ }
+ if(envelopeEval&&envelopeEval.status==='ok')next.push(`Condición actual dentro del envelope recuperado del compresor: ${envelopeEval.application||'aplicación compatible'}.`);
  if(iPct!==null&&iPct>115)add("Corriente superior a nominal","La corriente medida supera 115% de la nominal aportada. No significa automáticamente compresor defectuoso.",["Alta condensación","Problema mecánico","Problema eléctrico"],["Verificar voltaje bajo carga y correlacionar con presión de descarga."],"review");
  if(iPct!==null&&iPct<70)add("Corriente significativamente baja","Corriente muy por debajo de la nominal; puede depender de carga, capacidad o condición del compresor.",["Baja carga","Compresor descargado","Medición"],["Comparar con ficha del fabricante y condición de carga."],"attention");
  if(compElec&&vn!==null&&compElec.vr&&!(vn>=compElec.vr.min&&vn<=compElec.vr.max))add("Voltaje nominal no coincide con la ficha","El voltaje nominal ingresado queda fuera del rango de tensión indicado para el compresor consultado.",["Selección de compresor/ficha","Alimentación eléctrica"],["Confirmar variante, tensión y frecuencia exactas en la placa."],"review");
@@ -323,8 +369,9 @@ async function calculate(){
  $("causes").innerHTML=[...causes].map(x=>`<li>${x}</li>`).join("")||"<li>No disponibles.</li>";
  $("next").innerHTML=[...new Set(next)].map(x=>`<div class="alert">${x}</div>`).join("")||"<div class='alert'>Compare con datos del fabricante.</div>";
 
- lastResult={ref,pu,tu,expansion,expRule,ps,pd,selectedCompressor,state1,state2s,state2,state3,state4,thermo,tev,tcond,tcondD,teo,ts,tl,td,amb,tra,tsa,shEv,shTot,shLine,sc,dtAir,dtCond,ratio,vm,vn,am,an,vDev,iPct,findings,next};
+ lastResult={ref,pu,tu,expansion,expRule,applicationMode:text("applicationMode")||"AUTO",envelopeEval,ps,pd,selectedCompressor,state1,state2s,state2,state3,state4,thermo,tev,tcond,tcondD,teo,ts,tl,td,amb,tra,tsa,shEv,shTot,shLine,sc,dtAir,dtCond,ratio,vm,vn,am,an,vDev,iPct,findings,next};
  renderMetrics(lastResult);drawChart(lastResult);
+ if(selectedCompressor){ if(selectedCompressor.raw) remoteCompressorCard(selectedCompressor.raw); else renderLocalCompressor(selectedCompressor); }
 }
 
 function drawChart(r={ref:$('ref').value}){
@@ -357,6 +404,74 @@ function drawChart(r={ref:$('ref').value}){
 function resetChart(){drawChart(lastResult||{ref:$('ref').value})}
 function downloadChart(){Plotly.downloadImage("plot",{format:"png",width:2200,height:1400,scale:2,filename:"Mollier_HVACR_HD"})}
 
+function classifyApplication(tevapC, mode='AUTO'){
+ if(mode && mode!=='AUTO') return mode;
+ if(tevapC===null||!Number.isFinite(tevapC)) return null;
+ // Clasificación orientativa. Si el fabricante publica la aplicación, esa referencia tiene prioridad.
+ if(tevapC<=-10) return 'LBP';
+ if(tevapC<7.2) return 'MBP';
+ return 'HBP';
+}
+function normalizeEnvelope(data){
+ const e=data?.envelope||{};
+ const n=v=>Number.isFinite(Number(v))?Number(v):null;
+ return {
+  application:String(e.application_class||data?.application_envelope||'').trim()||null,
+  evapMin:n(e.evap_min_C), evapMax:n(e.evap_max_C),
+  condMin:n(e.cond_min_C), condMax:n(e.cond_max_C),
+  dischargeMax:n(e.max_discharge_C ?? data?.max_discharge_C),
+  prMax:n(e.max_pressure_ratio),
+  notes:String(e.notes||'').trim()||null,
+  points:Array.isArray(e.points)?e.points.filter(p=>Array.isArray(p)&&p.length>=2&&Number.isFinite(Number(p[0]))&&Number.isFinite(Number(p[1]))).map(p=>[Number(p[0]),Number(p[1])]):[],
+  ashrae:Array.isArray(e.ashrae_tests)?e.ashrae_tests:[]
+ };
+}
+function applicationMatch(app, declared){
+ if(!app||!declared)return null;
+ const d=String(declared).toUpperCase();
+ if(d.includes(app))return true;
+ if(app==='HBP' && /(AIR CONDITION|AIR-CONDITION|A\/C|HVAC|CLIMATIZ|AIRE ACOND)/.test(d))return true;
+ if(app==='MBP'&&d.includes('MBP'))return true;
+ if(app==='LBP'&&d.includes('LBP'))return true;
+ if(app==='HBP'&&d.includes('HBP'))return true;
+ return false;
+}
+function evaluateEnvelope(x,r){
+ const e=normalizeEnvelope(x),mode=text('applicationMode')||'AUTO';
+ const app=classifyApplication(r?.tev,mode);
+ const out={envelope:e,application:app,checks:[],status:'unknown'};
+ if(!e.application&&e.evapMin===null&&e.evapMax===null&&e.condMin===null&&e.condMax===null&&!e.points.length)return out;
+ const add=(label,ok,detail)=>out.checks.push({label,ok,detail});
+ if(app&&e.application)add('Aplicación',applicationMatch(app,e.application),`Trabajo calculado: ${app}. Ficha: ${e.application}.`);
+ if(r?.tev!==null&&(e.evapMin!==null||e.evapMax!==null)){
+  const ok=(e.evapMin===null||r.tev>=e.evapMin)&&(e.evapMax===null||r.tev<=e.evapMax);
+  add('Evaporación',ok,`${fmt(r.tev,1)} °C · rango ficha ${e.evapMin??'—'} a ${e.evapMax??'—'} °C`);
+ }
+ if(r?.tcond!==null&&(e.condMin!==null||e.condMax!==null)){
+  const ok=(e.condMin===null||r.tcond>=e.condMin)&&(e.condMax===null||r.tcond<=e.condMax);
+  add('Condensación',ok,`${fmt(r.tcond,1)} °C · rango ficha ${e.condMin??'—'} a ${e.condMax??'—'} °C`);
+ }
+ if(r?.td!==null&&e.dischargeMax!==null)add('Descarga',r.td<=e.dischargeMax,`${fmt(r.td,1)} °C · máximo publicado ${fmt(e.dischargeMax,1)} °C`);
+ if(r?.ratio!==null&&e.prMax!==null)add('Relación de presión',r.ratio<=e.prMax,`${fmt(r.ratio,2)} · máximo publicado ${fmt(e.prMax,2)}`);
+ if(out.checks.length)out.status=out.checks.every(c=>c.ok)?'ok':out.checks.some(c=>c.ok===false)?'warn':'unknown';
+ return out;
+}
+function nearestAshrae(e,r){
+ const a=(e.ashrae||[]).filter(x=>Number.isFinite(Number(x.evap_C))&&Number.isFinite(Number(x.cond_C)));
+ if(!a.length||r?.tev===null||r?.tcond===null)return null;
+ return a.map(x=>({...x,d:Math.hypot(Number(x.evap_C)-r.tev,Number(x.cond_C)-r.tcond)})).sort((u,v)=>u.d-v.d)[0];
+}
+function envelopeCard(x,r){
+ const ev=evaluateEnvelope(x,r),e=ev.envelope;
+ if(!e.application&&e.evapMin===null&&e.evapMax===null&&e.condMin===null&&e.condMax===null&&!e.points.length){
+  return `<div class="envelope-box"><div class="envelope-title">ENVELOPE / APLICACIÓN</div><div class="envelope-note">La búsqueda encontró la referencia, pero no obtuvo límites de envelope suficientemente verificables. No se inventan límites; debe consultarse el datasheet exacto.</div></div>`;
+ }
+ const cls=ev.status==='ok'?'envelope-ok':ev.status==='warn'?'envelope-warn':'';
+ const rows=ev.checks.map(c=>`<div class="envelope-item"><b>${esc(c.label)}</b><span class="${c.ok?'envelope-ok':'envelope-danger'}">${c.ok?'✓ DENTRO':'⚠ FUERA'}</span><br>${esc(c.detail)}</div>`).join('');
+ const ash=e.ashrae.slice(0,8).map(a=>`<tr><td>${esc(a.application||'—')}</td><td>${a.evap_C??'—'}</td><td>${a.cond_C??'—'}</td><td>${a.capacity_kW??'—'}</td><td>${a.input_power_kW??'—'}</td></tr>`).join('');
+ const near=nearestAshrae(e,r);
+ return `<div class="envelope-box"><div class="envelope-title">ENVELOPE DEL COMPRESOR · <span class="${cls}">${ev.status==='ok'?'OPERACIÓN COMPATIBLE':ev.status==='warn'?'REVISAR ENVELOPE':'REFERENCIA PARCIAL'}</span></div><div class="envelope-grid">${rows||''}<div class="envelope-item"><b>Trabajo actual</b>${esc(ev.application||'—')} · Tevap ${r?.tev==null?'—':fmt(r.tev,1)+' °C'}</div><div class="envelope-item"><b>Condensación actual</b>${r?.tcond==null?'—':fmt(r.tcond,1)+' °C'}</div></div>${e.notes?`<div class="envelope-note">${esc(e.notes)}</div>`:''}${near?`<div class="envelope-note"><b>Punto ASHRAE publicado más cercano:</b> ${esc(near.application||'—')} · Tevap ${near.evap_C} °C · Tcond ${near.cond_C} °C${near.capacity_kW!=null?` · Cap. ${near.capacity_kW} kW`:''}${near.input_power_kW!=null?` · Input ${near.input_power_kW} kW`:''}. Esto es un punto de ensayo, NO un límite de envelope.</div>`:''}${ash?`<details style="margin-top:6px"><summary>Condiciones ASHRAE encontradas</summary><table class="ashrae-table"><thead><tr><th>Aplicación</th><th>Tevap °C</th><th>Tcond °C</th><th>Cap. kW</th><th>Input kW</th></tr></thead><tbody>${ash}</tbody></table></details>`:''}<div class="envelope-note">LBP/MBP/HBP es una clasificación orientativa cuando el fabricante no la declara. Si existe un envelope gráfico oficial, sus límites tienen prioridad.</div></div>`;
+}
 function parseVoltageRange(v){
  const nums=(String(v||'').match(/\d+(?:\.\d+)?/g)||[]).map(Number);
  if(nums.length>=2)return {min:Math.min(nums[0],nums[1]),max:Math.max(nums[0],nums[1])};
@@ -378,28 +493,27 @@ function compareCompressorElectrical(x,vn,an){
  }
  return {vr,vStatus,vClass,aStatus,aClass};
 }
-function searchCompressor(){
+function renderLocalCompressor(x){
+ const vn=num('vnom'),an=num('anom'),cap=capKW(num('capacity'),text('capacityUnit'));
+ const e=compareCompressorElectrical(x,vn,an);
+ let a=[['Fabricante / modelo',x.m+' — '+x.model],['Refrigerante',x.ref],['Tipo',x.type],['Tensión ficha',x.volt],['Frecuencia',x.hz],['Fase',x.phase],['RLA ficha',x.rla+' A'],['LRA ficha',x.lra?x.lra+' A':'—'],['Capacidad ref.',x.cap+' kW'],['Desplazamiento',x.displacement?x.displacement+' cm³/rev':'—'],['Potencia',x.power?x.power+' kW':'—'],['COP ficha',x.cop?x.cop+' W/W':'—'],['Voltaje nominal ingresado',vn===null?'—':vn+' V'],['Comparación voltaje',`<span class="${e.vClass}">${e.vStatus}</span>`],['Amperaje nominal ingresado',an===null?'—':an.toFixed(1)+' A'],['Comparación amperage',`<span class="${e.aClass}">${e.aStatus}</span>`]];
+ if(cap!==null&&x.cap)a.push(['Capacidad ingresada',cap.toFixed(2)+' kW '+(Math.abs(cap-x.cap)/x.cap>.2?'⚠ revisar':'✓')]);
+ if(x.capacityBTU)a.push(['Capacidad ficha',x.capacityBTU.toLocaleString('en-US')+' BTU/h']);
+ const box=$('compressorResult');
+ box.innerHTML=`<div class="small" style="margin-bottom:4px"><b>REFERENCIA LOCAL</b> · se usará como respaldo mientras se consulta Internet.</div><div class="compare-grid">${a.map(v=>`<div class="compare-item"><b>${v[0]}</b>${v[1]}</div>`).join('')}</div>`;
+}
+
+async function searchCompressor(){
  const q=text('compressorCode').trim().toUpperCase();
  const box=$('compressorResult');
  if(!box)return;
  if(!q){selectedCompressor=null;box.innerHTML='';return;}
- const hits=COMPRESSORS.filter(x=>x.model.toUpperCase().includes(q)||q.includes(x.model.toUpperCase()));
- if(!hits.length){
-   selectedCompressor=null;
-   box.innerHTML=`<div class="alert"><b>Referencia no encontrada en la base local</b>El código <strong>${q}</strong> no tiene una ficha cargada. Verifique el código exacto y la placa del compresor.</div>`;
-   return;
- }
- const x=hits[0]; selectedCompressor=x;
- const vn=num('vnom'),an=num('anom'),cap=capKW(num('capacity'),text('capacityUnit'));
- const e=compareCompressorElectrical(x,vn,an);
- let a=[
-  ['Fabricante / modelo',x.m+' — '+x.model],['Refrigerante',x.ref],['Tipo',x.type],['Tensión ficha',x.volt],['Frecuencia',x.hz],['Fase',x.phase],['RLA ficha',x.rla+' A'],['Capacidad ref.',x.cap+' kW'],
-  ['Voltaje nominal ingresado',vn===null?'—':vn+' V'],['Comparación voltaje',`<span class="${e.vClass}">${e.vStatus}</span>`],
-  ['Amperaje nominal ingresado',an===null?'—':an.toFixed(1)+' A'],['Comparación amperaje',`<span class="${e.aClass}">${e.aStatus}</span>`]
- ];
- if(cap!==null)a.push(['Capacidad ingresada',cap.toFixed(2)+' kW '+(Math.abs(cap-x.cap)/x.cap>.2?'⚠ revisar':'✓')]);
- box.innerHTML=`<div class="small" style="margin-bottom:4px"><b>REFERENCIA DEL COMPRESOR</b> · comparación orientativa</div><div class="compare-grid">${a.map(v=>`<div class="compare-item"><b>${v[0]}</b>${v[1]}</div>`).join('')}</div><div class="small" style="margin-top:5px">Voltaje nominal y amperaje nominal se comparan contra la ficha encontrada. RLA es una referencia de placa/fabricante; no sustituye el dato exacto de la ficha del modelo y variante. Confirmar siempre con la placa.</div>`;
+ const nq=normalizeCode(q);
+ const hit=COMPRESSORS.find(x=>{const nx=normalizeCode(x.model);return nx===nq||nx.includes(nq)||nq.includes(nx)});
+ if(hit){selectedCompressor=hit;renderLocalCompressor(hit);}
+ await webSearchCompressor(q);
 }
+
 function convertPressure(id,from,to){const v=num(id);if(v!==null)$(id).value=barP(pBar(v,from),to).toFixed(2)}
 function convertTemp(id,from,to){const v=num(id);if(v!==null)$(id).value=ct(tc(v,from),to).toFixed(1)}
 function convertCapacity(from,to){const v=num("capacity");if(v!==null)$( "capacity").value=kwCap(capKW(v,from),to).toFixed(2)}
@@ -440,17 +554,17 @@ $("compressorCode").addEventListener("keydown",e=>{if(e.key==="Enter"){e.prevent
 document.querySelectorAll("input,textarea,select").forEach(e=>e.addEventListener("input",()=>{$("systemStatus").textContent="Cambios sin analizar"}));
 
 function saveData(){
- const ids=["brand","fiscal","technician","modelBrand","model","compressorCode","tempUnidad","capacity","capacityUnit","ref","punit","type","expansion","psuc","pdis","tevapout","tsuction","tliquid","tdischarge","tamb","treturnAir","tsupply","vmeas","vnom","ameas","anom",];
- const d={};ids.forEach(id=>d[id]=text(id));localStorage.setItem("hvacrV29",JSON.stringify(d));alert("Datos guardados en este navegador.");
+ const ids=["brand","fiscal","technician","modelBrand","model","compressorCode","tempUnidad","capacity","capacityUnit","ref","punit","type","expansion","applicationMode","psuc","pdis","tevapout","tsuction","tliquid","tdischarge","tamb","treturnAir","tsupply","vmeas","vnom","ameas","anom",];
+ const d={};ids.forEach(id=>d[id]=text(id));localStorage.setItem("hvacrV31",JSON.stringify(d));alert("Datos guardados en este navegador.");
 }
 function loadData(){
- const d=JSON.parse(localStorage.getItem("hvacrV29")||"null");if(!d){alert("No hay datos guardados.");return}
+ const d=JSON.parse(localStorage.getItem("hvacrV31")||"null");if(!d){alert("No hay datos guardados.");return}
  Object.entries(d).forEach(([id,v])=>{if($(id))$(id).value=v});units={p:text("punit"),t:text("tempUnidad"),cap:text("capacityUnit")};calculate();
 }
 function clearData(){
  if(!confirm("¿Limpiar todos los datos?"))return;
  document.querySelectorAll("input,textarea").forEach(e=>e.value="");
- $("ref").value="R410A";$("punit").value="psi";$("tempUnidad").value="C";$("capacityUnit").value="BTU/h";$("type").value="Split";$("expansion").value="TXV";
+ $("ref").value="R410A";$("punit").value="psi";$("tempUnidad").value="C";$("capacityUnit").value="BTU/h";$("type").value="Split";$("expansion").value="TXV";$("applicationMode").value="AUTO";
  units={p:"psi",t:"C",cap:"BTU/h"};lastResult=null;renderMetrics(null);$("findings").innerHTML="<div class='alert'>Complete las mediciones y pulse ANALIZAR.</div>";$("causes").innerHTML="<li>Datos insuficientes.</li>";$("next").innerHTML="";Plotly.purge("plot");status("error","DATOS INSUFICIENTES","Ingrese las mediciones disponibles.");
 }
 
@@ -461,10 +575,11 @@ function generatePDF(){
  const T=c=>c===null?"—":fmt(ct(c,tu))+" "+(tu==="F"?"°F":"°C"),P=p=>p===null?"—":fmt(barP(p-ATM,pu),1)+" "+pu+" g ("+fmt(p,2)+" barA)";
  $("pdfDate").textContent=new Date().toLocaleString("es-ES");
  $("pdfAdmin").innerHTML=[pdfItem("Empresa",text("brand")),pdfItem("RIF",text("fiscal")),pdfItem("Técnico",text("technician")),pdfItem("Marca",text("modelBrand")),pdfItem("Modelo",text("model")),pdfItem("Compresor",text("compressorCode")),pdfItem("Unidad temperatura",tu==="F"?"°F":"°C")].join("");
- $("pdfEquipo").innerHTML=[pdfItem("Capacidad",num("capacity")===null?"—":num("capacity")+" "+cu),pdfItem("Refrigerante",text("ref")),pdfItem("Tipo de equipo",text("type")),pdfItem("Expansión",expansionRule().name),pdfItem("Unidad presión",pu)].join("");
+ $("pdfEquipo").innerHTML=[pdfItem("Capacidad",num("capacity")===null?"—":num("capacity")+" "+cu),pdfItem("Refrigerante",text("ref")),pdfItem("Tipo de equipo",text("type")),pdfItem("Expansión",expansionRule().name),pdfItem("Aplicación de trabajo",text("applicationMode")||"AUTO"),pdfItem("Unidad presión",pu)].join("");
  $("pdfMed").innerHTML=[pdfItem("Presión succión",P(r.ps)),pdfItem("Temperatura salida evaporador",T(r.teo)),pdfItem("Temperatura succión",T(r.ts)),pdfItem("Presión descarga",P(r.pd)),pdfItem("Temperatura línea líquida",T(r.tl)),pdfItem("Temperatura descarga compresor",T(r.td)),pdfItem("Temperatura ambiente",T(r.amb)),pdfItem("Voltaje",r.vm===null?"—":r.vm+" V"),pdfItem("Amperaje",r.am===null?"—":r.am+" A")].join("");
  $("pdfInd").innerHTML=[pdfItem("T° saturación evaporación",T(r.tev)),pdfItem("T° saturación condensación",T(r.tcond)),pdfItem("Superheat evaporador",fmt(r.shEv)+" K"),pdfItem("Superheat total",fmt(r.shTot)+" K"),pdfItem("Superheat línea",fmt(r.shLine)+" K"),pdfItem("Subcooling",fmt(r.sc)+" K"),pdfItem("ΔT aire",fmt(r.dtAir)+" K"),pdfItem("ΔT condensación-ambiente",fmt(r.dtCond)+" K"),pdfItem("Relación de presión",fmt(r.ratio,2)),pdfItem("Desvío de voltaje",fmt(r.vDev)+" %"),pdfItem("Corriente vs nominal",fmt(r.iPct)+" %"),pdfItem("Efecto frigorífico específico",r.thermo?fmt(r.thermo.qEvap,1)+" kJ/kg":"—"),pdfItem("COP termodinámico",r.thermo?fmt(r.thermo.cop,2):"—"),pdfItem("Calidad después de expansión",r.thermo&&Number.isFinite(r.thermo.x4)?fmt(r.thermo.x4*100,1)+" %":"—")].join("");
- $("pdfDiag").innerHTML=r.findings.map(f=>`<div class="pdf-finding"><b>${f.title}</b><br>${f.detail}</div>`).join("")+"<b>Sugerencias</b><ul>"+[...new Set(r.next)].map(x=>`<li>${x}</li>`).join("")+"</ul>";
+ const envPdf=r.envelopeEval? r.envelopeEval.checks.map(c=>`${c.label}: ${c.ok?'DENTRO':'FUERA'} · ${c.detail}`).join(' | ') : 'Sin evaluación de envelope';
+ $("pdfDiag").innerHTML=r.findings.map(f=>`<div class="pdf-finding"><b>${f.title}</b><br>${f.detail}</div>`).join("")+`<div class="pdf-finding"><b>Envelope del compresor</b><br>${envPdf}</div>`+"<b>Sugerencias</b><ul>"+[...new Set(r.next)].map(x=>`<li>${x}</li>`).join("")+"</ul>";
  
  const report=$("pdfReport");report.style.display="block";
  html2pdf().set({margin:8,filename:"Reporte_HVAC_"+new Date().toISOString().slice(0,10)+".pdf",image:{type:"jpeg",quality:.96},html2canvas:{scale:2,useCORS:true,backgroundColor:"#fff"},jsPDF:{unit:"mm",format:"a4",orientation:"portrait"},pagebreak:{mode:["css","legacy"]}}).from(report).save().then(()=>report.style.display="none");
