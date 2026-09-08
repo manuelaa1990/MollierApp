@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Diagramas de Mollier (p-h) Pro - Mediciones y Diagnóstico de Campo</title>
+  <title>Diagramas de Mollier (p-h) Pro - Reporte Técnico</title>
   
-  <!-- CDNs necesarios: Plotly para la gráfica y html2pdf para generar el PDF -->
   <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
@@ -19,7 +18,6 @@
     html, body {
       width: 100%;
       height: 100%;
-      height: 100dvh;
       overflow-x: hidden;
       overflow-y: auto;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -32,13 +30,12 @@
       flex-direction: column;
       width: 100%;
       max-width: 100vw;
-      min-height: 100dvh;
       padding: 4px;
       gap: 4px;
       overflow-x: hidden;
     }
 
-    /* Barra superior con hora activa y clima */
+    /* Barra superior */
     .top-info-bar {
       background: #1e293b;
       border: 1px solid #38bdf8;
@@ -57,7 +54,7 @@
       font-size: 0.68rem;
     }
 
-    /* Formulario compacto de identificación profesional */
+    /* Formulario identificación */
     .prof-header-card {
       background: #1e293b;
       border: 1px solid #334155;
@@ -167,23 +164,6 @@
       height: 24px;
     }
 
-    .input-group select {
-      cursor: pointer;
-      border-color: #38bdf8;
-      font-weight: 600;
-    }
-
-    .input-group select optgroup {
-      background-color: #1e293b;
-      color: #38bdf8;
-      font-weight: bold;
-    }
-
-    .input-group select option {
-      background-color: #0f172a;
-      color: #f8fafc;
-    }
-
     .action-bar {
       display: flex;
       gap: 4px;
@@ -207,7 +187,6 @@
       height: 26px;
     }
 
-    /* Botón verde estricto para el reporte */
     .btn-reporte {
       background-color: #10b981;
       color: #ffffff;
@@ -220,7 +199,6 @@
     .btn-toggle.active {
       background-color: #0284c7;
       color: #ffffff;
-      box-shadow: 0 0 6px rgba(2, 132, 199, 0.4);
     }
 
     .results-grid {
@@ -270,29 +248,21 @@
       text-align: justify;
     }
 
-    .diag-item:last-child {
-      margin-bottom: 0;
-    }
-
     .chart-card {
       display: flex;
       flex-direction: column;
       width: 100%;
       max-width: 100vw;
       padding: 2px;
-      overflow: hidden;
-      box-sizing: border-box;
     }
 
     .chart-container {
       width: 100%;
       max-width: 100%;
-      height: 260px;
-      overflow: hidden;
+      height: 270px;
     }
 
     .alarm-field-active {
-      animation: blink-field 0.8s infinite alternate !important;
       border-radius: 6px;
       padding: 2px 4px !important;
     }
@@ -309,39 +279,73 @@
       font-weight: bold;
     }
 
-    @keyframes blink-field {
-      0% {
-        background-color: rgba(239, 68, 68, 0.9);
-        box-shadow: 0 0 10px rgba(239, 68, 68, 0.8);
-      }
-      100% {
-        background-color: rgba(127, 29, 29, 0.3);
-        box-shadow: 0 0 2px rgba(239, 68, 68, 0.2);
-      }
-    }
-
-    /* Ajustes específicos de impresión para cuando html2pdf captura la pantalla */
+    /* ESTILOS ESPECÍFICOS PARA EL PDF GENERADO */
     body.generating-pdf {
       background-color: #ffffff !important;
-      color: #000000 !important;
+      color: #0f172a !important;
     }
+
+    body.generating-pdf .app-container {
+      padding: 0;
+      gap: 6px;
+    }
+
+    body.generating-pdf .top-info-bar {
+      background: #f1f5f9 !important;
+      border-color: #0284c7 !important;
+      color: #0369a1 !important;
+    }
+
+    body.generating-pdf .top-info-bar .date-time-box {
+      color: #0f172a !important;
+      font-weight: bold;
+    }
+
     body.generating-pdf .card, 
     body.generating-pdf .prof-header-card, 
-    body.generating-pdf .top-info-bar,
-    body.generating-pdf .diag-container,
-    body.generating-pdf .kpi-box {
+    body.generating-pdf .diag-container {
       background-color: #ffffff !important;
-      border-color: #cccccc !important;
-      color: #000000 !important;
+      border-color: #cbd5e1 !important;
+      color: #0f172a !important;
+      box-shadow: none !important;
     }
+
+    body.generating-pdf .kpi-box {
+      background-color: #f8fafc !important;
+      border-color: #0284c7 !important;
+    }
+
+    body.generating-pdf .kpi-box .label {
+      color: #475569 !important;
+    }
+
+    body.generating-pdf .kpi-box .value {
+      color: #0f172a !important;
+    }
+
     body.generating-pdf input, 
     body.generating-pdf select {
-      background-color: #ffffff !important;
-      color: #000000 !important;
-      border-color: #999999 !important;
+      background-color: #f8fafc !important;
+      color: #0f172a !important;
+      border-color: #94a3b8 !important;
+      font-weight: 600;
     }
+
+    body.generating-pdf label {
+      color: #0284c7 !important;
+      font-weight: bold;
+    }
+
+    body.generating-pdf .card h2 {
+      color: #0369a1 !important;
+    }
+
     body.generating-pdf .action-bar {
       display: none !important;
+    }
+
+    body.generating-pdf .diag-item {
+      color: #334155 !important;
     }
   </style>
 </head>
@@ -349,7 +353,6 @@
 
   <div class="app-container" id="reporteArea">
     
-    <!-- Barra superior con Fecha, Hora Activa y Clima -->
     <div class="top-info-bar">
       <div class="date-time-box">
         📅 <span id="txtFechaHora">Cargando fecha y hora...</span>
@@ -359,7 +362,6 @@
       </div>
     </div>
 
-    <!-- Identificación Profesional y Datos del Equipo -->
     <div class="prof-header-card">
       <div class="prof-grid">
         <div class="input-group">
@@ -519,10 +521,8 @@
           </div>
         </div>
 
-        <div class="diag-container" id="panelAlertas">
-        </div>
+        <div class="diag-container" id="panelAlertas"></div>
       </div>
-
     </header>
 
     <main class="card chart-card">
@@ -530,7 +530,6 @@
         <button class="btn btn-toggle" id="btnZonaActiva" onclick="toggleZonaActiva()">
           🔍 Zoom Zona Activa: OFF
         </button>
-        <!-- Botón verde de reporte -->
         <button class="btn btn-reporte" onclick="descargarPDFReporte()">
           📄 Reporte
         </button>
@@ -654,9 +653,7 @@
     }
 
     function convertirTemp(tempC) {
-      if (tUnitActual === 'F') {
-        return (tempC * 9/5) + 32;
-      }
+      if (tUnitActual === 'F') return (tempC * 9/5) + 32;
       return tempC;
     }
 
@@ -682,9 +679,9 @@
       document.getElementById('lblPSuct').innerText = `P. Succión (${pUnits[pUnitActual].label})`;
       document.getElementById('lblPDesc').innerText = `P. Descarga (${pUnits[pUnitActual].label})`;
       document.getElementById('lblTEvapOut').innerText = `T. Salida Evap (°${tUnitActual})`;
-      document.getElementById('lblTSuct').innerText = `T. Succ Tubo (°${tUnitActual})`;
-      document.getElementById('lblTLiq').innerText = `T. Liq Tubo (°${tUnitActual})`;
-      document.getElementById('lblTDescReal').innerText = `T. Desc (°${tUnitActual})`;
+      document.getElementById('lblTSuct').innerText = `T. Temp Succión (°${tUnitActual})`;
+      document.getElementById('lblTLiq').innerText = `T. Tubería Liq (°${tUnitActual})`;
+      document.getElementById('lblTDescReal').innerText = `T. Descarga (°${tUnitActual})`;
     }
 
     function cambiarUnidades() {
@@ -797,17 +794,23 @@
       const element = document.getElementById('reporteArea');
       document.body.classList.add('generating-pdf');
 
+      // Forzar render de Plotly en modo claro para la captura
+      actualizarTodo(true);
+
       const opt = {
-        margin:       [5, 5, 5, 5],
+        margin:       [4, 4, 4, 4],
         filename:     `Reporte_Tecnico_${document.getElementById('equipoMarca').value}_${document.getElementById('equipoModelo').value}.pdf`,
         image:        { type: 'jpeg', quality: 0.98 },
         html2canvas:  { scale: 2, useCORS: true, logging: false },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
 
-      html2pdf().set(opt).from(element).save().then(() => {
-        document.body.classList.remove('generating-pdf');
-      });
+      setTimeout(() => {
+        html2pdf().set(opt).from(element).save().then(() => {
+          document.body.classList.remove('generating-pdf');
+          actualizarTodo(false);
+        });
+      }, 150);
     }
 
     function getPropAtP(refData, pBarAbs) {
@@ -903,12 +906,8 @@
         y: pVals,
         mode: 'lines+markers',
         name: `Domo ${refData.nombre}`,
-        line: { color: '#38bdf8', width: 2.0, shape: 'spline', smoothing: 1.1 },
-        marker: { size: 4, color: '#38bdf8' },
-        hovertemplate: `<b>Domo Sat. (${refData.nombre})</b><br>` +
-                       `Temp Sat: %{text}<br>` +
-                       `P: %{y:.1f} ${pUnits[pUnitActual].label}<br>` +
-                       `h: %{x:.1f} kJ/kg<extra></extra>`,
+        line: { color: '#0284c7', width: 2.0, shape: 'spline', smoothing: 1.1 },
+        marker: { size: 4, color: '#0284c7' },
         text: tempsText
       };
     }
@@ -955,16 +954,13 @@
       return { alertas, alarmaTDesc, alarmaTLiq };
     }
 
-    function actualizarTodo() {
+    function actualizarTodo(esModoPdf = false) {
       const refKey = document.getElementById('refSelect').value;
       const refData = refrigerantes[refKey];
       const pf = pUnits[pUnitActual].factor;
 
-      let pSuctInput = parseFloat(document.getElementById('pSuct').value);
-      let pDescInput = parseFloat(document.getElementById('pDesc').value);
-
-      if (isNaN(pSuctInput)) pSuctInput = 25;
-      if (isNaN(pDescInput)) pDescInput = 290;
+      let pSuctInput = parseFloat(document.getElementById('pSuct').value) || 25;
+      let pDescInput = parseFloat(document.getElementById('pDesc').value) || 290;
 
       const barFactor = (pUnitActual === 'psi') ? 14.5038 : ((pUnitActual === 'kpa') ? 100 : 1.0);
       const atmBar = 1.01325;
@@ -1043,9 +1039,9 @@
       else grpLiq.classList.remove('alarm-field-active');
 
       if (alertas.length === 0) {
-        panelAlertas.innerHTML = `<div class="diag-item" style="color: #34d399; text-align: left;">✅ <b>Sistema Estable:</b> El equipo con ${refData.nombre} opera dentro de los parámetros previstos.</div>`;
+        panelAlertas.innerHTML = `<div class="diag-item" style="color: #059669; text-align: left;">✅ <b>Sistema Estable:</b> El equipo con ${refData.nombre} opera dentro de los parámetros previstos.</div>`;
       } else {
-        panelAlertas.innerHTML = alertas.map(a => `<div class="diag-item" style="color: #cbd5e1;">${a}</div>`).join('');
+        panelAlertas.innerHTML = alertas.map(a => `<div class="diag-item">${a}</div>`).join('');
       }
 
       const pSuctPlot = pSuctBarAbs * pf;
@@ -1068,13 +1064,9 @@
         name: 'Ciclo Operativo',
         text: ['1', '2', '3', '4', '1'],
         textposition: 'top center',
-        textfont: { size: 8, color: '#f8fafc' },
-        line: { color: '#ef4444', width: 2.2 },
-        marker: { size: 6, color: '#f59e0b' },
-        hovertemplate: '<b>Punto %{text} del Ciclo</b><br>' +
-                       'Temp: %{customdata}<br>' +
-                       'P: %{y:.1f} ' + pUnits[pUnitActual].label + '<br>' +
-                       'h: %{x:.1f} kJ/kg<extra></extra>',
+        textfont: { size: 9, color: esModoPdf ? '#0f172a' : '#f8fafc' },
+        line: { color: '#dc2626', width: 2.2 },
+        marker: { size: 6, color: '#d97706' },
         customdata: [t1Str, t2Str, t3Str, t4Str, t1Str]
       };
 
@@ -1082,26 +1074,26 @@
 
       const layout = {
         autosize: true,
-        margin: { l: 22, r: 10, t: 10, b: 22 },
-        paper_bgcolor: '#1e293b',
-        plot_bgcolor: '#0f172a',
+        margin: { l: 26, r: 10, t: 10, b: 24 },
+        paper_bgcolor: esModoPdf ? '#ffffff' : '#1e293b',
+        plot_bgcolor: esModoPdf ? '#f8fafc' : '#0f172a',
         showlegend: false,
         xaxis: {
           title: 'h (kJ/kg)',
-          titlefont: { size: 7, color: '#94a3b8' },
-          tickfont: { size: 6.5, color: '#cbd5e1' },
-          gridcolor: '#334155',
+          titlefont: { size: 8, color: esModoPdf ? '#334155' : '#94a3b8' },
+          tickfont: { size: 7, color: esModoPdf ? '#0f172a' : '#cbd5e1' },
+          gridcolor: esModoPdf ? '#e2e8f0' : '#334155',
           zeroline: false,
           autorange: !zonaActivaHabilitada,
           range: zonaActivaHabilitada ? [Math.max(h4 - 25, minX), Math.min(h2 + 25, maxX)] : undefined
         },
         yaxis: {
           title: `P. Abs (${pUnits[pUnitActual].label})`,
-          titlefont: { size: 7, color: '#94a3b8' },
-          tickfont: { size: 6.5, color: '#cbd5e1' },
+          titlefont: { size: 8, color: esModoPdf ? '#334155' : '#94a3b8' },
+          tickfont: { size: 7, color: esModoPdf ? '#0f172a' : '#cbd5e1' },
           type: 'log',
           automargin: true,
-          gridcolor: '#334155',
+          gridcolor: esModoPdf ? '#e2e8f0' : '#334155',
           zeroline: false,
           autorange: !zonaActivaHabilitada,
           range: zonaActivaHabilitada ? [Math.log10(pSuctPlot * 0.75), Math.log10(pDescPlot * 1.25)] : undefined
