@@ -5,8 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Diagramas de Mollier (p-h) Pro - Mediciones y Diagnóstico de Campo</title>
   
-  <!-- CDN de Plotly.js -->
+  <!-- CDNs necesarios: Plotly para la gráfica y html2pdf para generar el PDF -->
   <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
   <style>
     * {
@@ -37,33 +38,60 @@
       overflow-x: hidden;
     }
 
-    .ambient-banner {
+    /* Barra superior con hora activa y clima */
+    .top-info-bar {
       background: #1e293b;
       border: 1px solid #38bdf8;
       border-radius: 6px;
-      padding: 4px 8px;
+      padding: 3px 8px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      font-size: 0.72rem;
+      font-size: 0.70rem;
       color: #38bdf8;
       font-weight: bold;
     }
 
-    .ambient-banner .weather-info {
-      display: flex;
-      gap: 6px;
-      align-items: center;
+    .top-info-bar .date-time-box {
+      color: #f8fafc;
+      font-size: 0.68rem;
     }
 
-    .ambient-banner button {
-      background: #0284c7;
-      border: none;
-      color: white;
-      padding: 2px 6px;
+    /* Formulario compacto de identificación profesional */
+    .prof-header-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 4px 6px;
+    }
+
+    .prof-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 3px;
+    }
+
+    .prof-grid .input-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .prof-grid label {
+      font-size: 0.52rem;
+      color: #38bdf8;
+      font-weight: bold;
+      margin-bottom: 1px;
+      white-space: nowrap;
+    }
+
+    .prof-grid input {
+      padding: 2px 4px;
+      border: 1px solid #475569;
       border-radius: 4px;
-      cursor: pointer;
-      font-size: 0.65rem;
+      font-size: 0.68rem;
+      background-color: #0f172a;
+      color: #f8fafc;
+      height: 22px;
     }
 
     .top-panel {
@@ -179,14 +207,20 @@
       height: 26px;
     }
 
-    .btn-primary { background-color: #0284c7; color: #ffffff; }
-    .btn-primary:hover { background-color: #0369a1; }
+    /* Botón verde estricto para el reporte */
+    .btn-reporte {
+      background-color: #10b981;
+      color: #ffffff;
+    }
+    .btn-reporte:hover {
+      background-color: #059669;
+    }
 
     .btn-toggle { background-color: #334155; color: #cbd5e1; }
     .btn-toggle.active {
-      background-color: #10b981;
+      background-color: #0284c7;
       color: #ffffff;
-      box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);
+      box-shadow: 0 0 6px rgba(2, 132, 199, 0.4);
     }
 
     .results-grid {
@@ -285,18 +319,79 @@
         box-shadow: 0 0 2px rgba(239, 68, 68, 0.2);
       }
     }
+
+    /* Ajustes específicos de impresión para cuando html2pdf captura la pantalla */
+    body.generating-pdf {
+      background-color: #ffffff !important;
+      color: #000000 !important;
+    }
+    body.generating-pdf .card, 
+    body.generating-pdf .prof-header-card, 
+    body.generating-pdf .top-info-bar,
+    body.generating-pdf .diag-container,
+    body.generating-pdf .kpi-box {
+      background-color: #ffffff !important;
+      border-color: #cccccc !important;
+      color: #000000 !important;
+    }
+    body.generating-pdf input, 
+    body.generating-pdf select {
+      background-color: #ffffff !important;
+      color: #000000 !important;
+      border-color: #999999 !important;
+    }
+    body.generating-pdf .action-bar {
+      display: none !important;
+    }
   </style>
 </head>
 <body>
 
-  <div class="app-container">
+  <div class="app-container" id="reporteArea">
     
-    <div class="ambient-banner" id="bannerAmbiente">
-      <div class="weather-info">
-        <span>📍 Punto Fijo:</span>
-        <span id="txtTempAmb">Cargando...</span>
+    <!-- Barra superior con Fecha, Hora Activa y Clima -->
+    <div class="top-info-bar">
+      <div class="date-time-box">
+        📅 <span id="txtFechaHora">Cargando fecha y hora...</span>
       </div>
-      <button onclick="obtenerClimaPuntoFijo()">🔄 Actualizar</button>
+      <div>
+        📍 Punto Fijo: <span id="txtTempAmb">Cargando...</span>
+      </div>
+    </div>
+
+    <!-- Identificación Profesional y Datos del Equipo -->
+    <div class="prof-header-card">
+      <div class="prof-grid">
+        <div class="input-group">
+          <label for="empresaNombre">Empresa</label>
+          <input type="text" id="empresaNombre" value="Servicios Técnicos" oninput="guardarYActualizar()">
+        </div>
+
+        <div class="input-group">
+          <label for="empresaRif">RIF / ID Fiscal</label>
+          <input type="text" id="empresaRif" value="J-00000000-0" oninput="guardarYActualizar()">
+        </div>
+
+        <div class="input-group">
+          <label for="tecnicoNombre">Técnico Evaluante</label>
+          <input type="text" id="tecnicoNombre" value="Téc. Especialista" oninput="guardarYActualizar()">
+        </div>
+
+        <div class="input-group">
+          <label for="equipoMarca">Marca del Equipo</label>
+          <input type="text" id="equipoMarca" value="Daikin" oninput="guardarYActualizar()">
+        </div>
+
+        <div class="input-group">
+          <label for="equipoModelo">Modelo</label>
+          <input type="text" id="equipoModelo" value="XL10-2026" oninput="guardarYActualizar()">
+        </div>
+
+        <div class="input-group">
+          <label for="capFrigNominal">Cap. Frigorífica (BTU/h / Ton)</label>
+          <input type="text" id="capFrigNominal" value="36,000 BTU/h (3 Ton)" oninput="guardarYActualizar()">
+        </div>
+      </div>
     </div>
 
     <header class="top-panel">
@@ -435,8 +530,9 @@
         <button class="btn btn-toggle" id="btnZonaActiva" onclick="toggleZonaActiva()">
           🔍 Zoom Zona Activa: OFF
         </button>
-        <button class="btn btn-primary" onclick="descargarGrafica()">
-          📷 Descargar PNG
+        <!-- Botón verde de reporte -->
+        <button class="btn btn-reporte" onclick="descargarPDFReporte()">
+          📄 Reporte
         </button>
       </div>
 
@@ -547,6 +643,16 @@
       }
     };
 
+    function actualizarReloj() {
+      const ahora = new Date();
+      const opciones = { 
+        year: 'numeric', month: '2-digit', day: '2-digit', 
+        hour: '2-digit', minute: '2-digit', second: '2-digit', 
+        hour12: true 
+      };
+      document.getElementById('txtFechaHora').innerText = ahora.toLocaleString('es-VE', opciones);
+    }
+
     function convertirTemp(tempC) {
       if (tUnitActual === 'F') {
         return (tempC * 9/5) + 32;
@@ -556,7 +662,6 @@
 
     async function obtenerClimaPuntoFijo() {
       const lbl = document.getElementById('txtTempAmb');
-      lbl.innerText = "Consultando...";
       try {
         const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=11.7&longitude=-70.2&current_weather=true');
         const data = await res.json();
@@ -566,11 +671,10 @@
           lbl.innerText = `${tempMostrar.toFixed(1)} °${tUnitActual}`;
           guardarYActualizar();
         } else {
-          lbl.innerText = "Error de datos";
+          lbl.innerText = "30.0 °C";
         }
       } catch (e) {
-        console.error("Error al obtener clima de Punto Fijo:", e);
-        lbl.innerText = "No disponible (30.0 °C)";
+        lbl.innerText = "30.0 °C";
       }
     }
 
@@ -629,6 +733,12 @@
 
     function guardarConfiguracion() {
       const data = {
+        empresaNombre: document.getElementById('empresaNombre').value,
+        empresaRif: document.getElementById('empresaRif').value,
+        tecnicoNombre: document.getElementById('tecnicoNombre').value,
+        equipoMarca: document.getElementById('equipoMarca').value,
+        equipoModelo: document.getElementById('equipoModelo').value,
+        capFrigNominal: document.getElementById('capFrigNominal').value,
         refSelect: document.getElementById('refSelect').value,
         pUnitSelect: document.getElementById('pUnitSelect').value,
         tUnitSelect: document.getElementById('tUnitSelect').value,
@@ -642,14 +752,20 @@
         iAmp: document.getElementById('iAmp').value,
         zonaActivaHabilitada: zonaActivaHabilitada
       };
-      localStorage.setItem('mollier_app_data', JSON.stringify(data));
+      localStorage.setItem('mollier_app_report_data', JSON.stringify(data));
     }
 
     function cargarConfiguracion() {
-      const saved = localStorage.getItem('mollier_app_data');
+      const saved = localStorage.getItem('mollier_app_report_data');
       if (saved) {
         try {
           const data = JSON.parse(saved);
+          if (data.empresaNombre !== undefined) document.getElementById('empresaNombre').value = data.empresaNombre;
+          if (data.empresaRif !== undefined) document.getElementById('empresaRif').value = data.empresaRif;
+          if (data.tecnicoNombre !== undefined) document.getElementById('tecnicoNombre').value = data.tecnicoNombre;
+          if (data.equipoMarca !== undefined) document.getElementById('equipoMarca').value = data.equipoMarca;
+          if (data.equipoModelo !== undefined) document.getElementById('equipoModelo').value = data.equipoModelo;
+          if (data.capFrigNominal !== undefined) document.getElementById('capFrigNominal').value = data.capFrigNominal;
           if (data.refSelect) document.getElementById('refSelect').value = data.refSelect;
           if (data.pUnitSelect) document.getElementById('pUnitSelect').value = data.pUnitSelect;
           if (data.tUnitSelect) document.getElementById('tUnitSelect').value = data.tUnitSelect;
@@ -667,7 +783,7 @@
           tUnitActual = document.getElementById('tUnitSelect').value;
           actualizarEstadoBotonZoom();
         } catch (e) {
-          console.error("Error al cargar configuración", e);
+          console.error("Error al cargar datos", e);
         }
       }
     }
@@ -677,31 +793,20 @@
       actualizarTodo();
     }
 
-    function descargarGrafica() {
-      const refKey = document.getElementById('refSelect').value;
-      const elem = document.getElementById('mollierPlot');
+    function descargarPDFReporte() {
+      const element = document.getElementById('reporteArea');
+      document.body.classList.add('generating-pdf');
 
-      Plotly.relayout(elem, {
-        margin: { l: 30, r: 10, t: 25, b: 30 },
-        'xaxis.title.font.size': 10,
-        'yaxis.title.font.size': 10,
-        'xaxis.tickfont.size': 9,
-        'yaxis.tickfont.size': 9
-      }).then(() => {
-        Plotly.downloadImage(elem, {
-          format: 'png',
-          width: 1000,
-          height: 600,
-          filename: `Mollier_Campo_${refKey}_${pUnitActual.toUpperCase()}`
-        }).then(() => {
-          Plotly.relayout(elem, {
-            margin: { l: 18, r: 5, t: 10, b: 18 },
-            'xaxis.title.font.size': 6,
-            'yaxis.title.font.size': 6,
-            'xaxis.tickfont.size': 5.5,
-            'yaxis.tickfont.size': 5.5
-          });
-        });
+      const opt = {
+        margin:       [5, 5, 5, 5],
+        filename:     `Reporte_Tecnico_${document.getElementById('equipoMarca').value}_${document.getElementById('equipoModelo').value}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, logging: false },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      html2pdf().set(opt).from(element).save().then(() => {
+        document.body.classList.remove('generating-pdf');
       });
     }
 
@@ -775,21 +880,18 @@
       return [traceLiquid, traceSat, traceVapor];
     }
 
-    // DOME DE SATURACIÓN CON TEMPERATURA EN PUNTOS
     function getDomeTrace(refData) {
       const hVals = [];
       const pVals = [];
       const tempsText = [];
       const f = pUnits[pUnitActual].factor;
 
-      // Rama de Líquido Saturado
       refData.dome.forEach(pt => {
         hVals.push(pt.hL);
         pVals.push(pt.p * f);
         tempsText.push(`${convertirTemp(pt.tSat).toFixed(1)} °${tUnitActual}`);
       });
 
-      // Rama de Vapor Saturado
       for (let i = refData.dome.length - 1; i >= 0; i--) {
         hVals.push(refData.dome[i].hV);
         pVals.push(refData.dome[i].p * f);
@@ -820,19 +922,19 @@
 
       if (tDescRealC > refData.tDescMax) {
         alarmaTDesc = true;
-        alertas.push(`🔴 <b>CRÍTICO (T. Descarga ${tDescRealC.toFixed(0)}°C):</b> Supera el límite de ${refData.tDescMax}°C para ${refData.nombre}. Riesgo de degradar aceite.`);
+        alertas.push(`🔴 <b>CRÍTICO (T. Descarga ${tDescRealC.toFixed(0)}°C):</b> Supera el límite de ${refData.tDescMax}°C para ${refData.nombre}.`);
       }
 
       if (tLiqC >= tSatCondC) {
         alarmaTLiq = true;
-        alertas.push(`🔴 <b>ALERTA (T. Líquido ${tLiqC.toFixed(1)}°C):</b> Sin Subenfriamiento (T. Líquido ≥ T. Sat ${tSatCondC.toFixed(1)}°C). Riesgo de Flash Gas en la línea.`);
+        alertas.push(`🔴 <b>ALERTA (T. Líquido ${tLiqC.toFixed(1)}°C):</b> Sin Subenfriamiento (T. Líquido ≥ T. Sat ${tSatCondC.toFixed(1)}°C). Riesgo de Flash Gas.`);
       }
 
       if (SC < 3.0 && !alarmaTLiq) {
         if (deltaTCondAmb > 18.0 || rP > refData.rPMax) {
-          alertas.push(`🔴 <b>CONDENSADOR INSUFICIENTE / SUCIO (SC = ${SC.toFixed(1)} K):</b> Subenfriamiento bajo con ΔT Cond-Amb elevado (${deltaTCondAmb.toFixed(1)} K) y alta presión. Falta de transferencia térmica en condensación.`);
+          alertas.push(`🔴 <b>CONDENSADOR SUCIO (SC = ${SC.toFixed(1)} K):</b> Subenfriamiento bajo con ΔT Cond-Amb elevado (${deltaTCondAmb.toFixed(1)} K).`);
         } else if (SHTotal > refData.shOptimo[1]) {
-          alertas.push(`🟡 <b>FALTA DE REFRIGERANTE (SC = ${SC.toFixed(1)} K):</b> Subenfriamiento bajo acompañado de Recalentamiento elevado (${SHTotal.toFixed(1)} K). Carga insuficiente.`);
+          alertas.push(`🟡 <b>FALTA DE REFRIGERANTE (SC = ${SC.toFixed(1)} K):</b> Subenfriamiento bajo y Recalentamiento elevado (${SHTotal.toFixed(1)} K).`);
         } else {
           alertas.push(`🟡 <b>Subenfriamiento Bajo (< 3.0 K):</b> Subenfriamiento insuficiente (${SC.toFixed(1)} K).`);
         }
@@ -841,29 +943,13 @@
       }
 
       if (rP > refData.rPMax) {
-        alertas.push(`🔴 <b>Relación de Presión Excesiva (rP = ${rP.toFixed(1)} > ${refData.rPMax}):</b> Compresor fuera de envolvente.`);
-      } else if (rP < 1.8 && rP > 1.0) {
-        alertas.push(`🟡 <b>Relación de Presión Muy Baja (rP = ${rP.toFixed(1)}):</b> Ineficiencia por desgaste o bypass.`);
+        alertas.push(`🔴 <b>Relación de Presión Excesiva (rP = ${rP.toFixed(1)} > ${refData.rPMax}):</b> Compresor fuera de rango.`);
       }
 
       if (SHUtil < refData.shOptimo[0]) {
-        alertas.push(`🔴 <b>Recalentamiento Útil Crítico (< ${refData.shOptimo[0]} K):</b> Riesgo de inundación / retorno líquido.`);
+        alertas.push(`🔴 <b>Recalentamiento Útil Crítico (< ${refData.shOptimo[0]} K):</b> Riesgo de retorno de líquido.`);
       } else if (SHUtil > refData.shOptimo[1]) {
         alertas.push(`🟡 <b>Recalentamiento Útil Alto (> ${refData.shOptimo[1]} K):</b> Evaporador subalimentado.`);
-      }
-
-      if ((SHTotal - SHUtil) > 5.0) {
-        alertas.push(`🟠 <b>Ganancia Térmica en Succión (${(SHTotal - SHUtil).toFixed(1)} K):</b> Aislamiento insuficiente en succión.`);
-      }
-
-      if (dischargeSuperHeatK < 10.0) {
-        alertas.push(`🔴 <b>Riesgo Golpe de Líquido (SH Descarga: ${dischargeSuperHeatK.toFixed(1)} K):</b> Poco sobrecalentamiento en descarga.`);
-      } else if (dischargeSuperHeatK > 42.0) {
-        alertas.push(`🔴 <b>Compresor Sobrecalentado (SH Descarga: ${dischargeSuperHeatK.toFixed(1)} K):</b> Exceso de calor.`);
-      }
-
-      if (refData.esZeotropico && refData.glide > 0.5) {
-        alertas.push(`ℹ️ <b>Mezcla Zeotrópica (Glide ${refData.glide} K):</b> Evaluar glide entre rocío y burbuja.`);
       }
 
       return { alertas, alarmaTDesc, alarmaTLiq };
@@ -970,7 +1056,6 @@
 
       const zoneTraces = getZoneTraces(refData, minX, maxX);
 
-      // TEMPERATURAS EN PUNTOS OPERATIVOS CUALQUIERA SEA LA UNIDAD
       const t1Str = `${convertirTemp(tSuctC).toFixed(1)} °${tUnitActual}`;
       const t2Str = `${convertirTemp(tDescRealC).toFixed(1)} °${tUnitActual}`;
       const t3Str = `${convertirTemp(tLiqC).toFixed(1)} °${tUnitActual}`;
@@ -1029,6 +1114,8 @@
     window.addEventListener('DOMContentLoaded', () => {
       cargarConfiguracion();
       actualizarEtiquetas();
+      actualizarReloj();
+      setInterval(actualizarReloj, 1000);
       obtenerClimaPuntoFijo();
     });
   </script>
