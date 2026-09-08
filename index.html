@@ -94,6 +94,36 @@
       height: 22px;
     }
 
+    /* Nueva fila para el input de capacidad con selector de unidad */
+    .cap-input-row {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+    .cap-input-row input {
+      flex: 2;
+      padding: 2px 6px;
+      border: 1px solid #475569;
+      border-radius: 4px;
+      font-size: 0.68rem;
+      background-color: #0f172a;
+      color: #f8fafc;
+      height: 22px;
+    }
+    .cap-input-row select {
+      flex: 1;
+      padding: 2px 6px;
+      border: 1px solid #475569;
+      border-radius: 4px;
+      font-size: 0.68rem;
+      background-color: #0f172a;
+      color: #f8fafc;
+      height: 22px;
+      cursor: pointer;
+      border-color: #38bdf8;
+      font-weight: 600;
+    }
+
     .top-panel {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -388,8 +418,15 @@
         </div>
 
         <div class="input-group">
-          <label for="capFrigNominal">Cap. Frigorífica (BTU/h / Ton)</label>
-          <input type="text" id="capFrigNominal" value="36,000 BTU/h (3 Ton)" oninput="guardarYActualizar()">
+          <label for="capFrigValue">Cap. Frigorífica</label>
+          <div class="cap-input-row">
+            <input type="number" id="capFrigValue" value="36000" oninput="guardarYActualizar()" step="1" />
+            <select id="capUnitSelect" onchange="guardarYActualizar()">
+              <option value="BTU/h" selected>BTU/h</option>
+              <option value="kW">kW</option>
+              <option value="Ton">Ton</option>
+            </select>
+          </div>
         </div>
       </div>
     </div>
@@ -738,7 +775,9 @@
         tecnicoNombre: document.getElementById('tecnicoNombre').value,
         equipoMarca: document.getElementById('equipoMarca').value,
         equipoModelo: document.getElementById('equipoModelo').value,
-        capFrigNominal: document.getElementById('capFrigNominal').value,
+        // Nuevo: guardamos valor numérico y unidad por separado
+        capFrigValue: document.getElementById('capFrigValue').value,
+        capFrigUnit: document.getElementById('capUnitSelect').value,
         refSelect: document.getElementById('refSelect').value,
         pUnitSelect: document.getElementById('pUnitSelect').value,
         tUnitSelect: document.getElementById('tUnitSelect').value,
@@ -765,7 +804,27 @@
           if (data.tecnicoNombre !== undefined) document.getElementById('tecnicoNombre').value = data.tecnicoNombre;
           if (data.equipoMarca !== undefined) document.getElementById('equipoMarca').value = data.equipoMarca;
           if (data.equipoModelo !== undefined) document.getElementById('equipoModelo').value = data.equipoModelo;
-          if (data.capFrigNominal !== undefined) document.getElementById('capFrigNominal').value = data.capFrigNominal;
+
+          // Compatibilidad: si existe capFrigValue lo usamos; si solo existe el antiguo capFrigNominal intentamos parsearlo
+          if (data.capFrigValue !== undefined) {
+            document.getElementById('capFrigValue').value = data.capFrigValue;
+          } else if (data.capFrigNominal) {
+            const s = data.capFrigNominal;
+            const m = s.match(/([\d\.,]+)/);
+            if (m) {
+              const num = parseFloat(m[1].replace(/,/g, ''));
+              if (!isNaN(num)) document.getElementById('capFrigValue').value = num;
+            }
+          }
+          if (data.capFrigUnit !== undefined) {
+            document.getElementById('capUnitSelect').value = data.capFrigUnit;
+          } else if (data.capFrigNominal) {
+            const s = data.capFrigNominal.toLowerCase();
+            if (s.includes('ton')) document.getElementById('capUnitSelect').value = 'Ton';
+            else if (s.includes('kw')) document.getElementById('capUnitSelect').value = 'kW';
+            else document.getElementById('capUnitSelect').value = 'BTU/h';
+          }
+
           if (data.refSelect) document.getElementById('refSelect').value = data.refSelect;
           if (data.pUnitSelect) document.getElementById('pUnitSelect').value = data.pUnitSelect;
           if (data.tUnitSelect) document.getElementById('tUnitSelect').value = data.tUnitSelect;
