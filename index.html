@@ -30,14 +30,14 @@
       flex-direction: column;
       width: 100%;
       min-height: 100dvh;
-      padding: 8px;
-      gap: 8px;
+      padding: 6px;
+      gap: 6px;
     }
 
     .top-panel {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 8px;
+      gap: 6px;
       flex-shrink: 0;
     }
 
@@ -45,16 +45,15 @@
       background: #1e293b;
       border: 1px solid #334155;
       border-radius: 8px;
-      padding: 8px 12px;
+      padding: 6px 10px;
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
-      transition: background-color 0.3s ease, border-color 0.3s ease;
     }
 
     .card h2 {
       font-size: 0.75rem;
       text-transform: uppercase;
       color: #38bdf8;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
       letter-spacing: 0.5px;
       display: flex;
       justify-content: space-between;
@@ -64,7 +63,7 @@
     .config-row {
       display: flex;
       gap: 6px;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
       width: 100%;
     }
 
@@ -74,19 +73,18 @@
     .controls-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 6px;
+      gap: 4px;
     }
 
     .input-group {
       display: flex;
       flex-direction: column;
       border-radius: 4px;
-      padding: 2px;
-      transition: all 0.3s ease;
+      padding: 1px;
     }
 
     .input-group label {
-      font-size: 0.6rem;
+      font-size: 0.58rem;
       font-weight: 600;
       margin-bottom: 2px;
       color: #94a3b8;
@@ -96,7 +94,7 @@
     }
 
     .input-group input, .input-group select {
-      padding: 2px 6px;
+      padding: 2px 4px;
       border: 1px solid #475569;
       border-radius: 4px;
       font-size: 0.75rem;
@@ -104,7 +102,7 @@
       background-color: #0f172a;
       color: #f8fafc;
       width: 100%;
-      height: 28px;
+      height: 26px;
     }
 
     .input-group select {
@@ -126,25 +124,24 @@
 
     .action-bar {
       display: flex;
-      gap: 8px;
-      margin-bottom: 6px;
+      gap: 6px;
+      margin-bottom: 4px;
       width: 100%;
     }
 
     .btn {
       flex: 1;
-      padding: 6px 12px;
+      padding: 4px 8px;
       border: none;
       border-radius: 4px;
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       font-weight: 700;
       cursor: pointer;
-      transition: all 0.2s;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 4px;
-      height: 32px;
+      height: 28px;
     }
 
     .btn-primary { background-color: #0284c7; color: #ffffff; }
@@ -154,25 +151,25 @@
     .btn-toggle.active {
       background-color: #10b981;
       color: #ffffff;
-      box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+      box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);
     }
 
     .results-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 6px;
-      margin-bottom: 8px;
+      gap: 4px;
+      margin-bottom: 6px;
     }
 
     .kpi-box {
       background-color: #0f172a;
       border-left: 3px solid #38bdf8;
-      padding: 4px 6px;
+      padding: 3px 5px;
       border-radius: 4px;
     }
 
     .kpi-box .label {
-      font-size: 0.58rem;
+      font-size: 0.55rem;
       color: #94a3b8;
       display: block;
       white-space: nowrap;
@@ -181,7 +178,7 @@
     }
 
     .kpi-box .value {
-      font-size: 0.82rem;
+      font-size: 0.78rem;
       font-weight: 700;
       color: #f8fafc;
     }
@@ -190,16 +187,15 @@
       background-color: #0f172a;
       border: 1px solid #334155;
       border-radius: 6px;
-      padding: 6px 8px;
-      max-height: 110px;
+      padding: 4px 6px;
+      max-height: 95px;
       overflow-y: auto;
-      transition: all 0.3s ease;
     }
 
     .diag-item {
-      font-size: 0.7rem;
-      margin-bottom: 4px;
-      line-height: 1.25;
+      font-size: 0.68rem;
+      margin-bottom: 3px;
+      line-height: 1.2;
       display: flex;
       align-items: flex-start;
       gap: 4px;
@@ -213,26 +209,25 @@
       display: flex;
       flex-direction: column;
       width: 100%;
-      padding: 6px 8px;
+      padding: 4px 6px;
     }
 
-    /* --- OPTIMIZACIÓN EXTREMA DE ALTURA PARA MÓVILES --- */
+    /* --- ALTURA COMPACTA Y AJUSTADA PARA MÓVILES --- */
     .chart-container {
       width: 100%;
-      height: 380px;
-      min-height: 210px;
+      height: 350px;
+      min-height: 190px;
     }
 
     @media (max-width: 680px) {
       .chart-container {
-        height: 210px !important; /* Altura compacta para evitar cortes y scroll */
+        height: 190px !important;
       }
       .card {
-        padding: 6px 8px;
+        padding: 4px 6px;
       }
     }
 
-    /* --- ESTILOS DE ALARMA INTERMITENTE POR CAMPO ESPECÍFICO --- */
     .alarm-field-active {
       animation: blink-field 0.8s infinite alternate !important;
       border-radius: 6px;
@@ -686,7 +681,7 @@
       });
 
       for (let i = refData.dome.length - 1; i >= 0; i--) {
-        hVals.push(refData.dome[i].hV);
+        hVals.push(refData.dome[i].v ? refData.dome[i].v : refData.dome[i].hV);
         pVals.push(refData.dome[i].p * f);
       }
 
@@ -699,39 +694,59 @@
       };
     }
 
-    function evaluarDiagnostico(refData, rP, tDescRealC, tLiqC, tSatCondC, SH, SC) {
+    function evaluarDiagnostico(refData, rP, tDescRealC, tLiqC, tSatCondC, SH, SC, dischargeSuperHeatK) {
       const alertas = [];
       let alarmaTDesc = false;
       let alarmaTLiq = false;
 
+      // 1. Temperatura de Descarga Límite
       if (tDescRealC > refData.tDescMax) {
         alarmaTDesc = true;
         alertas.push(`🔴 <b>CRÍTICO (T. Descarga ${tDescRealC.toFixed(0)}°C):</b> Supera el límite de ${refData.tDescMax}°C para ${refData.nombre}. Riesgo de degradar aceite.`);
       }
 
+      // 2. Temperatura de Líquido vs Saturación
       if (tLiqC >= tSatCondC) {
         alarmaTLiq = true;
         alertas.push(`🔴 <b>ALERTA (T. Líquido ${tLiqC.toFixed(1)}°C):</b> Igual o superior a T. Sat (${tSatCondC.toFixed(1)}°C). Pérdida de subenfriamiento / Flash Gas.`);
       }
 
+      // 3. Relación de Presión
       if (rP > refData.rPMax) {
         alertas.push(`🔴 <b>Relación de Presión Excesiva (rP = ${rP.toFixed(1)} > ${refData.rPMax}):</b> Compresor fuera de envolvente. Condensador sucio o restricción.`);
       } else if (rP < 1.8 && rP > 1.0) {
         alertas.push(`🟡 <b>Relación de Presión Muy Baja (rP = ${rP.toFixed(1)}):</b> Ineficiencia por desgaste en válvulas o bypass interno.`);
       }
 
+      // 4. Recalentamiento de Succión
       if (SH < refData.shOptimo[0]) {
         alertas.push(`🔴 <b>Recalentamiento Crítico (< ${refData.shOptimo[0]} K):</b> Riesgo de retorno de líquido al compresor.`);
       } else if (SH > refData.shOptimo[1]) {
         alertas.push(`🟡 <b>Recalentamiento Alto (> ${refData.shOptimo[1]} K):</b> Evaporador subalimentado o falta de carga.`);
       }
 
+      // 5. Subenfriamiento
       if (SC < refData.scOptimo[0] && !alarmaTLiq) {
         alertas.push(`🟡 <b>Subenfriamiento Bajo (< ${refData.scOptimo[0]} K):</b> Falta de refrigerante o baja transferencia en condensador.`);
       } else if (SC > refData.scOptimo[1]) {
         alertas.push(`🔵 <b>Subenfriamiento Alto (> ${refData.scOptimo[1]} K):</b> Exceso de carga o líquido retenido en condensador.`);
       }
 
+      // 6. Recalentamiento en la Descarga (Nuevo Módulo)
+      if (dischargeSuperHeatK < 10.0) {
+        alertas.push(`🔴 <b>Riesgo de Golpe de Líquido (SH Descarga muy bajo: ${dischargeSuperHeatK.toFixed(1)} K):</b> El gas sale con muy poco sobrecalentamiento respecto al condensador. Posible retorno de líquido.`);
+      } else if (dischargeSuperHeatK > 42.0) {
+        alertas.push(`🔴 <b>Compresor Sobrecalentado (SH Descarga excesivo: ${dischargeSuperHeatK.toFixed(1)} K):</b> Exceso de calor en compresión. Revise si hay subalimentación de refrigerante o condensador obstruido.`);
+      }
+
+      // 7. Detección de Compresor Sobredimensionado (Nuevo Módulo)
+      if (SH > 11.0 && SC > 7.5) {
+        alertas.push(`🟠 <b>Posible Sobredimensionamiento (Capacidad Excesiva):</b> SH alto (${SH.toFixed(1)} K) y SC elevado (${SC.toFixed(1)} K) sugieren que el compresor evacua más carga de la que el evaporador recibe.`);
+      } else if (rP > (refData.rPMax * 0.9) && SH > 10.0) {
+        alertas.push(`🟠 <b>Alerta de Desbalance Térmico:</b> Relación de presión elevada con alto recalentamiento. Evalúe si la cilindrada del compresor supera la carga térmica.`);
+      }
+
+      // 8. Mezcla Zeotrópica
       if (refData.esZeotropico && refData.glide > 0.5) {
         alertas.push(`ℹ️ <b>Mezcla Zeotrópica (Glide ${refData.glide} K):</b> Considere la diferencia de temperatura entre rocío y burbuja.`);
       }
@@ -779,6 +794,7 @@
 
       const superHeatK = Math.max(tSuctC - propEvap.tSat, 0);
       const subCoolK = Math.max(propCond.tSat - tLiqC, 0);
+      const dischargeSuperHeatK = Math.max(tDescRealC - propCond.tSat, 0);
 
       const h1 = propEvap.hV + (superHeatK * refData.cpV);
       const h3 = propCond.hL - (subCoolK * refData.cpL);
@@ -804,7 +820,7 @@
       document.getElementById('kpicop').innerText = cop.toFixed(2);
 
       const { alertas, alarmaTDesc, alarmaTLiq } = evaluarDiagnostico(
-        refData, rP, tDescRealC, tLiqC, propCond.tSat, superHeatK, subCoolK
+        refData, rP, tDescRealC, tLiqC, propCond.tSat, superHeatK, subCoolK, dischargeSuperHeatK
       );
       
       const grpDesc = document.getElementById('grpTDescReal');
@@ -824,7 +840,7 @@
       }
 
       if (alertas.length === 0) {
-        panelAlertas.innerHTML = `<div class="diag-item" style="color: #34d399;">✅ <b>Sistema Estable:</b> El equipo con ${refData.nombre} opera dentro de los parámetros de diseño previstos.</div>`;
+        panelAlertas.innerHTML = `<div class="diag-item" style="color: #34d399;">✅ <b>Sistema Estable:</b> El equipo con ${refData.nombre} opera dentro de los parámetros previstos.</div>`;
       } else {
         panelAlertas.innerHTML = alertas.map(a => `<div class="diag-item" style="color: #cbd5e1;">${a}</div>`).join('');
       }
@@ -844,9 +860,9 @@
         name: 'Ciclo Operativo Real',
         text: ['1 (Succ)', '2 (Desc)', '3 (Liq)', '4 (Evap)', ''],
         textposition: ['bottom right', 'top right', 'top left', 'bottom left', ''],
-        textfont: { color: '#ffffff', size: 9 },
-        line: { color: '#f43f5e', width: 2.5 },
-        marker: { size: 5, color: '#f59e0b' }
+        textfont: { color: '#ffffff', size: 8 },
+        line: { color: '#f43f5e', width: 2 },
+        marker: { size: 4, color: '#f59e0b' }
       };
 
       const cycleFillTrace = {
@@ -867,9 +883,8 @@
       const maxH_Ciclo = Math.max(h1, h2, h3, h4);
       const minH_Ciclo = Math.min(h1, h2, h3, h4);
 
-      // LÓGICA DE ZOOM ESTRICTO EN ZONA OPERATIVA PARA MÓVILES
       if (zonaActivaHabilitada) {
-        const hMargin = (maxH_Ciclo - minH_Ciclo) * 0.08; // Margen reducido al 8%
+        const hMargin = (maxH_Ciclo - minH_Ciclo) * 0.08;
         const minPLog = Math.log10(Math.min(pSuctPlot, pDescPlot)) - 0.05;
         const maxPLog = Math.log10(Math.max(pSuctPlot, pDescPlot)) + 0.05;
 
@@ -887,8 +902,7 @@
       }
 
       const layout = {
-        /* Márgenes ultra reducidos para aprovechar el ancho total */
-        margin: { l: 30, r: 10, t: 20, b: 25 },
+        margin: { l: 20, r: 5, t: 15, b: 20 },
         autosize: true,
         paper_bgcolor: '#1e293b',
         plot_bgcolor: '#0f172a',
@@ -899,20 +913,20 @@
           font: { color: '#f8fafc', size: 10 }
         },
         xaxis: {
-          title: { text: 'Entalpía (kJ/kg)', font: { color: '#94a3b8', size: 8 } },
+          title: { text: 'Entalpía (kJ/kg)', font: { color: '#94a3b8', size: 7 } },
           visible: true,
           showticklabels: true,
-          tickfont: { color: '#94a3b8', size: 7 },
+          tickfont: { color: '#94a3b8', size: 6 },
           showgrid: true,
           gridcolor: '#334155',
           range: xRangeFinal,
           fixedrange: true
         },
         yaxis: {
-          title: { text: `P (${pUnits[pUnitActual].label})`, font: { color: '#94a3b8', size: 8 } },
+          title: { text: `P (${pUnits[pUnitActual].label})`, font: { color: '#94a3b8', size: 7 } },
           visible: true,
           showticklabels: true,
-          tickfont: { color: '#94a3b8', size: 7 },
+          tickfont: { color: '#94a3b8', size: 6 },
           showgrid: true,
           gridcolor: '#334155',
           type: 'log',
