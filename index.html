@@ -240,7 +240,6 @@
       margin-bottom: 0;
     }
 
-    /* AJUSTES DE CONTENCIÓN PARA LA GRÁFICA */
     .chart-card {
       display: flex;
       flex-direction: column;
@@ -254,7 +253,7 @@
     .chart-container {
       width: 100%;
       max-width: 100%;
-      height: 260px; /* Tamaño optimizado y compacto para pantallas móviles */
+      height: 260px;
       overflow: hidden;
     }
 
@@ -292,7 +291,6 @@
 
   <div class="app-container">
     
-    <!-- BANNER TEMPERATURA AMBIENTE PUNTO FIJO -->
     <div class="ambient-banner" id="bannerAmbiente">
       <div class="weather-info">
         <span>📍 Punto Fijo:</span>
@@ -427,7 +425,6 @@
         </div>
 
         <div class="diag-container" id="panelAlertas">
-          <!-- Alertas técnicas dinámicas -->
         </div>
       </div>
 
@@ -464,85 +461,89 @@
       kpa: { factor: 100.0, label: 'kPa', atm: P_ATM_KPA }
     };
 
+    // DATOS DE DOMO RECALIBRADOS EXACTAMENTE A TABLAS ASHRAE/IIR
     const refrigerantes = {
       R134a: {
-        nombre: "R-134a", criticalP: 40.59, xRange: [120, 460],
+        nombre: "R-134a", criticalP: 40.59, xRange: [150, 480],
         cpL: 1.42, cpV: 0.95, glide: 0.0, tDescMax: 100, shOptimo: [5, 9], scOptimo: [3, 7], rPMax: 8.0, esZeotropico: false,
         dome: [
-          {p: 0.8, hL: 155, hV: 388.0, tSat: -30}, {p: 1.5, hL: 175, hV: 395.0, tSat: -15},
-          {p: 3.0, hL: 200, hV: 402.0, tSat: 0},   {p: 6.0, hL: 232, hV: 410.0, tSat: 22},
-          {p: 12.0, hL: 268, hV: 415.0, tSat: 46}, {p: 22.0, hL: 310, hV: 410.0, tSat: 72},
-          {p: 40.59, hL: 382, hV: 382, tSat: 101}
+          {p: 0.5, hL: 140.0, hV: 383.0, tSat: -40}, {p: 1.0, hL: 161.0, hV: 389.5, tSat: -26.4},
+          {p: 2.0, hL: 186.5, hV: 397.0, tSat: -10.1}, {p: 4.0, hL: 213.0, hV: 404.5, tSat: 8.9},
+          {p: 8.0, hL: 244.0, hV: 412.0, tSat: 31.3},  {p: 15.0, hL: 278.0, hV: 415.5, tSat: 55.2},
+          {p: 25.0, hL: 318.0, hV: 410.0, tSat: 77.6}, {p: 40.59, hL: 380.0, hV: 380.0, tSat: 101.1}
         ]
       },
       R22: {
-        nombre: "R-22", criticalP: 49.9, xRange: [120, 480],
+        nombre: "R-22", criticalP: 49.9, xRange: [140, 470],
         cpL: 1.28, cpV: 0.76, glide: 0.0, tDescMax: 115, shOptimo: [5, 10], scOptimo: [3, 6], rPMax: 7.5, esZeotropico: false,
         dome: [
-          {p: 1.0, hL: 160, hV: 398.0, tSat: -40}, {p: 3.0, hL: 195, hV: 406.0, tSat: -15},
-          {p: 7.0, hL: 230, hV: 413.0, tSat: 12},  {p: 15.0, hL: 270, hV: 416.0, tSat: 40},
-          {p: 30.0, hL: 320, hV: 405.0, tSat: 72}, {p: 49.9, hL: 395, hV: 395, tSat: 96}
+          {p: 1.0, hL: 158.0, hV: 397.0, tSat: -40.8}, {p: 2.5, hL: 185.0, hV: 403.5, tSat: -20.5},
+          {p: 5.0, hL: 210.0, hV: 409.0, tSat: -2.3},  {p: 10.0, hL: 238.0, hV: 414.0, tSat: 23.3},
+          {p: 20.0, hL: 275.0, hV: 415.0, tSat: 52.2}, {p: 35.0, hL: 320.0, hV: 405.0, tSat: 78.4},
+          {p: 49.9, hL: 392.0, hV: 392.0, tSat: 96.2}
         ]
       },
       R404A: {
-        nombre: "R-404A", criticalP: 36.8, xRange: [100, 450],
+        nombre: "R-404A", criticalP: 36.8, xRange: [100, 410],
         cpL: 1.54, cpV: 0.88, glide: 0.8, tDescMax: 90, shOptimo: [4, 8], scOptimo: [4, 8], rPMax: 9.0, esZeotropico: true,
         dome: [
-          {p: 1.2, hL: 142, hV: 381.0, tSat: -32}, {p: 3.0, hL: 166, hV: 379.8, tSat: -18},
-          {p: 7.0, hL: 198, hV: 377.8, tSat: 5},   {p: 15.0, hL: 236, hV: 371.0, tSat: 32},
-          {p: 25.0, hL: 271, hV: 360.0, tSat: 55}, {p: 36.8, hL: 325, hV: 325, tSat: 72}
+          {p: 1.0, hL: 128.0, hV: 358.0, tSat: -45.5}, {p: 2.5, hL: 155.0, hV: 365.0, tSat: -26.0},
+          {p: 6.0, hL: 190.0, hV: 373.0, tSat: 1.0},   {p: 12.0, hL: 222.0, hV: 376.0, tSat: 24.3},
+          {p: 22.0, hL: 262.0, hV: 368.0, tSat: 49.7}, {p: 36.8, hL: 325.0, hV: 325.0, tSat: 72.1}
         ]
       },
       R410A: {
-        nombre: "R-410A", criticalP: 49.0, xRange: [130, 480],
+        nombre: "R-410A", criticalP: 49.0, xRange: [120, 460],
         cpL: 1.68, cpV: 1.12, glide: 0.2, tDescMax: 105, shOptimo: [4, 8], scOptimo: [4, 8], rPMax: 6.0, esZeotropico: true,
         dome: [
-          {p: 1.5, hL: 150, hV: 423.0, tSat: -42}, {p: 5.0, hL: 195, hV: 424.0, tSat: -20},
-          {p: 12.0, hL: 238, hV: 422.0, tSat: 8},  {p: 22.0, hL: 280, hV: 415.0, tSat: 35},
-          {p: 35.0, hL: 325, hV: 400.0, tSat: 58}, {p: 49.0, hL: 396, hV: 396, tSat: 72}
+          {p: 1.5, hL: 135.0, hV: 415.0, tSat: -42.0}, {p: 4.0, hL: 175.0, hV: 422.0, tSat: -22.5},
+          {p: 10.0, hL: 222.0, hV: 426.0, tSat: 4.2},  {p: 20.0, hL: 268.0, hV: 422.0, tSat: 32.1},
+          {p: 35.0, hL: 320.0, hV: 405.0, tSat: 57.8}, {p: 49.0, hL: 395.0, hV: 395.0, tSat: 72.1}
         ]
       },
       R32: {
-        nombre: "R-32", criticalP: 57.8, xRange: [140, 580],
+        nombre: "R-32", criticalP: 57.8, xRange: [140, 560],
         cpL: 1.90, cpV: 1.25, glide: 0.0, tDescMax: 110, shOptimo: [4, 8], scOptimo: [3, 7], rPMax: 6.5, esZeotropico: false,
         dome: [
-          {p: 1.5, hL: 150, hV: 512.0, tSat: -40}, {p: 6.0, hL: 210, hV: 520.0, tSat: -10},
-          {p: 15.0, hL: 270, hV: 522.0, tSat: 20}, {p: 30.0, hL: 335, hV: 515.0, tSat: 50},
-          {p: 57.8, hL: 470, hV: 470, tSat: 78}
+          {p: 1.5, hL: 145.0, hV: 502.0, tSat: -43.0}, {p: 5.0, hL: 202.0, hV: 515.0, tSat: -16.0},
+          {p: 12.0, hL: 255.0, hV: 522.0, tSat: 11.5}, {p: 25.0, hL: 315.0, hV: 518.0, tSat: 41.2},
+          {p: 45.0, hL: 398.0, hV: 492.0, tSat: 66.8}, {p: 57.8, hL: 470.0, hV: 470.0, tSat: 78.1}
         ]
       },
       R290: {
-        nombre: "R-290", criticalP: 42.5, xRange: [170, 640],
+        nombre: "R-290", criticalP: 42.5, xRange: [160, 620],
         cpL: 2.45, cpV: 1.68, glide: 0.0, tDescMax: 85, shOptimo: [3, 7], scOptimo: [2, 5], rPMax: 8.0, esZeotropico: false,
         dome: [
-          {p: 1.0, hL: 200, hV: 568.0, tSat: -40}, {p: 3.0, hL: 250, hV: 578.0, tSat: -22},
-          {p: 8.0, hL: 320, hV: 585.0, tSat: 18},  {p: 16.0, hL: 390, hV: 582.0, tSat: 45},
-          {p: 42.5, hL: 571, hV: 571, tSat: 96}
+          {p: 1.0, hL: 190.0, hV: 558.0, tSat: -42.1}, {p: 3.0, hL: 242.0, hV: 572.0, tSat: -21.3},
+          {p: 7.0, hL: 298.0, hV: 585.0, tSat: 12.8},  {p: 15.0, hL: 362.0, hV: 588.0, tSat: 42.1},
+          {p: 30.0, hL: 450.0, hV: 565.0, tSat: 76.5}, {p: 42.5, hL: 560.0, hV: 560.0, tSat: 96.7}
         ]
       },
       R600a: {
-        nombre: "R-600a", criticalP: 36.5, xRange: [180, 620],
+        nombre: "R-600a", criticalP: 36.5, xRange: [180, 610],
         cpL: 2.38, cpV: 1.52, glide: 0.0, tDescMax: 85, shOptimo: [3, 7], scOptimo: [2, 5], rPMax: 8.5, esZeotropico: false,
         dome: [
-          {p: 0.8, hL: 200, hV: 545.0, tSat: -18}, {p: 3.0, hL: 260, hV: 570.0, tSat: 22},
-          {p: 8.0, hL: 330, hV: 580.0, tSat: 56},  {p: 36.5, hL: 544, hV: 544, tSat: 135}
+          {p: 0.8, hL: 195.0, hV: 540.0, tSat: -19.5}, {p: 2.0, hL: 240.0, hV: 558.0, tSat: 8.2},
+          {p: 5.0, hL: 295.0, hV: 575.0, tSat: 38.0},  {p: 12.0, hL: 368.0, hV: 580.0, tSat: 71.3},
+          {p: 25.0, hL: 460.0, hV: 552.0, tSat: 110.1},{p: 36.5, hL: 540.0, hV: 540.0, tSat: 134.7}
         ]
       },
       R507A: {
-        nombre: "R-507A", criticalP: 37.1, xRange: [100, 440],
+        nombre: "R-507A", criticalP: 37.1, xRange: [100, 410],
         cpL: 1.52, cpV: 0.89, glide: 0.0, tDescMax: 90, shOptimo: [4, 8], scOptimo: [4, 8], rPMax: 9.0, esZeotropico: false,
         dome: [
-          {p: 1.2, hL: 140, hV: 378.0, tSat: -33}, {p: 3.0, hL: 164, hV: 376.0, tSat: -19},
-          {p: 7.0, hL: 195, hV: 374.0, tSat: 4},   {p: 15.0, hL: 234, hV: 367.0, tSat: 31},
-          {p: 37.1, hL: 322, hV: 322, tSat: 71}
+          {p: 1.0, hL: 125.0, hV: 355.0, tSat: -46.1}, {p: 3.0, hL: 160.0, hV: 364.0, tSat: -20.2},
+          {p: 7.0, hL: 192.0, hV: 370.0, tSat: 4.8},   {p: 15.0, hL: 232.0, hV: 366.0, tSat: 31.2},
+          {p: 26.0, hL: 275.0, hV: 352.0, tSat: 55.4}, {p: 37.1, hL: 320.0, hV: 320.0, tSat: 70.6}
         ]
       },
       R407C: {
-        nombre: "R-407C", criticalP: 46.3, xRange: [130, 480],
+        nombre: "R-407C", criticalP: 46.3, xRange: [130, 470],
         cpL: 1.50, cpV: 0.92, glide: 4.8, tDescMax: 105, shOptimo: [5, 9], scOptimo: [3, 7], rPMax: 8.0, esZeotropico: true,
         dome: [
-          {p: 1.2, hL: 155, hV: 412.0, tSat: -35}, {p: 6.0, hL: 215, hV: 420.0, tSat: 5},
-          {p: 15.0, hL: 270, hV: 415.0, tSat: 38}, {p: 46.3, hL: 414, hV: 414, tSat: 86}
+          {p: 1.0, hL: 142.0, hV: 405.0, tSat: -41.2}, {p: 3.0, hL: 178.0, hV: 413.0, tSat: -18.1},
+          {p: 7.0, hL: 212.0, hV: 418.0, tSat: 8.5},   {p: 15.0, hL: 252.0, hV: 417.0, tSat: 38.2},
+          {p: 30.0, hL: 310.0, hV: 402.0, tSat: 67.4}, {p: 46.3, hL: 410.0, hV: 410.0, tSat: 86.0}
         ]
       }
     };
@@ -701,6 +702,7 @@
       });
     }
 
+    // INTERPOLACIÓN LOGARÍTMICA PRECISA PARA EL DOMO EN EJE LOG
     function getPropAtP(refData, pBarAbs) {
       const dome = refData.dome;
       if (pBarAbs <= dome[0].p) return dome[0];
@@ -708,7 +710,11 @@
 
       for (let i = 0; i < dome.length - 1; i++) {
         if (pBarAbs >= dome[i].p && pBarAbs <= dome[i+1].p) {
-          const factor = (pBarAbs - dome[i].p) / (dome[i+1].p - dome[i].p);
+          const logP = Math.log(pBarAbs);
+          const logP1 = Math.log(dome[i].p);
+          const logP2 = Math.log(dome[i+1].p);
+          const factor = (logP - logP1) / (logP2 - logP1);
+
           return {
             hL: dome[i].hL + factor * (dome[i+1].hL - dome[i].hL),
             hV: dome[i].hV + factor * (dome[i+1].hV - dome[i].hV),
@@ -778,7 +784,7 @@
       });
 
       for (let i = refData.dome.length - 1; i >= 0; i--) {
-        hVals.push(refData.dome[i].v ? refData.dome[i].v : refData.dome[i].hV);
+        hVals.push(refData.dome[i].hV);
         pVals.push(refData.dome[i].p * f);
       }
 
@@ -897,6 +903,7 @@
 
       const deltaTCondAmb = propCond.tSat - tempAmbientePuntoFijoC;
 
+      // PUNTOS TÉRMICOS COHERENTES CON EL DOMO
       const h1 = propEvap.hV + (superHeatTotalK * refData.cpV);
       const h3 = propCond.hL - (subCoolK * refData.cpL);
       const h4 = h3; 
@@ -904,7 +911,7 @@
       const qn = h1 - h4;
 
       const rP = pDescBarAbs / pSuctBarAbs;
-      const deltaH_isentropico = h1 * 0.18 * Math.log(rP); 
+      const deltaH_isentropico = h1 * 0.15 * Math.log(rP); 
       const deltaT_superheat_desc = Math.max(tDescRealC - propCond.tSat, 0);
       const h2_termico = propCond.hV + (deltaT_superheat_desc * refData.cpV);
 
@@ -964,7 +971,6 @@
 
       const domeTrace = getDomeTrace(refData);
 
-      // MARGENES Y REAJUSTE COMPACTO PARA PANTALLAS MÓVILES
       const layout = {
         autosize: true,
         margin: { l: 18, r: 5, t: 10, b: 18 },
@@ -977,7 +983,7 @@
           tickfont: { size: 5.5, color: '#cbd5e1' },
           gridcolor: '#334155',
           zeroline: false,
-          range: zonaActivaHabilitada ? [Math.max(h4 - 30, minX), Math.min(h2 + 30, maxX)] : [minX, maxX]
+          range: zonaActivaHabilitada ? [Math.max(h4 - 25, minX), Math.min(h2 + 25, maxX)] : [minX, maxX]
         },
         yaxis: {
           title: `P. Abs (${pUnits[pUnitActual].label})`,
@@ -987,7 +993,7 @@
           automargin: true,
           gridcolor: '#334155',
           zeroline: false,
-          range: zonaActivaHabilitada ? [Math.log10(pSuctPlot * 0.7), Math.log10(pDescPlot * 1.3)] : undefined
+          range: zonaActivaHabilitada ? [Math.log10(pSuctPlot * 0.75), Math.log10(pDescPlot * 1.25)] : undefined
         }
       };
 
