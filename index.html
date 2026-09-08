@@ -207,7 +207,7 @@
       height: 26px;
     }
 
-    /* Botón verde para el reporte */
+    /* Botón verde estricto para el reporte */
     .btn-reporte {
       background-color: #10b981;
       color: #ffffff;
@@ -904,166 +904,220 @@
         mode: 'lines+markers',
         name: `Domo ${refData.nombre}`,
         line: { color: '#38bdf8', width: 2.0, shape: 'spline', smoothing: 1.1 },
-        marker: { size: 3, color: '#38bdf8' },
-        hovertext: tempsText,
-        hovertemplate: 'h: %{x:.1f} kJ/kg<br>P: %{y:.1f}<br>T.Sat: %{hovertext}<extra></extra>'
+        marker: { size: 4, color: '#38bdf8' },
+        hovertemplate: `<b>Domo Sat. (${refData.nombre})</b><br>` +
+                       `Temp Sat: %{text}<br>` +
+                       `P: %{y:.1f} ${pUnits[pUnitActual].label}<br>` +
+                       `h: %{x:.1f} kJ/kg<extra></extra>`,
+        text: tempsText
       };
+    }
+
+    function evaluarDiagnostico(refData, rP, tDescRealC, tLiqC, tSatCondC, SHUtil, SHTotal, SC, dischargeSuperHeatK, tempAmbienteC) {
+      const alertas = [];
+      let alarmaTDesc = false;
+      let alarmaTLiq = false;
+
+      const deltaTCondAmb = tSatCondC - tempAmbienteC;
+
+      if (tDescRealC > refData.tDescMax) {
+        alarmaTDesc = true;
+        alertas.push(`🔴 <b>CRÍTICO (T. Descarga ${tDescRealC.toFixed(0)}°C):</b> Supera el límite de ${refData.tDescMax}°C para ${refData.nombre}.`);
+      }
+
+      if (tLiqC >= tSatCondC) {
+        alarmaTLiq = true;
+        alertas.push(`🔴 <b>ALERTA (T. Líquido ${tLiqC.toFixed(1)}°C):</b> Sin Subenfriamiento (T. Líquido ≥ T. Sat ${tSatCondC.toFixed(1)}°C). Riesgo de Flash Gas.`);
+      }
+
+      if (SC < 3.0 && !alarmaTLiq) {
+        if (deltaTCondAmb > 18.0 || rP > refData.rPMax) {
+          alertas.push(`🔴 <b>CONDENSADOR SUCIO (SC = ${SC.toFixed(1)} K):</b> Subenfriamiento bajo con ΔT Cond-Amb elevado (${deltaTCondAmb.toFixed(1)} K).`);
+        } else if (SHTotal > refData.shOptimo[1]) {
+          alertas.push(`🟡 <b>FALTA DE REFRIGERANTE (SC = ${SC.toFixed(1)} K):</b> Subenfriamiento bajo y Recalentamiento elevado (${SHTotal.toFixed(1)} K).`);
+        } else {
+          alertas.push(`🟡 <b>Subenfriamiento Bajo (< 3.0 K):</b> Subenfriamiento insuficiente (${SC.toFixed(1)} K).`);
+        }
+      } else if (SC > refData.scOptimo[1]) {
+        alertas.push(`🔵 <b>Subenfriamiento Alto (> ${refData.scOptimo[1]} K):</b> Exceso de carga de refrigerante.`);
+      }
+
+      if (rP > refData.rPMax) {
+        alertas.push(`🔴 <b>Relación de Presión Excesiva (rP = ${rP.toFixed(1)} > ${refData.rPMax}):</b> Compresor fuera de rango.`);
+      }
+
+      if (SHUtil < refData.shOptimo[0]) {
+        alertas.push(`🔴 <b>Recalentamiento Útil Crítico (< ${refData.shOptimo[0]} K):</b> Riesgo de retorno de líquido.`);
+      } else if (SHUtil > refData.shOptimo[1]) {
+        alertas.push(`🟡 <b>Recalentamiento Útil Alto (> ${refData.shOptimo[1]} K):</b> Evaporador subalimentado.`);
+      }
+
+      return { alertas, alarmaTDesc, alarmaTLiq };
     }
 
     function actualizarTodo() {
-      actualizarReloj();
-      const keyRef = document.getElementById('refSelect').value;
-      const refData = refrigerantes[keyRef] || refrigerantes.R404A;
+      const refKey = document.getElementById('refSelect').value;
+      const refData = refrigerantes[refKey];
+      const pf = pUnits[pUnitActual].factor;
 
-      const uP = pUnits[pUnitActual];
-      const factorP = uP.factor;
+      let pSuctInput = parseFloat(document.getElementById('pSuct').value);
+      let pDescInput = parseFloat(document.getElementById('pDesc').value);
 
-      let pSuctMan = parseFloat(document.getElementById('pSuct').value) || 0;
-      let pDescMan = parseFloat(document.getElementById('pDesc').value) || 0;
+      if (isNaN(pSuctInput)) pSuctInput = 25;
+      if (isNaN(pDescInput)) pDescInput = 290;
 
-      let tEvapOutInput = parseFloat(document.getElementById('tEvapOut').value) || 0;
-      let tSuctInput = parseFloat(document.getElementById('tSuct').value) || 0;
-      let tLiqInput = parseFloat(document.getElementById('tLiq').value) || 0;
-      let tDescRealInput = parseFloat(document.getElementById('tDescReal').value) || 0;
+      const barFactor = (pUnitActual === 'psi') ? 14.5038 : ((pUnitActual === 'kpa') ? 100 : 1.0);
+      const atmBar = 1.01325;
 
-      let tEvapOutC = (tUnitActual === 'F') ? (tEvapOutInput - 32) * 5/9 : tEvapOutInput;
-      let tSuctC = (tUnitActual === 'F') ? (tSuctInput - 32) * 5/9 : tSuctInput;
-      let tLiqC = (tUnitActual === 'F') ? (tLiqInput - 32) * 5/9 : tLiqInput;
-      let tDescRealC = (tUnitActual === 'F') ? (tDescRealInput - 32) * 5/9 : tDescRealInput;
+      const pSuctBarAbs = Math.max((pSuctInput / barFactor) + atmBar, 0.2);
+      const pDescBarAbs = Math.min((pDescInput / barFactor) + atmBar, refData.criticalP - 0.2);
 
-      let vVolt = parseFloat(document.getElementById('vVolt').value) || 0;
-      let iAmp = parseFloat(document.getElementById('iAmp').value) || 0;
+      let tEvapOutVal = parseFloat(document.getElementById('tEvapOut').value) || -12;
+      let tSuctVal = parseFloat(document.getElementById('tSuct').value) || -10;
+      let tLiqVal = parseFloat(document.getElementById('tLiq').value) || 45;
+      let tDescRealVal = parseFloat(document.getElementById('tDescReal').value) || 90;
 
-      let pSuctBarAbs = (pSuctMan / factorP) + (uP.atm / factorP);
-      let pDescBarAbs = (pDescMan / factorP) + (uP.atm / factorP);
+      let tEvapOutC = tEvapOutVal;
+      let tSuctC = tSuctVal;
+      let tLiqC = tLiqVal;
+      let tDescRealC = tDescRealVal;
 
-      let propSuct = getPropAtP(refData, pSuctBarAbs);
-      let propDesc = getPropAtP(refData, pDescBarAbs);
+      if (tUnitActual === 'F') {
+        tEvapOutC = (tEvapOutVal - 32) * 5/9;
+        tSuctC = (tSuctVal - 32) * 5/9;
+        tLiqC = (tLiqVal - 32) * 5/9;
+        tDescRealC = (tDescRealVal - 32) * 5/9;
+      }
 
-      let shUtil = tEvapOutC - propSuct.tSat;
-      let shTotal = tSuctC - propSuct.tSat;
-      let sc = propDesc.tSat - tLiqC;
+      const vVolt = parseFloat(document.getElementById('vVolt').value) || 220;
+      const iAmp = parseFloat(document.getElementById('iAmp').value) || 0;
+      const pKw = (vVolt * iAmp * 0.9) / 1000.0;
 
-      let deltaAmb = propDesc.tSat - tempAmbientePuntoFijoC;
+      const propEvap = getPropAtP(refData, pSuctBarAbs);
+      const propCond = getPropAtP(refData, pDescBarAbs);
 
-      let h1 = propSuct.hV + refData.cpV * shTotal;
-      let h3 = propDesc.hL - refData.cpL * sc;
-      let h4 = h3;
-      let h2 = propDesc.hV + refData.cpV * (tDescRealC - propDesc.tSat);
+      const superHeatUtilK = Math.max(tEvapOutC - propEvap.tSat, 0);
+      const superHeatTotalK = Math.max(tSuctC - propEvap.tSat, 0);
+      const subCoolK = Math.max(propCond.tSat - tLiqC, 0);
+      const dischargeSuperHeatK = Math.max(tDescRealC - propCond.tSat, 0);
 
-      let qn = h1 - h4;
-      let w = h2 - h1;
-      let cop = (w > 0) ? (qn / w) : 0;
-      let kwPwr = (vVolt * iAmp * 0.90 * 1.732) / 1000;
+      const deltaTCondAmb = propCond.tSat - tempAmbientePuntoFijoC;
 
-      document.getElementById('kpiSHUtil').innerText = `${shUtil.toFixed(1)} K`;
-      document.getElementById('kpiSHTotal').innerText = `${shTotal.toFixed(1)} K`;
-      document.getElementById('kpiSC').innerText = `${sc.toFixed(1)} K`;
-      document.getElementById('kpiKW').innerText = `${kwPwr.toFixed(2)} kW`;
-      document.getElementById('kpiqn').innerText = `${Math.round(qn)} kJ/kg`;
-      document.getElementById('kpiw').innerText = `${Math.round(w)} kJ/kg`;
+      const h1 = propEvap.hV + (superHeatTotalK * refData.cpV);
+      const h3 = propCond.hL - (subCoolK * refData.cpL);
+      const h4 = h3; 
+
+      const qn = h1 - h4;
+
+      const rP = pDescBarAbs / pSuctBarAbs;
+      const deltaH_isentropico = h1 * 0.15 * Math.log(rP); 
+      const deltaT_superheat_desc = Math.max(tDescRealC - propCond.tSat, 0);
+      const h2_termico = propCond.hV + (deltaT_superheat_desc * refData.cpV);
+
+      const h2 = Math.max(h1 + deltaH_isentropico, h2_termico);
+
+      const w = h2 - h1;
+      const cop = w > 0 ? (qn / w) : 0;
+
+      document.getElementById('kpiSHUtil').innerText = `${superHeatUtilK.toFixed(1)} K`;
+      document.getElementById('kpiSHTotal').innerText = `${superHeatTotalK.toFixed(1)} K`;
+      document.getElementById('kpiSC').innerText = `${subCoolK.toFixed(1)} K`;
+      document.getElementById('kpiKW').innerText = `${pKw.toFixed(2)} kW`;
+      document.getElementById('kpiqn').innerText = `${qn.toFixed(1)} kJ/kg`;
+      document.getElementById('kpiw').innerText = `${w.toFixed(1)} kJ/kg`;
       document.getElementById('kpicop').innerText = cop.toFixed(2);
-      document.getElementById('kpiDeltaAmb').innerText = `${deltaAmb.toFixed(1)} K`;
+      document.getElementById('kpiDeltaAmb').innerText = `${deltaTCondAmb.toFixed(1)} K`;
 
-      // Limpiar alarmas visuales
-      document.querySelectorAll('.input-group').forEach(el => el.classList.remove('alarm-field-active'));
+      const { alertas, alarmaTDesc, alarmaTLiq } = evaluarDiagnostico(
+        refData, rP, tDescRealC, tLiqC, propCond.tSat, superHeatUtilK, superHeatTotalK, subCoolK, dischargeSuperHeatK, tempAmbientePuntoFijoC
+      );
+      
+      const grpDesc = document.getElementById('grpTDescReal');
+      const grpLiq = document.getElementById('grpTLiq');
+      const panelAlertas = document.getElementById('panelAlertas');
 
-      let alertas = [];
+      if (alarmaTDesc) grpDesc.classList.add('alarm-field-active');
+      else grpDesc.classList.remove('alarm-field-active');
 
-      if (shUtil < refData.shOptimo[0]) {
-        alertas.push(`⚠️ <b>Superheat Útil Bajo (${shUtil.toFixed(1)} K):</b> Riesgo de retorno de líquido al compresor.`);
-        document.getElementById('grpTEvapOut').classList.add('alarm-field-active');
-      } else if (shUtil > refData.shOptimo[1]) {
-        alertas.push(`⚠️ <b>Superheat Útil Alto (${shUtil.toFixed(1)} K):</b> Evaporador desalimentado o falta de refrigerante.`);
-        document.getElementById('grpTEvapOut').classList.add('alarm-field-active');
-      }
+      if (alarmaTLiq) grpLiq.classList.add('alarm-field-active');
+      else grpLiq.classList.remove('alarm-field-active');
 
-      if (sc < refData.scOptimo[0]) {
-        alertas.push(`⚠️ <b>Subenfriamiento Bajo (${sc.toFixed(1)} K):</b> Subcarga o restricción en la línea de líquido.`);
-        document.getElementById('grpTLiq').classList.add('alarm-field-active');
-      } else if (sc > refData.scOptimo[1]) {
-        alertas.push(`⚠️ <b>Subenfriamiento Alto (${sc.toFixed(1)} K):</b> Sobrecarga de refrigerante o condensador ineficiente.`);
-        document.getElementById('grpTLiq').classList.add('alarm-field-active');
-      }
-
-      if (tDescRealC > refData.tDescMax) {
-        alertas.push(`🚨 <b>Temperatura de Descarga Crítica (${convertirTemp(tDescRealC).toFixed(1)}°${tUnitActual}):</b> Inminente degradación de aceite.`);
-        document.getElementById('grpTDescReal').classList.add('alarm-field-active');
-      }
-
-      let pRatio = pDescBarAbs / pSuctBarAbs;
-      if (pRatio > refData.rPMax) {
-        alertas.push(`⚠️ <b>Relación de Compresión Elevada (${pRatio.toFixed(1)}:1):</b> Alto esfuerzo mecánico.`);
-        document.getElementById('grpPDesc').classList.add('alarm-field-active');
-        document.getElementById('grpPSuct').classList.add('alarm-field-active');
-      }
-
-      const containerAlertas = document.getElementById('panelAlertas');
       if (alertas.length === 0) {
-        containerAlertas.innerHTML = `<div class="diag-item" style="color: #10b981;">✅ <b>Diagnóstico:</b> Todos los parámetros de operación se encuentran dentro de los rangos óptimos.</div>`;
+        panelAlertas.innerHTML = `<div class="diag-item" style="color: #34d399; text-align: left;">✅ <b>Sistema Estable:</b> El equipo con ${refData.nombre} opera dentro de los parámetros previstos.</div>`;
       } else {
-        containerAlertas.innerHTML = alertas.map(a => `<div class="diag-item" style="color: #ef4444;">${a}</div>`).join('');
+        panelAlertas.innerHTML = alertas.map(a => `<div class="diag-item" style="color: #cbd5e1;">${a}</div>`).join('');
       }
 
-      renderGrafica(refData, propSuct, propDesc, h1, h2, h3, h4, factorP);
-    }
+      const pSuctPlot = pSuctBarAbs * pf;
+      const pDescPlot = pDescBarAbs * pf;
 
-    function renderGrafica(refData, propSuct, propDesc, h1, h2, h3, h4, factorP) {
       const minX = refData.xRange[0];
       const maxX = refData.xRange[1];
 
-      const traces = getZoneTraces(refData, minX, maxX);
-      traces.push(getDomeTrace(refData));
+      const zoneTraces = getZoneTraces(refData, minX, maxX);
 
-      const pSuctGraf = propSuct.p * factorP;
-      const pDescGraf = propDesc.p * factorP;
+      const t1Str = `${convertirTemp(tSuctC).toFixed(1)} °${tUnitActual}`;
+      const t2Str = `${convertirTemp(tDescRealC).toFixed(1)} °${tUnitActual}`;
+      const t3Str = `${convertirTemp(tLiqC).toFixed(1)} °${tUnitActual}`;
+      const t4Str = `${convertirTemp(propEvap.tSat).toFixed(1)} °${tUnitActual}`;
 
-      const cicloTrace = {
+      const cycleTrace = {
         x: [h1, h2, h3, h4, h1],
-        y: [pSuctGraf, pDescGraf, pDescGraf, pSuctGraf, pSuctGraf],
-        mode: 'lines+markers',
-        name: 'Ciclo Real',
-        line: { color: '#ef4444', width: 2.5 },
-        marker: { size: 6, color: '#f8fafc' }
+        y: [pSuctPlot, pDescPlot, pDescPlot, pSuctPlot, pSuctPlot],
+        mode: 'lines+markers+text',
+        name: 'Ciclo Operativo',
+        text: ['1', '2', '3', '4', '1'],
+        textposition: 'top center',
+        textfont: { size: 8, color: '#f8fafc' },
+        line: { color: '#ef4444', width: 2.2 },
+        marker: { size: 6, color: '#f59e0b' },
+        hovertemplate: '<b>Punto %{text} del Ciclo</b><br>' +
+                       'Temp: %{customdata}<br>' +
+                       'P: %{y:.1f} ' + pUnits[pUnitActual].label + '<br>' +
+                       'h: %{x:.1f} kJ/kg<extra></extra>',
+        customdata: [t1Str, t2Str, t3Str, t4Str, t1Str]
       };
 
-      traces.push(cicloTrace);
+      const domeTrace = getDomeTrace(refData);
 
-      let layout = {
-        paper_bgcolor: '#0f172a',
+      const layout = {
+        autosize: true,
+        margin: { l: 22, r: 10, t: 10, b: 22 },
+        paper_bgcolor: '#1e293b',
         plot_bgcolor: '#0f172a',
-        margin: { l: 40, r: 15, t: 10, b: 35 },
         showlegend: false,
         xaxis: {
-          title: 'Entalpía h (kJ/kg)',
-          color: '#94a3b8',
+          title: 'h (kJ/kg)',
+          titlefont: { size: 7, color: '#94a3b8' },
+          tickfont: { size: 6.5, color: '#cbd5e1' },
           gridcolor: '#334155',
-          zerolinecolor: '#334155'
+          zeroline: false,
+          autorange: !zonaActivaHabilitada,
+          range: zonaActivaHabilitada ? [Math.max(h4 - 25, minX), Math.min(h2 + 25, maxX)] : undefined
         },
         yaxis: {
-          title: `Presión Absoluta (${pUnits[pUnitActual].label})`,
+          title: `P. Abs (${pUnits[pUnitActual].label})`,
+          titlefont: { size: 7, color: '#94a3b8' },
+          tickfont: { size: 6.5, color: '#cbd5e1' },
           type: 'log',
-          color: '#94a3b8',
+          automargin: true,
           gridcolor: '#334155',
-          zerolinecolor: '#334155'
+          zeroline: false,
+          autorange: !zonaActivaHabilitada,
+          range: zonaActivaHabilitada ? [Math.log10(pSuctPlot * 0.75), Math.log10(pDescPlot * 1.25)] : undefined
         }
       };
 
-      if (zonaActivaHabilitada) {
-        layout.xaxis.range = [Math.min(h3, h4) - 20, Math.max(h1, h2) + 20];
-        layout.yaxis.range = [Math.log10(pSuctGraf * 0.8), Math.log10(pDescGraf * 1.2)];
-      }
-
-      Plotly.newPlot('mollierPlot', traces, layout, { responsive: true, displayModeBar: false });
+      Plotly.react('mollierPlot', [...zoneTraces, domeTrace, cycleTrace], layout, { responsive: true, displayModeBar: false });
     }
 
-    setInterval(actualizarReloj, 1000);
-
-    window.onload = () => {
+    window.addEventListener('DOMContentLoaded', () => {
       cargarConfiguracion();
       actualizarEtiquetas();
+      actualizarReloj();
+      setInterval(actualizarReloj, 1000);
       obtenerClimaPuntoFijo();
-    };
+    });
   </script>
 </body>
 </html>
