@@ -1,591 +1,1182 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Monitor HVAC/R V3.1 · búsqueda automática</title>
-<link rel="icon" type="image/svg+xml" href="icono.svg">
-<link rel="apple-touch-icon" href="icono.png">
-<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
-<script type="module">
-import createCoolProp from "https://cdn.jsdelivr.net/npm/coolprop-wasm@6.6.0/index.js";
-window.__coolPropPromise = createCoolProp().then(x=>{window.CoolProp=x;window.CoolPropReady=true;const e=document.getElementById("thermoStatus");if(e)e.textContent="Motor P/T: EOS activo";return x}).catch(()=>{window.CoolPropReady=false;const e=document.getElementById("thermoStatus");if(e)e.textContent="Motor P/T: tabla de respaldo";return null});
-</script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<style>
-:root{--bg:#071018;--panel:#0d1923;--panel2:#101f2b;--input:#08151e;--border:#203542;--text:#eaf2f7;--muted:#91a5b5;--accent:#39b7ff;--good:#58d69d;--warn:#ffc857;--danger:#ff6577;--radius:10px}
-*{box-sizing:border-box}
-body{margin:0;background:radial-gradient(circle at top,#122432 0,#071018 42%,#050b10 100%);color:var(--text);font-family:Arial,Helvetica,sans-serif;font-size:14px}
-button,input,select,textarea{font:inherit}
-.app{width:min(1180px,100%);margin:auto;padding:7px}
-.topbar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;margin-bottom:7px;background:rgba(13,25,35,.97);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 7px 22px #0004;position:sticky;top:4px;z-index:30;backdrop-filter:blur(10px)}
-.brand h1{margin:0;font-size:17px;line-height:1.1}.brand h1 span{color:var(--accent)}.brand small{display:block;margin-top:2px;color:var(--muted);font-size:9px}
-.status{display:flex;align-items:center;gap:5px;white-space:nowrap;color:var(--muted);font-size:9px}.status-dot{width:7px;height:7px;border-radius:50%;background:var(--good);box-shadow:0 0 7px var(--good)}
-.card{margin-bottom:7px;padding:9px;background:rgba(13,25,35,.97);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 6px 18px #0003}
-.section-title{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:7px}.section-title h2{margin:0;font-size:13px}.hint{font-size:9px;color:var(--muted)}
-.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.field{min-width:0}.field label{display:block;font-size:9px;font-weight:700;color:#b9c9d6;margin:0 0 3px}
-input,select,textarea{width:100%;padding:8px 7px;border:1px solid #29404f;border-radius:7px;background:var(--input);color:var(--text);outline:none;font-size:12px}input:focus,select:focus,textarea:focus{border-color:var(--accent)}
-.unit{display:flex}.unit input{border-radius:7px 0 0 7px}.unit select{width:76px;border-left:0;border-radius:0 7px 7px 0}
-details summary{cursor:pointer;list-style:none;font-size:12px;font-weight:800;color:#dce8f1}details summary::-webkit-details-marker{display:none}details summary:after{content:"＋";float:right;color:var(--accent)}details[open] summary:after{content:"−"}
-.measure-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}.measure{background:#0a151e;border:1px solid var(--border);border-radius:8px;padding:8px}.mhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}.mhead b{font-size:10px;color:var(--accent)}.mhead span{font-size:8px;color:var(--muted)}
-.actions{display:flex;gap:6px;flex-wrap:wrap}button{border:0;border-radius:7px;padding:8px 10px;font-size:10px;font-weight:800;cursor:pointer}.primary{background:var(--accent);color:#fff}.secondary{background:#163044;color:#dceaf5}.ghost{background:#0a151e;color:#a9bbc9;border:1px solid var(--border)}
-.badge{padding:6px 8px;border-radius:999px;font-size:8px;font-weight:900}.normal{background:#12382a;color:#5de0a0}.attention{background:#3d300f;color:#ffd16e}.review{background:#432719;color:#ffb080}.critical{background:#451c25;color:#ff8998}.error{background:#26313a;color:#b8c5cf}
-.results{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}.metric{background:#0a151e;border:1px solid var(--border);border-radius:7px;padding:7px;min-height:53px}.metric .name{font-size:8px;color:var(--muted);line-height:1.2}.metric .value{font-size:15px;font-weight:900;margin-top:4px}
-.alert{padding:8px 9px;border-left:3px solid var(--warn);background:#17150e;border-radius:5px;margin:5px 0;font-size:11px}.alert.ok{border-left-color:var(--good);background:#0c1d17}.alert.danger{border-left-color:var(--danger);background:#211014}.alert b{display:block;margin-bottom:2px}
-.small{font-size:9px;color:var(--muted)}ul{margin:5px 0 5px 17px;padding:0}li{margin:3px 0;font-size:10px}
-.compare-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.compare-item{background:#0a151e;border:1px solid var(--border);border-radius:7px;padding:7px;font-size:10px}.compare-item b{display:block;font-size:8px;color:var(--muted);margin-bottom:2px}
-.search-row{display:flex;gap:5px}.search-row input{flex:1}
-.search-code{display:flex;align-items:stretch}.search-code input{min-width:0;border-radius:7px 0 0 7px}.search-icon{width:38px;padding:0;border-radius:0 7px 7px 0;background:#163044;color:#dceaf5;border:1px solid #29404f;border-left:0;font-size:19px;line-height:1}.search-icon:active{background:#20445d}.compressor-result{margin-top:7px}.compressor-result a{word-break:break-word}.compressor-result .compare-grid{margin-top:0}.envelope-box{margin-top:7px;padding:8px;border:1px solid #29404f;border-radius:8px;background:#09141d}.envelope-title{font-size:10px;font-weight:900;color:#39b7ff;margin-bottom:5px}.envelope-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.envelope-item{background:#0a151e;border:1px solid #203542;border-radius:7px;padding:6px;font-size:10px}.envelope-item b{display:block;font-size:8px;color:#91a5b5;margin-bottom:2px}.envelope-ok{color:#58d69d;font-weight:900}.envelope-warn{color:#ffc857;font-weight:900}.envelope-danger{color:#ff6577;font-weight:900}.ashrae-table{width:100%;border-collapse:collapse;font-size:8px;margin-top:6px}.ashrae-table th,.ashrae-table td{border:1px solid #203542;padding:4px;text-align:left}.ashrae-table th{color:#91a5b5;font-weight:800}.envelope-note{font-size:8px;color:#91a5b5;margin-top:5px;line-height:1.35}
-#plot{width:100%;height:600px;border-radius:8px;overflow:hidden}.chart-actions{display:flex;gap:5px}.chart-actions button{padding:6px 8px;font-size:9px}
-#pdfReport{display:none}.pdf-page{background:#fff;color:#17202a;padding:12mm;font-family:Arial,sans-serif;font-size:10px}.pdf-title{font-size:19px;font-weight:800}.pdf-sub{font-size:9px;color:#647586}.pdf-section-title{margin-top:12px;background:#eaf0f5;padding:5px;font-weight:800;font-size:10px}.pdf-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:0 10px}.pdf-item{padding:4px 0;border-bottom:1px solid #dce3e8}.pdf-label{font-size:8px;color:#667887}.pdf-value{font-weight:700}.pdf-finding{padding:6px;margin:5px 0;border-left:3px solid #e1a63b;background:#f8f4e9}
-footer{text-align:center;color:var(--muted);font-size:8px;padding:5px 0 12px}
-.action-bar{display:flex;align-items:center;gap:6px;margin:2px 0 7px;padding:0 2px}.action-btn{width:auto!important;min-width:0;padding:7px 11px!important;font-size:10px!important;font-weight:800;white-space:nowrap}.action-status{margin-left:auto;display:flex;align-items:center;gap:5px;min-width:0;color:var(--muted);font-size:8px}.action-status #statusText{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.action-bar .badge{font-size:7px;padding:3px 5px;white-space:nowrap}
-@media(max-width:600px){.action-bar{gap:5px}.action-btn{padding:7px 8px!important;font-size:9px!important}.action-status{max-width:42%}.action-status #statusText{display:none}}
-@media(max-width:850px){.grid{grid-template-columns:repeat(2,1fr)}.results{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:600px){.app{padding:5px}.topbar{top:2px;padding:7px 8px}.brand h1{font-size:15px}.card{padding:8px}.grid{gap:5px}.measure-grid{gap:5px}.results{grid-template-columns:repeat(2,1fr)}#plot{height:570px}.compare-grid{grid-template-columns:1fr 1fr}.section-title h2{font-size:12px}}
-@media(max-width:370px){.measure-grid{grid-template-columns:1fr}#plot{height:530px}}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Diagramas de Mollier (p-h) Pro - Mediciones y Diagnóstico de Campo</title>
+  
+  <!-- CDNs necesarios: Plotly para la gráfica y html2pdf para generar el PDF -->
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
-</style>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      height: 100dvh;
+      overflow-x: hidden;
+      overflow-y: auto;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #0f172a;
+      color: #f8fafc;
+    }
+
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      max-width: 100vw;
+      min-height: 100dvh;
+      padding: 4px;
+      gap: 4px;
+      overflow-x: hidden;
+    }
+
+    /* Barra superior con hora activa y clima */
+    .top-info-bar {
+      background: #1e293b;
+      border: 1px solid #38bdf8;
+      border-radius: 6px;
+      padding: 3px 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.70rem;
+      color: #38bdf8;
+      font-weight: bold;
+    }
+
+    .top-info-bar .date-time-box {
+      color: #f8fafc;
+      font-size: 0.68rem;
+    }
+
+    /* Formulario compacto de identificación profesional */
+    .prof-header-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 4px 6px;
+    }
+
+    .prof-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 3px;
+    }
+
+    .prof-grid .input-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .prof-grid label {
+      font-size: 0.52rem;
+      color: #38bdf8;
+      font-weight: bold;
+      margin-bottom: 1px;
+      white-space: nowrap;
+    }
+
+    .prof-grid input {
+      padding: 2px 4px;
+      border: 1px solid #475569;
+      border-radius: 4px;
+      font-size: 0.68rem;
+      background-color: #0f172a;
+      color: #f8fafc;
+      height: 22px;
+    }
+
+    /* Nueva fila para el input de capacidad con selector de unidad */
+    .cap-input-row {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+    .cap-input-row input {
+      flex: 2;
+      padding: 2px 6px;
+      border: 1px solid #475569;
+      border-radius: 4px;
+      font-size: 0.68rem;
+      background-color: #0f172a;
+      color: #f8fafc;
+      height: 22px;
+    }
+    .cap-input-row select {
+      flex: 1;
+      padding: 2px 6px;
+      border: 1px solid #475569;
+      border-radius: 4px;
+      font-size: 0.68rem;
+      background-color: #0f172a;
+      color: #f8fafc;
+      height: 22px;
+      cursor: pointer;
+      border-color: #38bdf8;
+      font-weight: 600;
+    }
+
+    .top-panel {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 4px;
+      flex-shrink: 0;
+      width: 100%;
+    }
+
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 4px 6px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+      width: 100%;
+    }
+
+    .card h2 {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      color: #38bdf8;
+      margin-bottom: 3px;
+      letter-spacing: 0.5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .config-row {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 3px;
+      width: 100%;
+    }
+
+    .config-row .input-group-ref { flex: 2; min-width: 0; }
+    .config-row .input-group-unit { flex: 1; min-width: 0; }
+
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 3px;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      border-radius: 4px;
+      padding: 1px;
+    }
+
+    .input-group label {
+      font-size: 0.55rem;
+      font-weight: 600;
+      margin-bottom: 1px;
+      color: #94a3b8;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .input-group input, .input-group select {
+      padding: 2px 4px;
+      border: 1px solid #475569;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      outline: none;
+      background-color: #0f172a;
+      color: #f8fafc;
+      width: 100%;
+      height: 24px;
+    }
+
+    .input-group select {
+      cursor: pointer;
+      border-color: #38bdf8;
+      font-weight: 600;
+    }
+
+    .input-group select optgroup {
+      background-color: #1e293b;
+      color: #38bdf8;
+      font-weight: bold;
+    }
+
+    .input-group select option {
+      background-color: #0f172a;
+      color: #f8fafc;
+    }
+
+    .action-bar {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 3px;
+      width: 100%;
+      flex-shrink: 0;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 3px 6px;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      height: 26px;
+    }
+
+    /* Botón verde estricto para el reporte */
+    .btn-reporte {
+      background-color: #10b981;
+      color: #ffffff;
+    }
+    .btn-reporte:hover {
+      background-color: #059669;
+    }
+
+    .btn-toggle { background-color: #334155; color: #cbd5e1; }
+    .btn-toggle.active {
+      background-color: #0284c7;
+      color: #ffffff;
+      box-shadow: 0 0 6px rgba(2, 132, 199, 0.4);
+    }
+
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 3px;
+      margin-bottom: 4px;
+    }
+
+    .kpi-box {
+      background-color: #0f172a;
+      border-left: 3px solid #38bdf8;
+      padding: 2px 3px;
+      border-radius: 4px;
+    }
+
+    .kpi-box .label {
+      font-size: 0.50rem;
+      color: #94a3b8;
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .kpi-box .value {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #f8fafc;
+    }
+
+    .diag-container {
+      background-color: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 4px 6px;
+      width: 100%;
+    }
+
+    .diag-item {
+      font-size: 0.62rem;
+      margin-bottom: 2px;
+      line-height: 1.2;
+      display: flex;
+      align-items: flex-start;
+      gap: 4px;
+      text-align: justify;
+    }
+
+    .diag-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .chart-card {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      max-width: 100vw;
+      padding: 2px;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+
+    .chart-container {
+      width: 100%;
+      max-width: 100%;
+      height: 260px;
+      overflow: hidden;
+    }
+
+    .alarm-field-active {
+      animation: blink-field 0.8s infinite alternate !important;
+      border-radius: 6px;
+      padding: 2px 4px !important;
+    }
+
+    .alarm-field-active input {
+      background-color: #7f1d1d !important;
+      color: #ffffff !important;
+      border-color: #ef4444 !important;
+      font-weight: bold;
+    }
+
+    .alarm-field-active label {
+      color: #fca5a5 !important;
+      font-weight: bold;
+    }
+
+    @keyframes blink-field {
+      0% {
+        background-color: rgba(239, 68, 68, 0.9);
+        box-shadow: 0 0 10px rgba(239, 68, 68, 0.8);
+      }
+      100% {
+        background-color: rgba(127, 29, 29, 0.3);
+        box-shadow: 0 0 2px rgba(239, 68, 68, 0.2);
+      }
+    }
+
+    /* Ajustes específicos de impresión para cuando html2pdf captura la pantalla */
+    body.generating-pdf {
+      background-color: #ffffff !important;
+      color: #000000 !important;
+    }
+    body.generating-pdf .card, 
+    body.generating-pdf .prof-header-card, 
+    body.generating-pdf .top-info-bar,
+    body.generating-pdf .diag-container,
+    body.generating-pdf .kpi-box {
+      background-color: #ffffff !important;
+      border-color: #cccccc !important;
+      color: #000000 !important;
+    }
+    body.generating-pdf input, 
+    body.generating-pdf select {
+      background-color: #ffffff !important;
+      color: #000000 !important;
+      border-color: #999999 !important;
+    }
+    body.generating-pdf .action-bar {
+      display: none !important;
+    }
+  </style>
 </head>
 <body>
-<input type="hidden" id="tamb" value="">
-<div class="app">
 
-<header class="topbar">
-  <div class="brand"><h1>MONITOR HVAC/R <span>V3.1</span></h1><small>Asistente técnico de diagnóstico de campo</small></div>
-  <div class="status"><i class="status-dot" id="statusDot"></i><span id="systemStatus">Listo</span></div>
-</header>
+  <div class="app-container" id="reporteArea">
+    
+    <!-- Barra superior con Fecha, Hora Activa y Clima -->
+    <div class="top-info-bar">
+      <div class="date-time-box">
+        📅 <span id="txtFechaHora">Cargando fecha y hora...</span>
+      </div>
+      <div>
+        📍 Punto Fijo: <span id="txtTempAmb">Cargando...</span>
+      </div>
+    </div>
 
-<section class="card">
-<details open>
-<summary>1. DATOS ADMINISTRATIVOS</summary>
-<div style="height:7px"></div>
-<div class="grid">
-  <div class="field"><label>Empresa</label><input id="brand" placeholder="Empresa"></div>
-  <div class="field"><label>RIF</label><input id="fiscal" placeholder="RIF"></div>
-  <div class="field"><label>Técnico</label><input id="technician" placeholder="Nombre"></div>
-  <div class="field"><label>Marca</label><input id="modelBrand" placeholder="Fabricante"></div>
-  <div class="field"><label>Modelo del equipo</label><input id="model" placeholder="Modelo"></div>
-  <div class="field">
-<label>Código / modelo compresor</label>
-<div class="search-code"><input id="compressorCode" placeholder="Ej. ZP36K5E" autocomplete="off"><button type="button" class="search-icon" aria-label="Buscar compresor" title="Buscar referencia" onclick="searchCompressor()">⌕</button></div>
-</div>
-</div>
-</details>
-</section>
+    <!-- Identificación Profesional y Datos del Equipo -->
+    <div class="prof-header-card">
+      <div class="prof-grid">
+        <div class="input-group">
+          <label for="empresaNombre">Empresa</label>
+          <input type="text" id="empresaNombre" value="Servicios Técnicos" oninput="guardarYActualizar()">
+        </div>
 
-<section class="card">
-<div class="section-title"><h2>2. DATOS DEL EQUIPO Y UNIDADES</h2><span class="hint" id="thermoStatus">Motor P/T: iniciando…</span></div>
-<div class="grid">
-  <div class="field"><label>Capacidad frigorífica nominal</label><div class="unit"><input id="capacity" type="number" step="0.1"><select id="capacityUnit"><option value="BTU/h">BTU/h</option><option value="kW">kW</option><option value="TR">TR</option></select></div></div>
-  <div class="field"><label>Refrigerante</label><select id="ref"><option value="R410A">R-410A</option><option value="R32">R-32</option><option value="R134a">R-134a</option><option value="R22">R-22</option><option value="R407C">R-407C</option><option value="R404A">R-404A</option><option value="R507A">R-507A</option><option value="R290">R-290</option><option value="R600a">R-600a</option></select></div>
-  <div class="field"><label>Unidad de presión</label><select id="punit"><option value="psi">PSI</option><option value="bar">bar</option><option value="kPa">kPa</option></select></div>
-  <div class="field"><label>Unidad de temperatura</label><select id="tempUnidad"><option value="C">°C</option><option value="F">°F</option></select></div>
-  <div class="field"><label>Tipo de equipo</label><select id="type"><option>Split</option><option>Mini Split</option><option>Unidad paquete</option><option>Refrigeración comercial</option><option>Cámara frigorífica</option><option>Chiller</option><option>Congelación</option><option>Otro</option></select></div>
-  <div class="field"><label>Dispositivo de expansión</label><select id="expansion"><option value="TXV">Válvula TXV / termostática</option><option value="EEV">Válvula electrónica EEV</option><option value="CAP">Tubo capilar</option><option value="ORIFICE">Orificio / pistón fijo</option><option value="MANUAL">Válvula de expansión manual</option><option value="UNKNOWN">No identificado</option></select></div>
-  <div class="field"><label>Aplicación de trabajo</label><select id="applicationMode"><option value="AUTO">Automática por condición de evaporación</option><option value="LBP">LBP · Baja contrapresión</option><option value="MBP">MBP · Media contrapresión</option><option value="HBP">HBP · Alta contrapresión</option></select></div>
-</div>
-</section>
+        <div class="input-group">
+          <label for="empresaRif">RIF / ID Fiscal</label>
+          <input type="text" id="empresaRif" value="J-00000000-0" oninput="guardarYActualizar()">
+        </div>
 
-<section class="card">
-<div class="section-title"><h2>3. MEDICIONES DE CAMPO</h2><span class="hint">Solo valores realmente medidos</span></div>
-<div class="measure-grid">
+        <div class="input-group">
+          <label for="tecnicoNombre">Técnico Evaluante</label>
+          <input type="text" id="tecnicoNombre" value="Téc. Especialista" oninput="guardarYActualizar()">
+        </div>
 
-<div class="measure">
-<div class="mhead"><b>BAJA / SUCCIÓN</b><span>evaporador → compresor</span></div>
-<div class="field"><label>Presión de succión</label><input id="psuc" type="number" step="0.1"></div>
-<div class="field" style="margin-top:5px"><label>Temperatura salida evaporador</label><input id="tevapout" type="number" step="0.1"></div>
-<div class="field" style="margin-top:5px"><label>Temperatura succión / entrada compresor</label><input id="tsuction" type="number" step="0.1"></div>
-</div>
+        <div class="input-group">
+          <label for="equipoMarca">Marca del Equipo</label>
+          <input type="text" id="equipoMarca" value="Daikin" oninput="guardarYActualizar()">
+        </div>
 
-<div class="measure">
-<div class="mhead"><b>ALTA / CONDENSACIÓN</b><span>condensador</span></div>
-<div class="field"><label>Presión de descarga</label><input id="pdis" type="number" step="0.1"></div>
-<div class="field" style="margin-top:5px"><label>Temperatura línea líquida</label><input id="tliquid" type="number" step="0.1"></div>
-<div class="field" style="margin-top:5px"><label>Temperatura descarga compresor</label><input id="tdischarge" type="number" step="0.1"></div>
-</div>
+        <div class="input-group">
+          <label for="equipoModelo">Modelo</label>
+          <input type="text" id="equipoModelo" value="XL10-2026" oninput="guardarYActualizar()">
+        </div>
 
-<div class="measure">
-<div class="mhead"><b>AIRE / CARGA TÉRMICA</b><span>si está disponible</span></div>
-<div class="field"><label>Temperatura retorno de aire</label><input id="treturnAir" type="number" step="0.1"></div>
-<div class="field" style="margin-top:5px"><label>Temperatura suministro de aire</label><input id="tsupply" type="number" step="0.1"></div>
-</div>
+        <div class="input-group">
+          <label for="capFrigValue">Cap. Frigorífica</label>
+          <div class="cap-input-row">
+            <input type="number" id="capFrigValue" value="36000" oninput="guardarYActualizar()" step="1" />
+            <select id="capUnitSelect" onchange="guardarYActualizar()">
+              <option value="BTU/h" selected>BTU/h</option>
+              <option value="kW">kW</option>
+              <option value="Ton">Ton</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
 
-<div class="measure">
-<div class="mhead"><b>ELÉCTRICO</b><span>medido bajo carga</span></div>
-<div class="grid" style="grid-template-columns:1fr 1fr">
-<div class="field"><label>Voltaje medido</label><input id="vmeas" type="number" step="0.1"></div>
-<div class="field"><label>Voltaje nominal</label><input id="vnom" type="number" step="0.1"></div>
-<div class="field"><label>Amperaje medido</label><input id="ameas" type="number" step="0.1"></div>
-<div class="field"><label>Amperaje nominal</label><input id="anom" type="number" step="0.1"></div>
-</div>
-</div>
-</div>
-</section>
+    <header class="top-panel">
+      <div class="card" id="cardDatosCampo">
+        <h2><span>Datos de Campo</span></h2>
+        
+        <div class="config-row">
+          <div class="input-group input-group-ref">
+            <label for="refSelect">Refrigerante</label>
+            <select id="refSelect" onchange="guardarYActualizar()">
+              <optgroup label="Puros y Tradicionales">
+                <option value="R134a">R-134a</option>
+                <option value="R22">R-22</option>
+                <option value="R410A">R-410A</option>
+                <option value="R32">R-32</option>
+              </optgroup>
+              <optgroup label="Hidrocarburos (HC)">
+                <option value="R290">R-290 (Propano)</option>
+                <option value="R600a">R-600a (Isobutano)</option>
+              </optgroup>
+              <optgroup label="Mezclas HFC (Serie 400 / 500)">
+                <option value="R404A" selected>R-404A</option>
+                <option value="R507A">R-507A</option>
+                <option value="R407C">R-407C</option>
+              </optgroup>
+            </select>
+          </div>
 
-<!-- La búsqueda del compresor se ejecuta desde la lupa del código y su resultado aparece debajo de las recomendaciones. -->
-<section class="action-bar">
-  <button class="secondary action-btn" onclick="calculate()">⚙️ ANALIZAR</button>
-  <button class="secondary action-btn" onclick="generatePDF()">📄 DESCARGAR PDF</button>
-  <div class="action-status"><span id="statusBadge" class="badge error">DATOS INSUFICIENTES</span><span id="statusText">Ingrese las mediciones disponibles.</span></div>
-</section>
+          <div class="input-group input-group-unit">
+            <label for="pUnitSelect">U. Presión</label>
+            <select id="pUnitSelect" onchange="cambiarUnidades()">
+              <option value="psi" selected>PSI</option>
+              <option value="bar">Bar</option>
+              <option value="kpa">kPa</option>
+            </select>
+          </div>
 
-<section class="card">
-<div class="section-title"><h2>5. INDICADORES CALCULADOS</h2><span class="hint">no sustituye PT del fabricante</span></div>
-<div id="metrics" class="results"></div>
-</section>
+          <div class="input-group input-group-unit">
+            <label for="tUnitSelect">U. Temp</label>
+            <select id="tUnitSelect" onchange="cambiarUnidades()">
+              <option value="C" selected>°C</option>
+              <option value="F">°F</option>
+            </select>
+          </div>
+        </div>
 
-<section class="card">
-<div class="section-title"><h2>6. DIAGNÓSTICO</h2><span class="hint">patrones + envelope del compresor</span></div>
-<div id="findings"><div class="alert">Complete las mediciones y pulse ANALIZAR.</div></div>
-<details><summary>Posibles causas</summary><ul id="causes"><li>Datos insuficientes.</li></ul></details>
-<div style="height:5px"></div>
-<details><summary>REVISAR AHORA</summary><div id="next" style="margin-top:5px"></div></details>
-<div id="compressorResult" class="compressor-result"></div>
-</section>
+        <div class="controls-grid">
+          <div class="input-group" id="grpPSuct">
+            <label for="pSuct" id="lblPSuct">P. Succión</label>
+            <input type="number" id="pSuct" value="25" step="1" oninput="guardarYActualizar()">
+          </div>
 
+          <div class="input-group" id="grpPDesc">
+            <label for="pDesc" id="lblPDesc">P. Descarga</label>
+            <input type="number" id="pDesc" value="290" step="1" oninput="guardarYActualizar()">
+          </div>
 
+          <div class="input-group" id="grpTEvapOut">
+            <label for="tEvapOut" id="lblTEvapOut">T. Salida Evap</label>
+            <input type="number" id="tEvapOut" value="-12" step="0.5" oninput="guardarYActualizar()">
+          </div>
 
-<section class="card">
-<div class="section-title">
-<div><h2>7. DIAGRAMA MOLLIER P-h</h2><span class="hint">campana completa · zoom táctil</span></div>
-<div class="chart-actions"><button class="secondary" onclick="downloadChart()">PNG HD</button><button class="ghost" onclick="resetChart()">↺</button></div>
-</div>
-<div id="plot"></div>
-<div class="small">Arrastre para desplazarse, pellizque/toque para zoom y doble toque para restablecer. La campana completa permanece visible.</div>
-</section>
+          <div class="input-group" id="grpTSuct">
+            <label for="tSuct" id="lblTSuct">T. Temp Succión</label>
+            <input type="number" id="tSuct" value="-10" step="0.5" oninput="guardarYActualizar()">
+          </div>
 
-<footer>Monitor HVAC/R V3.1 · Herramienta de apoyo para técnicos · Verificar siempre con placa y documentación del fabricante.</footer>
-</div>
+          <div class="input-group" id="grpTLiq">
+            <label for="tLiq" id="lblTLiq">T. Tubería Liq</label>
+            <input type="number" id="tLiq" value="45" step="0.5" oninput="guardarYActualizar()">
+          </div>
 
-<div id="pdfReport">
-<div class="pdf-page">
-<div class="pdf-title">REPORTE TÉCNICO HVAC/R</div>
-<div class="pdf-sub">Monitor HVAC/R V3.1 · <span id="pdfDate"></span></div>
+          <div class="input-group" id="grpTDescReal">
+            <label for="tDescReal" id="lblTDescReal">T. Descarga</label>
+            <input type="number" id="tDescReal" value="90" step="1" oninput="guardarYActualizar()">
+          </div>
 
-<div class="pdf-section-title">1. DATOS ADMINISTRATIVOS</div><div class="pdf-grid" id="pdfAdmin"></div>
-<div class="pdf-section-title">2. DATOS DEL EQUIPO</div><div class="pdf-grid" id="pdfEquipo"></div>
-<div class="pdf-section-title">3. MEDICIONES DE CAMPO</div><div class="pdf-grid" id="pdfMed"></div>
-<div class="pdf-section-title">4. INDICADORES</div><div class="pdf-grid" id="pdfInd"></div>
-<div class="pdf-section-title">5. DIAGNÓSTICO Y SUGERENCIAS</div><div id="pdfDiag"></div>
+          <div class="input-group">
+            <label for="vVolt">Voltaje (V)</label>
+            <input type="number" id="vVolt" value="220" step="1" oninput="guardarYActualizar()">
+          </div>
 
-<div style="margin-top:12px;font-size:8px;color:#667887">Las conclusiones representan patrones compatibles basados en las mediciones aportadas. Confirmar con placa, fabricante, condiciones de operación y procedimiento aplicable. La gráfica Mollier no se incluye en el PDF.</div>
-</div>
-</div>
+          <div class="input-group">
+            <label for="iAmp">Amperaje (A)</label>
+            <input type="number" id="iAmp" value="22" step="0.1" oninput="guardarYActualizar()">
+          </div>
+        </div>
 
-<script>
-// Si el HTML se publica separado del servidor, se puede definir esta URL antes de este script.
-// Ejemplo: window.COMPRESSOR_SEARCH_API = "https://tu-servidor.example.com/api/compressor-search";
-window.COMPRESSOR_SEARCH_API = window.COMPRESSOR_SEARCH_API || '/api/compressor-search';
-// V3.1: la API debe devolver envelope verificado y condiciones ASHRAE cuando existan en las fuentes.
-const ATM=1.01325; // bar, presión atmosférica estándar usada para convertir manométrica→absoluta
+      </div>
 
-// P/T de respaldo: valores de referencia de tablas publicadas. El motor intenta usar CoolProp/HEOS primero.
-// Estructura: [T°C, PbarA, PbarA_dew]. Para fluidos puros dew=bubble. En mezclas se conservan ambos puntos.
-const PT={
- R410A:[[ -40,1.76,1.76],[-30,2.65,2.65],[-20,3.86,3.86],[-10,5.46,5.46],[0,7.98,7.98],[5,9.32,9.32],[10,10.83,10.83],[15,12.51,12.51],[20,14.39,14.39],[25,16.48,16.48],[30,18.81,18.81],[35,21.39,21.39],[40,24.24,24.24],[45,27.39,27.39],[50,30.86,30.86],[60,38.87,38.87]],
- R32:[[-40,1.77,1.77],[-30,2.27,2.27],[-20,2.86,2.86],[-10,3.57,3.57],[0,4.41,4.41],[10,5.39,5.39],[20,6.53,6.53],[30,7.84,7.84],[40,9.36,9.36],[50,11.06,11.06],[60,12.70,12.70],[70,15.22,15.22]],
- R134a:[[-40,0.53,0.53],[-30,0.94,0.94],[-20,1.52,1.52],[-10,2.19,2.19],[0,3.14,3.14],[5,3.63,3.63],[10,4.01,4.01],[15,4.60,4.60],[20,5.25,5.25],[25,5.93,5.93],[30,6.70,6.70],[35,7.53,7.53],[40,8.45,8.45],[50,11.00,11.00],[60,15.82,15.82]],
- R22:[[-40,1.05,1.05],[-30,1.39,1.39],[-20,2.25,2.25],[-10,3.35,3.35],[0,4.73,4.73],[5,5.55,5.55],[10,6.47,6.47],[15,7.46,7.46],[20,8.58,8.58],[25,9.79,9.79],[30,11.14,11.14],[35,12.59,12.59],[40,14.18,14.18],[50,18.20,18.20],[60,24.47,24.47]],
- R407C:[[-20,2.66,3.46],[-10,3.81,5.03],[0,5.79,7.03],[5,6.85,8.21],[10,7.86,9.43],[15,9.25,10.58],[20,10.54,11.91],[25,11.98,13.48],[30,14.00,16.22],[35,15.85,18.28],[40,17.36,20.10],[50,23.15,25.44],[60,27.36,30.32]],
- R404A:[[-30,2.98,3.06],[-20,4.44,4.54],[-10,6.40,6.43],[0,8.86,9.04],[5,10.28,10.50],[10,11.87,12.09],[15,13.59,13.85],[20,15.47,15.72],[25,17.50,17.86],[30,19.76,20.27],[40,25.03,26.00],[50,31.72,33.00]],
- R507A:[[-30,2.05,2.05],[-20,3.15,3.15],[-10,4.60,4.60],[0,6.52,6.52],[5,7.90,7.90],[10,9.02,9.02],[20,12.19,12.19],[30,16.15,16.15],[40,21.05,21.05],[50,27.05,27.05]],
- R290:[[-30,1.28,1.28],[-20,2.05,2.05],[-10,3.10,3.10],[0,4.47,4.47],[10,6.20,6.20],[20,8.34,8.34],[30,10.94,10.94],[40,14.07,14.07],[50,17.79,17.79]],
- R600a:[[-20,0.46,0.46],[-10,0.75,0.75],[0,1.13,1.13],[10,1.41,1.41],[20,1.76,1.76],[30,2.14,2.14],[40,2.61,2.61],[50,3.44,3.44],[60,4.46,4.46]]
-};
-const FLUID={R410A:'R410A',R32:'R32',R134a:'R134a',R22:'R22',R407C:'R407C',R404A:'R404A',R507A:'R507A',R290:'Propane',R600a:'IsoButane'};
+      <div class="card" id="cardIndicadores">
+        <h2>Indicadores y Diagnóstico</h2>
+        <div class="results-grid">
+          <div class="kpi-box" style="border-left-color: #38bdf8;">
+            <span class="label">SH Útil (Evap)</span>
+            <span class="value" id="kpiSHUtil">0.0 K</span>
+          </div>
+          <div class="kpi-box" style="border-left-color: #0284c7;">
+            <span class="label">SH Total (Succ)</span>
+            <span class="value" id="kpiSHTotal">0.0 K</span>
+          </div>
+          <div class="kpi-box" style="border-left-color: #10b981;">
+            <span class="label">Subenfriam. (SC)</span>
+            <span class="value" id="kpiSC">0.0 K</span>
+          </div>
+          <div class="kpi-box" style="border-left-color: #f59e0b;">
+            <span class="label">Potencia Elec.</span>
+            <span class="value" id="kpiKW">0.00 kW</span>
+          </div>
+          <div class="kpi-box" style="border-left-color: #a855f7;">
+            <span class="label">Cap. Frig. (qn)</span>
+            <span class="value" id="kpiqn">0 kJ/kg</span>
+          </div>
+          <div class="kpi-box" style="border-left-color: #ef4444;">
+            <span class="label">Trabajo Comp (w)</span>
+            <span class="value" id="kpiw">0 kJ/kg</span>
+          </div>
+          <div class="kpi-box" style="border-left-color: #ec4899;">
+            <span class="label">COP Estimado</span>
+            <span class="value" id="kpicop">0.0</span>
+          </div>
+          <div class="kpi-box" style="border-left-color: #64748b;">
+            <span class="label">ΔT Cond - Amb</span>
+            <span class="value" id="kpiDeltaAmb">0.0 K</span>
+          </div>
+        </div>
 
+        <div class="diag-container" id="panelAlertas">
+        </div>
+      </div>
 
-const COMPRESSORS=[
-{m:"Copeland",model:"ZP36K5E",ref:"R410A",rla:7.4,volt:"208–230 V",hz:"60 Hz",phase:"1Φ",cap:3.5,type:"Scroll",source:"Base técnica local"},
-{m:"Copeland",model:"ZP42K5E",ref:"R410A",rla:8.8,volt:"208–230 V",hz:"60 Hz",phase:"1Φ",cap:4.1,type:"Scroll",source:"Base técnica local"},
-{m:"Copeland",model:"ZP51K5E",ref:"R410A",rla:10.5,volt:"208–230 V",hz:"60 Hz",phase:"1Φ",cap:5.0,type:"Scroll",source:"Base técnica local"},
-{m:"Copeland",model:"ZB26KCE",ref:"R404A/R507A",rla:5.8,volt:"208–230 V",hz:"60 Hz",phase:"1Φ",cap:2.5,type:"Scroll",source:"Base técnica local"},
-{m:"GMCC",model:"PA118M1C-3FZU",ref:"R410A",rla:5.4,volt:"208–230 V",hz:"60 Hz",phase:"1Φ",cap:3.390,type:"Rotativo",lra:27,displacement:11.8,power:1.125,cop:3.01,capacityBTU:11567,source:"GMCC / catálogo de compresores"}
-];
-function normalizeCode(v){return String(v||'').toUpperCase().replace(/[\s_\-\.\/]/g,'');}
-const SEARCH_API_URL = window.COMPRESSOR_SEARCH_API || '/api/compressor-search';
+    </header>
 
-function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
-function fmtRemote(v,unit=''){return v===null||v===undefined||v===''?'—':esc(v)+(unit?' '+unit:'');}
-function remoteCompressorCard(data){
- const vn=num('vnom'),an=num('anom'),cap=capKW(num('capacity'),text('capacityUnit'));
- const local={m:data.manufacturer||'Web',model:data.model||text('compressorCode'),ref:data.refrigerant||'',rla:Number(data.RLA_A)||null,volt:data.voltage||'',hz:data.frequency||'',phase:data.phase||'',cap:Number(data.capacity_kW)||null,type:data.type||'',lra:Number(data.LRA_A)||null,displacement:Number(data.displacement_cm3_rev)||null,power:Number(data.power_kW)||null,cop:Number(data.COP)||null,capacityBTU:Number(data.capacity_BTUh)||null,source:'Búsqueda web automática',raw:data,envelope:data.envelope||{application_class:data.application_envelope,max_discharge_C:data.max_discharge_C}};
- selectedCompressor=local;
- const e=compareCompressorElectrical(local,vn,an);
- let rows=[['Fabricante / modelo',`${esc(local.m)} — ${esc(local.model)}`],['Refrigerante',esc(local.ref||'—')],['Tipo',esc(local.type||'—')],['Tensión ficha',esc(local.volt||'—')],['Frecuencia',esc(local.hz||'—')],['Fase',esc(local.phase||'—')],['RLA ficha',local.rla!=null?local.rla+' A':'—'],['LRA ficha',local.lra!=null?local.lra+' A':'—'],['Capacidad ref.',local.cap!=null?local.cap+' kW':'—'],['Desplazamiento',local.displacement!=null?local.displacement+' cm³/rev':'—'],['Potencia',local.power!=null?local.power+' kW':'—'],['COP ficha',local.cop!=null?local.cop+' W/W':'—'],['Voltaje nominal ingresado',vn==null?'—':vn+' V'],['Comparación voltaje',`<span class="${e.vClass}">${e.vStatus}</span>`],['Amperaje nominal ingresado',an==null?'—':an.toFixed(1)+' A'],['Comparación amperaje',`<span class="${e.aClass}">${e.aStatus}</span>`]];
- if(cap!==null&&local.cap)rows.push(['Capacidad ingresada',cap.toFixed(2)+' kW '+(Math.abs(cap-local.cap)/local.cap>.2?'⚠ revisar':'✓ compatible')]);
- if(local.capacityBTU)rows.push(['Capacidad ficha',local.capacityBTU.toLocaleString('es-ES')+' BTU/h']);
- const box=$('compressorResult');
- box.innerHTML=`<div class="alert ok"><b>✓ COMPRESOR ENCONTRADO EN INTERNET</b>${esc(data.summary||'Ficha técnica consolidada mediante búsqueda web.')}</div><div class="small" style="margin-bottom:4px"><b>FICHA CONSOLIDADA</b> · confianza: ${esc(data.confidence||'no determinada')}</div><div class="compare-grid">${rows.map(v=>`<div class="compare-item"><b>${v[0]}</b>${v[1]}</div>`).join('')}</div>${(data.conflicts||[]).length?`<div class="alert"><b>Discrepancias entre fuentes</b><ul>${data.conflicts.map(c=>`<li><b>${esc(c.field)}:</b> ${esc(c.values)} — ${esc(c.comment)}</li>`).join('')}</ul></div>`:''}${lastResult?envelopeCard(local,lastResult):'<div class="envelope-box"><div class="envelope-title">ENVELOPE DEL COMPRESOR</div><div class="envelope-note">Pulse ANALIZAR para comparar las condiciones reales con el envelope encontrado.</div></div>'}<div class="small" style="margin-top:6px"><b>Fuentes consultadas</b></div><div class="small">${(data.sources||[]).map(x=>`<div>• <a href="${esc(x.url)}" target="_blank" rel="noopener" style="color:#39b7ff">${esc(x.title||x.url)}</a> <span style="color:#91a5b5">(${esc(x.kind||'web')})</span></div>`).join('')||'No se recibieron enlaces directos.'}</div><div class="small" style="margin-top:6px">No se consideran límites válidos los datos que no estén respaldados por documentación técnica. Confirmar siempre la variante exacta.</div>`;
-}
+    <main class="card chart-card">
+      <div class="action-bar">
+        <button class="btn btn-toggle" id="btnZonaActiva" onclick="toggleZonaActiva()">
+          🔍 Zoom Zona Activa: OFF
+        </button>
+        <!-- Botón verde de reporte -->
+        <button class="btn btn-reporte" onclick="descargarPDFReporte()">
+          📄 Reporte
+        </button>
+      </div>
 
-async function webSearchCompressor(q){
- const box=$('compressorResult');
- if(!box)return;
- box.innerHTML=`<div class="alert"><b>🔎 BUSCANDO ${esc(q)}</b>Consultando fuentes web y consolidando datos técnicos. Esto puede tardar unos segundos…</div>`;
- try{
-   const res=await fetch(SEARCH_API_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:q,brand:text('modelBrand'),refrigerant:text('ref')})});
-   const data=await res.json().catch(()=>({}));
-   if(!res.ok)throw new Error(data.error||`HTTP ${res.status}`);
-   if(!data.found){box.innerHTML=`<div class="alert"><b>Referencia no confirmada</b>No se encontró una ficha técnica suficientemente confiable para <strong>${esc(q)}</strong>. Revisa el código de placa.</div>`;selectedCompressor=null;return;}
-   remoteCompressorCard(data);
- }catch(err){
-   selectedCompressor=null;
-   const query=encodeURIComponent('"'+q+'" compressor datasheet PDF');
-   box.innerHTML=`<div class="alert"><b>⚠ Búsqueda automática no disponible</b>${esc(err.message)}<br><span class="small">El servidor V3.1 no está conectado o no tiene configurada la API. Puedes abrir una búsqueda manual mientras se configura.</span></div><div class="actions" style="margin-top:5px"><button type="button" class="secondary" onclick="window.open('https://www.google.com/search?q=${query}','_blank','noopener')">BUSCAR EN GOOGLE</button></div>`;
- }
-}
+      <div id="mollierPlot" class="chart-container"></div>
+    </main>
 
+  </div>
 
-let lastResult=null;
-let selectedCompressor=null;
-let units={p:"psi",t:"C",cap:"BTU/h"};
+  <script>
+    let zonaActivaHabilitada = false;
+    let pUnitActual = 'psi';
+    let tUnitActual = 'C';
+    let tempAmbientePuntoFijoC = 30.0;
 
-const $=id=>document.getElementById(id);
-const num=id=>{const v=parseFloat($(id)?.value);return Number.isFinite(v)?v:null};
-const text=id=>$(id)?.value||"";
-const set=id=>$(id)?.value;
-function pBar(v,u){return v===null?null:(u==="psi"?v/14.5037738:u==="kPa"?v/100:v)+ATM}
-function pGaugeBar(v,u){return v===null?null:u==="psi"?v/14.5037738:u==="kPa"?v/100:v}
-function barP(v,u){return v===null?null:u==="psi"?v*14.5037738:u==="kPa"?v*100:v}
-function tc(v,u){return v===null?null:u==="F"?(v-32)*5/9:v}
-function ct(v,u){return v===null?null:u==="F"?v*9/5+32:v}
-function capKW(v,u){return v===null?null:u==="BTU/h"?v/3412.142:u==="TR"?v*3.5168528:v}
-function kwCap(v,u){return v===null?null:u==="BTU/h"?v*3412.142:u==="TR"?v/3.5168528:v}
-function interpPT(d,p,col){if(p===null||!d?.length)return null;if(p<d[0][1]||p>d.at(-1)[1])return null;for(let k=0;k<d.length-1;k++){const a=d[k],b=d[k+1];if(p>=a[1]&&p<=b[1])return a[col]+(b[col]-a[col])*(p-a[1])/(b[1]-a[1]);}return null}
-function fallbackSat(ref,p,side){const d=PT[ref]||[];return interpPT(d,p,side==="bubble"?1:2)}
-function cpFluid(ref){return FLUID[ref]||ref}
-function cpSat(ref,p,side){try{if(!window.CoolPropReady||!window.CoolProp)return null;const CP=window.CoolProp,fluid=cpFluid(ref);return CP.PropsSI('T','P',p*1e5,'Q',side==='bubble'?0:1,fluid)-273.15}catch(e){return null}}
-function sat(ref,p,side){return cpSat(ref,p,side) ?? fallbackSat(ref,p,side)}
-function cpStatePT(ref,pBarA,tC){try{if(!window.CoolPropReady||!window.CoolProp||pBarA===null||tC===null)return null;const CP=window.CoolProp,fluid=cpFluid(ref),P=pBarA*1e5,T=tC+273.15;return {h:CP.PropsSI('H','P',P,'T',T,fluid)/1000,s:CP.PropsSI('S','P',P,'T',T,fluid)/1000,rho:CP.PropsSI('D','P',P,'T',T,fluid),T:tC,p:pBarA};}catch(e){return null}}
-function cpStatePH(ref,pBarA,hKJ){try{if(!window.CoolPropReady||!window.CoolProp||pBarA===null||hKJ===null)return null;const CP=window.CoolProp,fluid=cpFluid(ref),P=pBarA*1e5,h=hKJ*1000;return {T:CP.PropsSI('T','P',P,'H',h,fluid)-273.15,s:CP.PropsSI('S','P',P,'H',h,fluid)/1000,rho:CP.PropsSI('D','P',P,'H',h,fluid),h:hKJ,p:pBarA};}catch(e){return null}}
-function cpStatePS(ref,pBarA,sKJ){try{if(!window.CoolPropReady||!window.CoolProp||pBarA===null||sKJ===null)return null;const CP=window.CoolProp,fluid=cpFluid(ref),P=pBarA*1e5,s=sKJ*1000;return {T:CP.PropsSI('T','P',P,'S',s,fluid)-273.15,h:CP.PropsSI('H','P',P,'S',s,fluid)/1000,s:sKJ,rho:CP.PropsSI('D','P',P,'S',s,fluid),p:pBarA};}catch(e){return null}}
-function fmt(v,dec=1){return v===null||v===undefined||!Number.isFinite(v)?"—":v.toFixed(dec)}
+    const P_ATM_BAR = 1.01325;
+    const P_ATM_PSI = 14.696;
+    const P_ATM_KPA = 101.325;
 
-function metric(name,v,u=""){return `<div class="metric"><div class="name">${name}</div><div class="value">${v===null||v===undefined?"—":v+u}</div></div>`}
-function renderMetrics(r){
- if(!r){$("metrics").innerHTML=["T° saturación evaporación","T° saturación condensación","Superheat evaporador","Superheat total","Superheat línea","Subcooling","ΔT aire","ΔT condensación-ambiente","Relación de presión","Desvío de voltaje","Corriente vs nominal"].map(x=>metric(x,null)).join("");return}
- const tu=text("tempUnidad"),ut=tu==="F"?" °F":" °C";
- $("metrics").innerHTML=[
- metric("T° saturación evaporación",fmt(ct(r.tev,tu)),ut),
- metric("T° saturación condensación",fmt(ct(r.tcond,tu)),ut),
- metric("Superheat evaporador",fmt(r.shEv)," K"),
- metric("Superheat total",fmt(r.shTot)," K"),
- metric("Superheat línea",fmt(r.shLine)," K"),
- metric("Subcooling",fmt(r.sc)," K"),
- metric("ΔT aire",fmt(r.dtAir)," K"),
- metric("ΔT condensación-ambiente",fmt(r.dtCond)," K"),
- metric("Relación de presión",fmt(r.ratio,2)),
- metric("Desvío de voltaje",fmt(r.vDev)," %"),
- metric("Corriente vs nominal",fmt(r.iPct)," %"),
- metric("Efecto frigorífico específico",r.thermo?fmt(r.thermo.qEvap,1):"—"," kJ/kg"),
- metric("COP termodinámico",r.thermo?fmt(r.thermo.cop,2):"—"),
- metric("Calidad después de expansión",r.thermo&&r.thermo.x4!==null&&Number.isFinite(r.thermo.x4)?fmt(r.thermo.x4*100,1):"—"," %")
- ].join("");
-}
+    const pUnits = {
+      bar: { factor: 1.0, label: 'Bar', atm: P_ATM_BAR },
+      psi: { factor: 14.5038, label: 'PSI', atm: P_ATM_PSI },
+      kpa: { factor: 100.0, label: 'kPa', atm: P_ATM_KPA }
+    };
 
-function status(cls,badge,msg){
- $("statusBadge").className="badge "+cls;$("statusBadge").textContent=badge;$("statusText").textContent=msg;
- $("systemStatus").textContent=badge;
-}
+    const refrigerantes = {
+      R134a: {
+        nombre: "R-134a", criticalP: 40.59, xRange: [150, 480],
+        cpL: 1.42, cpV: 0.95, glide: 0.0, tDescMax: 100, shOptimo: [5, 9], scOptimo: [3, 7], rPMax: 8.0, esZeotropico: false,
+        dome: [
+          {p: 0.5, hL: 140.0, hV: 383.0, tSat: -40}, {p: 1.0, hL: 161.0, hV: 389.5, tSat: -26.4},
+          {p: 2.0, hL: 186.5, hV: 397.0, tSat: -10.1}, {p: 4.0, hL: 213.0, hV: 404.5, tSat: 8.9},
+          {p: 8.0, hL: 244.0, hV: 412.0, tSat: 31.3},  {p: 15.0, hL: 278.0, hV: 415.5, tSat: 55.2},
+          {p: 25.0, hL: 318.0, hV: 410.0, tSat: 77.6}, {p: 40.59, hL: 380.0, hV: 380.0, tSat: 101.1}
+        ]
+      },
+      R22: {
+        nombre: "R-22", criticalP: 49.9, xRange: [140, 470],
+        cpL: 1.28, cpV: 0.76, glide: 0.0, tDescMax: 115, shOptimo: [5, 10], scOptimo: [3, 6], rPMax: 7.5, esZeotropico: false,
+        dome: [
+          {p: 1.0, hL: 158.0, hV: 397.0, tSat: -40.8}, {p: 2.5, hL: 185.0, hV: 403.5, tSat: -20.5},
+          {p: 5.0, hL: 210.0, hV: 409.0, tSat: -2.3},  {p: 10.0, hL: 238.0, hV: 414.0, tSat: 23.3},
+          {p: 20.0, hL: 275.0, hV: 415.0, tSat: 52.2}, {p: 35.0, hL: 320.0, hV: 405.0, tSat: 78.4},
+          {p: 49.9, hL: 392.0, hV: 392.0, tSat: 96.2}
+        ]
+      },
+      R404A: {
+        nombre: "R-404A", criticalP: 36.8, xRange: [100, 410],
+        cpL: 1.54, cpV: 0.88, glide: 0.8, tDescMax: 90, shOptimo: [4, 8], scOptimo: [4, 8], rPMax: 9.0, esZeotropico: true,
+        dome: [
+          {p: 1.0, hL: 128.0, hV: 358.0, tSat: -45.5}, {p: 2.5, hL: 155.0, hV: 365.0, tSat: -26.0},
+          {p: 6.0, hL: 190.0, hV: 373.0, tSat: 1.0},   {p: 12.0, hL: 222.0, hV: 376.0, tSat: 24.3},
+          {p: 22.0, hL: 262.0, hV: 368.0, tSat: 49.7}, {p: 36.8, hL: 325.0, hV: 325.0, tSat: 72.1}
+        ]
+      },
+      R410A: {
+        nombre: "R-410A", criticalP: 49.0, xRange: [120, 460],
+        cpL: 1.68, cpV: 1.12, glide: 0.2, tDescMax: 105, shOptimo: [4, 8], scOptimo: [4, 8], rPMax: 6.0, esZeotropico: true,
+        dome: [
+          {p: 1.5, hL: 135.0, hV: 415.0, tSat: -42.0}, {p: 4.0, hL: 175.0, hV: 422.0, tSat: -22.5},
+          {p: 10.0, hL: 222.0, hV: 426.0, tSat: 4.2},  {p: 20.0, hL: 268.0, hV: 422.0, tSat: 32.1},
+          {p: 35.0, hL: 320.0, hV: 405.0, tSat: 57.8}, {p: 49.0, hL: 395.0, hV: 395.0, tSat: 72.1}
+        ]
+      },
+      R32: {
+        nombre: "R-32", criticalP: 57.8, xRange: [140, 560],
+        cpL: 1.90, cpV: 1.25, glide: 0.0, tDescMax: 110, shOptimo: [4, 8], scOptimo: [3, 7], rPMax: 6.5, esZeotropico: false,
+        dome: [
+          {p: 1.5, hL: 145.0, hV: 502.0, tSat: -43.0}, {p: 5.0, hL: 202.0, hV: 515.0, tSat: -16.0},
+          {p: 12.0, hL: 255.0, hV: 522.0, tSat: 11.5}, {p: 25.0, hL: 315.0, hV: 518.0, tSat: 41.2},
+          {p: 45.0, hL: 398.0, hV: 492.0, tSat: 66.8}, {p: 57.8, hL: 470.0, hV: 470.0, tSat: 78.1}
+        ]
+      },
+      R290: {
+        nombre: "R-290", criticalP: 42.5, xRange: [160, 620],
+        cpL: 2.45, cpV: 1.68, glide: 0.0, tDescMax: 85, shOptimo: [3, 7], scOptimo: [2, 5], rPMax: 8.0, esZeotropico: false,
+        dome: [
+          {p: 1.0, hL: 190.0, hV: 558.0, tSat: -42.1}, {p: 3.0, hL: 242.0, hV: 572.0, tSat: -21.3},
+          {p: 7.0, hL: 298.0, hV: 585.0, tSat: 12.8},  {p: 15.0, hL: 362.0, hV: 588.0, tSat: 42.1},
+          {p: 30.0, hL: 450.0, hV: 565.0, tSat: 76.5}, {p: 42.5, hL: 560.0, hV: 560.0, tSat: 96.7}
+        ]
+      },
+      R600a: {
+        nombre: "R-600a", criticalP: 36.5, xRange: [180, 610],
+        cpL: 2.38, cpV: 1.52, glide: 0.0, tDescMax: 85, shOptimo: [3, 7], scOptimo: [2, 5], rPMax: 8.5, esZeotropico: false,
+        dome: [
+          {p: 0.8, hL: 195.0, hV: 540.0, tSat: -19.5}, {p: 2.0, hL: 240.0, hV: 558.0, tSat: 8.2},
+          {p: 5.0, hL: 295.0, hV: 575.0, tSat: 38.0},  {p: 12.0, hL: 368.0, hV: 580.0, tSat: 71.3},
+          {p: 25.0, hL: 460.0, hV: 552.0, tSat: 110.1},{p: 36.5, hL: 540.0, hV: 540.0, tSat: 134.7}
+        ]
+      },
+      R507A: {
+        nombre: "R-507A", criticalP: 37.1, xRange: [100, 410],
+        cpL: 1.52, cpV: 0.89, glide: 0.0, tDescMax: 90, shOptimo: [4, 8], scOptimo: [4, 8], rPMax: 9.0, esZeotropico: false,
+        dome: [
+          {p: 1.0, hL: 125.0, hV: 355.0, tSat: -46.1}, {p: 3.0, hL: 160.0, hV: 364.0, tSat: -20.2},
+          {p: 7.0, hL: 192.0, hV: 370.0, tSat: 4.8},   {p: 15.0, hL: 232.0, hV: 366.0, tSat: 31.2},
+          {p: 26.0, hL: 275.0, hV: 352.0, tSat: 55.4}, {p: 37.1, hL: 320.0, hV: 320.0, tSat: 70.6}
+        ]
+      },
+      R407C: {
+        nombre: "R-407C", criticalP: 46.3, xRange: [130, 470],
+        cpL: 1.50, cpV: 0.92, glide: 4.8, tDescMax: 105, shOptimo: [5, 9], scOptimo: [3, 7], rPMax: 8.0, esZeotropico: true,
+        dome: [
+          {p: 1.0, hL: 142.0, hV: 405.0, tSat: -41.2}, {p: 3.0, hL: 178.0, hV: 413.0, tSat: -18.1},
+          {p: 7.0, hL: 212.0, hV: 418.0, tSat: 8.5},   {p: 15.0, hL: 252.0, hV: 417.0, tSat: 38.2},
+          {p: 30.0, hL: 310.0, hV: 402.0, tSat: 67.4}, {p: 46.3, hL: 410.0, hV: 410.0, tSat: 86.0}
+        ]
+      }
+    };
 
-const EXPANSION_RULES={
- TXV:{name:"Válvula TXV / termostática",shMin:5,shMax:10,low:3,high:12},
- EEV:{name:"Válvula electrónica EEV",shMin:3,shMax:8,low:2,high:10},
- CAP:{name:"Tubo capilar",shMin:8,shMax:15,low:5,high:18},
- ORIFICE:{name:"Orificio / pistón fijo",shMin:8,shMax:15,low:5,high:18},
- MANUAL:{name:"Válvula de expansión manual",shMin:5,shMax:12,low:3,high:15},
- UNKNOWN:{name:"No identificado",shMin:5,shMax:12,low:3,high:15}
-};
-function expansionRule(){return EXPANSION_RULES[text("expansion")]||EXPANSION_RULES.UNKNOWN}
+    function actualizarReloj() {
+      const ahora = new Date();
+      const opciones = { 
+        year: 'numeric', month: '2-digit', day: '2-digit', 
+        hour: '2-digit', minute: '2-digit', second: '2-digit', 
+        hour12: true 
+      };
+      document.getElementById('txtFechaHora').innerText = ahora.toLocaleString('es-VE', opciones);
+    }
 
-async function calculate(){
- try{await (window.__coolPropPromise||Promise.resolve(null))}catch(e){}
- const ref=text("ref"),pu=text("punit"),tu=text("tempUnidad"),expansion=text("expansion")||"UNKNOWN";
- const expRule=EXPANSION_RULES[expansion]||EXPANSION_RULES.UNKNOWN;
- const ps=pBar(num("psuc"),pu),pd=pBar(num("pdis"),pu);
- const tev=sat(ref,ps,"dew"),tcond=sat(ref,pd,"bubble"),tcondD=sat(ref,pd,"dew");
- const teo=tc(num("tevapout"),tu),ts=tc(num("tsuction"),tu),tl=tc(num("tliquid"),tu),td=tc(num("tdischarge"),tu);
- const amb=tc(num("tamb"),tu),tra=tc(num("treturnAir"),tu),tsa=tc(num("tsupply"),tu);
- const vm=num("vmeas"),vn=num("vnom"),am=num("ameas"),an=num("anom");
- const compElec=selectedCompressor?compareCompressorElectrical(selectedCompressor,vn,an):null;
- const state1=cpStatePT(ref,ps,ts), state3=cpStatePT(ref,pd,tl);
- let state2s=null,state2=null,state4=null,thermo=null;
- if(state1&&state3){
-   state2s=cpStatePS(ref,pd,state1.s);
-   if(state2s){
-     const eta=0.70; const h2=state1.h+(state2s.h-state1.h)/eta;
-     state2=cpStatePH(ref,pd,h2);
-   }
-   state4=cpStatePH(ref,ps,state3.h);
-   thermo={h1:state1.h,h2s:state2s?.h??null,h2:state2?.h??null,h3:state3.h,h4:state4?.h??state3.h,qEvap:state1.h-state3.h,work:state2?state2.h-state1.h:null,cop:state2?(state1.h-state3.h)/(state2.h-state1.h):null,x4:null};
-   if(window.CoolProp&&state4){try{thermo.x4=window.CoolProp.PropsSI('Q','P',ps*1e5,'H',state3.h*1000,cpFluid(ref));}catch(e){}}
- }
- if(ps!==null&&ps<=0||pd!==null&&pd<=0){status("error","ERROR DE DATOS","Revise las presiones ingresadas.");renderMetrics(null);return}
- if(ps===null||pd===null){status("error","DATOS INSUFICIENTES","Ingrese presión de succión y descarga.");renderMetrics(null);return}
- if(tev===null||tcond===null){status("error","FUERA DE RANGO","La presión está fuera de la tabla simplificada del refrigerante.");renderMetrics(null);return}
+    function convertirTemp(tempC) {
+      if (tUnitActual === 'F') {
+        return (tempC * 9/5) + 32;
+      }
+      return tempC;
+    }
 
- const shEv=teo===null?null:teo-tev,shTot=ts===null?null:ts-tev,shLine=shEv!==null&&shTot!==null?shTot-shEv:null;
- const sc=tl===null?null:tcond-tl,dtAir=tra!==null&&tsa!==null?tra-tsa:null,dtCond=amb!==null?tcond-amb:null;
- const ratio=pd/ps,vDev=vm!==null&&vn>0?(vm-vn)/vn*100:null,iPct=am!==null&&an>0?am/an*100:null;
- const envelopeEval=selectedCompressor?evaluateEnvelope(selectedCompressor,{tev,tcond,td,ratio}):null;
- const findings=[],causes=new Set(),next=[];
- const add=(title,detail,cs,ns,level)=>{findings.push({title,detail,level});(cs||[]).forEach(x=>causes.add(x));(ns||[]).forEach(x=>next.push(x))};
- if(state1&&state3){
-   if(state1.h<=state3.h)add("Estado termodinámico inconsistente","La entalpía calculada en la succión no supera la del líquido a la entrada de expansión. Revise mediciones y condiciones de operación.",["Datos P/T","Condición fuera de modelo"],["Verificar presión, temperatura y refrigerante."],"review");
-   if(state2&&td!==null&&Math.abs(state2.T-td)>15)add("Descarga medida vs. descarga calculada","La temperatura de descarga medida difiere más de 15 K del estado de descarga calculado con eficiencia isentrópica de referencia. Es una señal de correlación, no un diagnóstico de falla.",["Eficiencia real distinta","Pérdidas térmicas","Medición"],["Comparar con ficha del compresor y repetir medición estable."],"attention");
- }
-
- if(shTot!==null&&shTot<0)add("Riesgo de retorno de líquido","Superheat total negativo. Patrón compatible con retorno de líquido o con una medición mal ubicada.",["Superheat insuficiente","Punto de medición incorrecto"],["Confirmar presión y temperatura en la entrada del compresor."],"critical");
- else if(shTot!==null&&shTot<expRule.low)add("Superheat total bajo para la expansión seleccionada",`El superheat total es ${fmt(shTot,1)} K y está por debajo del umbral de referencia para ${expRule.name}. Puede existir sobrealimentación o riesgo de migración de líquido.`,["Expansión excesiva","Control de expansión","Condición de carga particular"],["Verificar superheat estable y ajuste/control del dispositivo de expansión."],"review");
-
- if(shEv!==null&&shEv<expRule.low)add("Superheat de evaporador bajo para la expansión seleccionada",`El superheat del evaporador es ${fmt(shEv,1)} K; referencia orientativa ${expRule.shMin}–${expRule.shMax} K para ${expRule.name}.`,["Expansión excesiva","Control de expansión","Carga/condición particular"],["Verificar superheat y el funcionamiento del dispositivo de expansión."],shEv<Math.max(0,expRule.low-1)?"critical":"review");
- if(shEv!==null&&shEv>expRule.high&&ps<4.5)add("Evaporador subalimentado",`Superheat alto para ${expRule.name} (${fmt(shEv,1)} K > ${expRule.high} K) junto con succión baja: patrón compatible con poco refrigerante efectivo en el evaporador.`,["Carga insuficiente","Restricción","Dispositivo de expansión restringido","Baja carga térmica"],["Comprobar fugas, filtro/secador, expansión y flujo de aire."],"review");
- if(shEv!==null&&shEv>expRule.high&&sc!==null&&sc<3)add("Patrón compatible con carga insuficiente","Superheat alto + subcooling bajo aumenta la evidencia de carga insuficiente.",["Fuga de refrigerante","Carga insuficiente","Flash gas"],["Buscar fugas antes de agregar refrigerante."],"review");
- if(shEv!==null&&shEv>expRule.high&&sc!==null&&sc>=5)add("Patrón compatible con restricción","Superheat alto + subcooling normal/alto puede indicar restricción antes del evaporador.",["Filtro deshidratador","Línea líquida","TXV/EEV"],["Medir temperatura antes/después del filtro y revisar caída de presión."],"review");
- if(dtCond!==null&&dtCond>17&&pd>18)add("Condensación elevada","Temperatura de condensación alta respecto al ambiente: patrón compatible con rechazo de calor deficiente.",["Condensador sucio","Flujo de aire insuficiente","Ventilador","Recirculación"],["Revisar serpentín, ventilador y recirculación."],"review");
- if(sc!==null&&sc>12&&pd>18)add("Subcooling alto","Puede ser compatible con exceso de carga, pero primero descarte rechazo de calor deficiente.",["Exceso de refrigerante","Condensador con mala disipación"],["Comparar con procedimiento del fabricante antes de retirar refrigerante."],"attention");
- if(dtAir!==null&&dtAir<7&&shEv!==null&&shEv>10)add("Posible problema de flujo de aire","ΔT de aire bajo con superheat alto puede corresponder a flujo de aire o carga térmica fuera de condición.",["Filtro/serpentín sucio","Ventilador","Carga térmica baja"],["Revisar filtro, serpentín, ventilador y caudal."],"attention");
- if(shEv!==null&&shEv>=expRule.shMin&&shEv<=expRule.shMax)next.push(`Superheat ${fmt(shEv,1)} K dentro de la referencia orientativa para ${expRule.name} (${expRule.shMin}–${expRule.shMax} K).`);
- if(td!==null&&td>95)add("Temperatura de descarga elevada","La temperatura de descarga merece correlación con superheat y condensación.",["Superheat alto","Condensación elevada","Carga insuficiente"],["Verificar superheat total y enfriamiento del compresor."],"review");
- if(td!==null&&td>=107)add("Temperatura de descarga crítica","Valor que requiere atención inmediata y comparación con el límite específico del compresor.",["Sobrecalentamiento severo","Enfriamiento insuficiente"],["Consultar ficha del compresor antes de continuar."],"critical");
- if(envelopeEval&&envelopeEval.checks.some(c=>c.ok===false)){
-   const bad=envelopeEval.checks.filter(c=>c.ok===false).map(c=>c.detail).join(' · ');
-   add("Condición fuera del envelope del compresor",`Una o más condiciones quedan fuera de los límites recuperados de la ficha: ${bad}`,['Envelope del fabricante','Aplicación no compatible','Condición de operación'],['Confirmar el envelope oficial y evitar operar fuera de sus límites.'],"review");
- }
- if(envelopeEval&&envelopeEval.status==='ok')next.push(`Condición actual dentro del envelope recuperado del compresor: ${envelopeEval.application||'aplicación compatible'}.`);
- if(iPct!==null&&iPct>115)add("Corriente superior a nominal","La corriente medida supera 115% de la nominal aportada. No significa automáticamente compresor defectuoso.",["Alta condensación","Problema mecánico","Problema eléctrico"],["Verificar voltaje bajo carga y correlacionar con presión de descarga."],"review");
- if(iPct!==null&&iPct<70)add("Corriente significativamente baja","Corriente muy por debajo de la nominal; puede depender de carga, capacidad o condición del compresor.",["Baja carga","Compresor descargado","Medición"],["Comparar con ficha del fabricante y condición de carga."],"attention");
- if(compElec&&vn!==null&&compElec.vr&&!(vn>=compElec.vr.min&&vn<=compElec.vr.max))add("Voltaje nominal no coincide con la ficha","El voltaje nominal ingresado queda fuera del rango de tensión indicado para el compresor consultado.",["Selección de compresor/ficha","Alimentación eléctrica"],["Confirmar variante, tensión y frecuencia exactas en la placa."],"review");
- if(compElec&&an!==null&&selectedCompressor&&an>selectedCompressor.rla*1.10)add("Amperaje nominal no coincide con la ficha","El amperaje nominal ingresado supera en más de 10% el RLA de la referencia consultada.",["Dato nominal incorrecto","Selección de compresor/ficha"],["Confirmar RLA exacto en la placa y ficha del modelo."],"review");
- if(compElec&&an!==null&&selectedCompressor&&an<selectedCompressor.rla*0.90)add("Amperaje nominal por debajo de la ficha","El amperaje nominal ingresado está más de 10% por debajo del RLA de la referencia consultada.",["Dato nominal incorrecto","Selección de compresor/ficha"],["Confirmar RLA exacto en la placa y ficha del modelo."],"attention");
- if(vDev!==null&&Math.abs(vDev)>10)add("Desvío de voltaje","El voltaje medido se aparta más de 10% del nominal ingresado.",["Alimentación eléctrica","Caída de tensión"],["Medir tensión en bornes bajo carga y revisar conexiones."],"review");
-
- if(!findings.length)add("Sin patrón anómalo dominante","No aparece un patrón fuerte con las mediciones disponibles. Esto no certifica que el equipo esté perfecto.",["Condición estable","Datos faltantes"],["Comparar con placa y fabricante."],"normal");
- const rank={normal:0,attention:1,review:2,critical:3};let worst="normal";findings.forEach(f=>{if(rank[f.level]>rank[worst])worst=f.level});
- status(worst,{normal:"NORMAL",attention:"ATENCIÓN",review:"REVISAR",critical:"CRÍTICO"}[worst],findings[0].detail);
- $("findings").innerHTML=findings.map(f=>`<div class="alert ${f.level==="critical"?"danger":f.level==="normal"?"ok":""}"><b>${f.title}</b>${f.detail}</div>`).join("");
- $("causes").innerHTML=[...causes].map(x=>`<li>${x}</li>`).join("")||"<li>No disponibles.</li>";
- $("next").innerHTML=[...new Set(next)].map(x=>`<div class="alert">${x}</div>`).join("")||"<div class='alert'>Compare con datos del fabricante.</div>";
-
- lastResult={ref,pu,tu,expansion,expRule,applicationMode:text("applicationMode")||"AUTO",envelopeEval,ps,pd,selectedCompressor,state1,state2s,state2,state3,state4,thermo,tev,tcond,tcondD,teo,ts,tl,td,amb,tra,tsa,shEv,shTot,shLine,sc,dtAir,dtCond,ratio,vm,vn,am,an,vDev,iPct,findings,next};
- renderMetrics(lastResult);drawChart(lastResult);
- if(selectedCompressor){ if(selectedCompressor.raw) remoteCompressorCard(selectedCompressor.raw); else renderLocalCompressor(selectedCompressor); }
-}
-
-function drawChart(r={ref:$('ref').value}){
- const ref=r.ref||$('ref').value,d=PT[ref]||PT.R410A;
- const p=d.map(x=>x[1]),tb=d.map(x=>x[0]), td=d.map(x=>x[0]);
- // Para la representación p-h se obtienen entalpías de saturación reales con CoolProp cuando está disponible.
- const hl=[],hv=[];
- if(!window.CoolPropReady||!window.CoolProp){
-   Plotly.react("plot",[],{paper_bgcolor:"#0d1923",plot_bgcolor:"#0d1923",margin:{l:45,r:10,t:20,b:40},xaxis:{visible:false},yaxis:{visible:false},annotations:[{text:"Motor termodinámico cargando…<br>El diagrama p-h se dibuja cuando la biblioteca de propiedades está disponible.",showarrow:false,font:{color:"#91a5b5",size:12}}]},{responsive:true,displaylogo:false});
-   return;
- }
- for(const row of d){const P=row[1];try{const f=cpFluid(ref);hl.push(window.CoolProp.PropsSI('H','P',P*1e5,'Q',0,f)/1000);hv.push(window.CoolProp.PropsSI('H','P',P*1e5,'Q',1,f)/1000)}catch(e){}}
- if(hl.length<3||hv.length<3){
-   Plotly.react("plot",[],{paper_bgcolor:"#0d1923",plot_bgcolor:"#0d1923",margin:{l:45,r:10,t:20,b:40},xaxis:{visible:false},yaxis:{visible:false},annotations:[{text:"No se pudieron obtener propiedades p-h para este refrigerante.",showarrow:false,font:{color:"#ffc857",size:12}}]},{responsive:true,displaylogo:false});
-   return;
- }
- const traces=[
- {x:hl,y:p,mode:"lines",name:"Líquido saturado",line:{width:3},hovertemplate:"h %{x:.1f} kJ/kg<br>P %{y:.2f} barA<extra></extra>"},
- {x:hv,y:p,mode:"lines",name:"Vapor saturado",line:{width:3},hovertemplate:"h %{x:.1f} kJ/kg<br>P %{y:.2f} barA<extra></extra>"}
- ];
- for(let q=.1;q<1;q+=.1){traces.push({x:hl.map((x,i)=>x+q*(hv[i]-x)),y:p,mode:"lines",line:{dash:"dot",width:1},opacity:.22,showlegend:false,hoverinfo:"skip"})}
- if(r.state1&&r.state2&&r.state3&&r.state4){
-   const cyc=[r.state1,r.state2,r.state3,r.state4,r.state1];
-   traces.push({x:cyc.map(s=>s.h),y:cyc.map(s=>s.p),mode:"lines+markers+text",text:["1 Succión","2 Descarga","3 Líquido","4 Expansión",""],textposition:"top center",name:"Ciclo operativo",line:{width:3},marker:{size:8},hovertemplate:"h %{x:.1f} kJ/kg<br>P %{y:.2f} barA<extra>%{text}</extra>"});
- }
- const yMin=Math.max(.2,Math.min(...p)*.75),yMax=Math.max(...p)*1.12;
- const xMin=Math.min(...hl),xMax=Math.max(...hv);
- Plotly.react("plot",traces,{paper_bgcolor:"#0d1923",plot_bgcolor:"#0d1923",margin:{l:58,r:10,t:14,b:48},xaxis:{title:"Entalpía h (kJ/kg)",gridcolor:"#203542",color:"#b9c9d6",zeroline:false,range:[xMin-(xMax-xMin)*.04,xMax+(xMax-xMin)*.04]},yaxis:{title:"Presión absoluta (barA)",type:"log",range:[Math.log10(yMin),Math.log10(yMax)],gridcolor:"#203542",color:"#b9c9d6"},font:{color:"#dce8f1",size:10},showlegend:true,legend:{orientation:"h",x:0,y:1.04,font:{size:8}},shapes:[{type:"rect",xref:"paper",x0:0,x1:1,yref:"y",y0:yMin,y1:yMax,fillcolor:"rgba(100,180,210,.04)",line:{width:0},layer:"below"}]},{responsive:true,displaylogo:false,scrollZoom:true,dragmode:"pan",modeBarButtonsToRemove:["lasso2d","select2d","autoScale2d"]});
-}
-function resetChart(){drawChart(lastResult||{ref:$('ref').value})}
-function downloadChart(){Plotly.downloadImage("plot",{format:"png",width:2200,height:1400,scale:2,filename:"Mollier_HVACR_HD"})}
-
-function classifyApplication(tevapC, mode='AUTO'){
- if(mode && mode!=='AUTO') return mode;
- if(tevapC===null||!Number.isFinite(tevapC)) return null;
- // Clasificación orientativa. Si el fabricante publica la aplicación, esa referencia tiene prioridad.
- if(tevapC<=-10) return 'LBP';
- if(tevapC<7.2) return 'MBP';
- return 'HBP';
-}
-function normalizeEnvelope(data){
- const e=data?.envelope||{};
- const n=v=>Number.isFinite(Number(v))?Number(v):null;
- return {
-  application:String(e.application_class||data?.application_envelope||'').trim()||null,
-  evapMin:n(e.evap_min_C), evapMax:n(e.evap_max_C),
-  condMin:n(e.cond_min_C), condMax:n(e.cond_max_C),
-  dischargeMax:n(e.max_discharge_C ?? data?.max_discharge_C),
-  prMax:n(e.max_pressure_ratio),
-  notes:String(e.notes||'').trim()||null,
-  points:Array.isArray(e.points)?e.points.filter(p=>Array.isArray(p)&&p.length>=2&&Number.isFinite(Number(p[0]))&&Number.isFinite(Number(p[1]))).map(p=>[Number(p[0]),Number(p[1])]):[],
-  ashrae:Array.isArray(e.ashrae_tests)?e.ashrae_tests:[]
- };
-}
-function applicationMatch(app, declared){
- if(!app||!declared)return null;
- const d=String(declared).toUpperCase();
- if(d.includes(app))return true;
- if(app==='HBP' && /(AIR CONDITION|AIR-CONDITION|A\/C|HVAC|CLIMATIZ|AIRE ACOND)/.test(d))return true;
- if(app==='MBP'&&d.includes('MBP'))return true;
- if(app==='LBP'&&d.includes('LBP'))return true;
- if(app==='HBP'&&d.includes('HBP'))return true;
- return false;
-}
-function evaluateEnvelope(x,r){
- const e=normalizeEnvelope(x),mode=text('applicationMode')||'AUTO';
- const app=classifyApplication(r?.tev,mode);
- const out={envelope:e,application:app,checks:[],status:'unknown'};
- if(!e.application&&e.evapMin===null&&e.evapMax===null&&e.condMin===null&&e.condMax===null&&!e.points.length)return out;
- const add=(label,ok,detail)=>out.checks.push({label,ok,detail});
- if(app&&e.application)add('Aplicación',applicationMatch(app,e.application),`Trabajo calculado: ${app}. Ficha: ${e.application}.`);
- if(r?.tev!==null&&(e.evapMin!==null||e.evapMax!==null)){
-  const ok=(e.evapMin===null||r.tev>=e.evapMin)&&(e.evapMax===null||r.tev<=e.evapMax);
-  add('Evaporación',ok,`${fmt(r.tev,1)} °C · rango ficha ${e.evapMin??'—'} a ${e.evapMax??'—'} °C`);
- }
- if(r?.tcond!==null&&(e.condMin!==null||e.condMax!==null)){
-  const ok=(e.condMin===null||r.tcond>=e.condMin)&&(e.condMax===null||r.tcond<=e.condMax);
-  add('Condensación',ok,`${fmt(r.tcond,1)} °C · rango ficha ${e.condMin??'—'} a ${e.condMax??'—'} °C`);
- }
- if(r?.td!==null&&e.dischargeMax!==null)add('Descarga',r.td<=e.dischargeMax,`${fmt(r.td,1)} °C · máximo publicado ${fmt(e.dischargeMax,1)} °C`);
- if(r?.ratio!==null&&e.prMax!==null)add('Relación de presión',r.ratio<=e.prMax,`${fmt(r.ratio,2)} · máximo publicado ${fmt(e.prMax,2)}`);
- if(out.checks.length)out.status=out.checks.every(c=>c.ok)?'ok':out.checks.some(c=>c.ok===false)?'warn':'unknown';
- return out;
-}
-function nearestAshrae(e,r){
- const a=(e.ashrae||[]).filter(x=>Number.isFinite(Number(x.evap_C))&&Number.isFinite(Number(x.cond_C)));
- if(!a.length||r?.tev===null||r?.tcond===null)return null;
- return a.map(x=>({...x,d:Math.hypot(Number(x.evap_C)-r.tev,Number(x.cond_C)-r.tcond)})).sort((u,v)=>u.d-v.d)[0];
-}
-function envelopeCard(x,r){
- const ev=evaluateEnvelope(x,r),e=ev.envelope;
- if(!e.application&&e.evapMin===null&&e.evapMax===null&&e.condMin===null&&e.condMax===null&&!e.points.length){
-  return `<div class="envelope-box"><div class="envelope-title">ENVELOPE / APLICACIÓN</div><div class="envelope-note">La búsqueda encontró la referencia, pero no obtuvo límites de envelope suficientemente verificables. No se inventan límites; debe consultarse el datasheet exacto.</div></div>`;
- }
- const cls=ev.status==='ok'?'envelope-ok':ev.status==='warn'?'envelope-warn':'';
- const rows=ev.checks.map(c=>`<div class="envelope-item"><b>${esc(c.label)}</b><span class="${c.ok?'envelope-ok':'envelope-danger'}">${c.ok?'✓ DENTRO':'⚠ FUERA'}</span><br>${esc(c.detail)}</div>`).join('');
- const ash=e.ashrae.slice(0,8).map(a=>`<tr><td>${esc(a.application||'—')}</td><td>${a.evap_C??'—'}</td><td>${a.cond_C??'—'}</td><td>${a.capacity_kW??'—'}</td><td>${a.input_power_kW??'—'}</td></tr>`).join('');
- const near=nearestAshrae(e,r);
- return `<div class="envelope-box"><div class="envelope-title">ENVELOPE DEL COMPRESOR · <span class="${cls}">${ev.status==='ok'?'OPERACIÓN COMPATIBLE':ev.status==='warn'?'REVISAR ENVELOPE':'REFERENCIA PARCIAL'}</span></div><div class="envelope-grid">${rows||''}<div class="envelope-item"><b>Trabajo actual</b>${esc(ev.application||'—')} · Tevap ${r?.tev==null?'—':fmt(r.tev,1)+' °C'}</div><div class="envelope-item"><b>Condensación actual</b>${r?.tcond==null?'—':fmt(r.tcond,1)+' °C'}</div></div>${e.notes?`<div class="envelope-note">${esc(e.notes)}</div>`:''}${near?`<div class="envelope-note"><b>Punto ASHRAE publicado más cercano:</b> ${esc(near.application||'—')} · Tevap ${near.evap_C} °C · Tcond ${near.cond_C} °C${near.capacity_kW!=null?` · Cap. ${near.capacity_kW} kW`:''}${near.input_power_kW!=null?` · Input ${near.input_power_kW} kW`:''}. Esto es un punto de ensayo, NO un límite de envelope.</div>`:''}${ash?`<details style="margin-top:6px"><summary>Condiciones ASHRAE encontradas</summary><table class="ashrae-table"><thead><tr><th>Aplicación</th><th>Tevap °C</th><th>Tcond °C</th><th>Cap. kW</th><th>Input kW</th></tr></thead><tbody>${ash}</tbody></table></details>`:''}<div class="envelope-note">LBP/MBP/HBP es una clasificación orientativa cuando el fabricante no la declara. Si existe un envelope gráfico oficial, sus límites tienen prioridad.</div></div>`;
-}
-function parseVoltageRange(v){
- const nums=(String(v||'').match(/\d+(?:\.\d+)?/g)||[]).map(Number);
- if(nums.length>=2)return {min:Math.min(nums[0],nums[1]),max:Math.max(nums[0],nums[1])};
- if(nums.length===1)return {min:nums[0],max:nums[0]};
- return null;
-}
-function compareCompressorElectrical(x,vn,an){
- const vr=parseVoltageRange(x.volt);
- let vStatus='—',vClass='',aStatus='—',aClass='';
- if(vn!==null&&vr){
-   if(vn>=vr.min&&vn<=vr.max){vStatus='✓ dentro de referencia';vClass='oktxt'}
-   else {vStatus='⚠ fuera de referencia';vClass='warntxt'}
- }
- if(an!==null&&Number.isFinite(x.rla)){
-   const pct=(an/x.rla)*100;
-   if(pct>=90&&pct<=110){aStatus='✓ dentro de ±10%';aClass='oktxt'}
-   else if(pct>110){aStatus='⚠ por encima de RLA';aClass='warntxt'}
-   else {aStatus='⚠ por debajo de RLA';aClass='warntxt'}
- }
- return {vr,vStatus,vClass,aStatus,aClass};
-}
-function renderLocalCompressor(x){
- const vn=num('vnom'),an=num('anom'),cap=capKW(num('capacity'),text('capacityUnit'));
- const e=compareCompressorElectrical(x,vn,an);
- let a=[['Fabricante / modelo',x.m+' — '+x.model],['Refrigerante',x.ref],['Tipo',x.type],['Tensión ficha',x.volt],['Frecuencia',x.hz],['Fase',x.phase],['RLA ficha',x.rla+' A'],['LRA ficha',x.lra?x.lra+' A':'—'],['Capacidad ref.',x.cap+' kW'],['Desplazamiento',x.displacement?x.displacement+' cm³/rev':'—'],['Potencia',x.power?x.power+' kW':'—'],['COP ficha',x.cop?x.cop+' W/W':'—'],['Voltaje nominal ingresado',vn===null?'—':vn+' V'],['Comparación voltaje',`<span class="${e.vClass}">${e.vStatus}</span>`],['Amperaje nominal ingresado',an===null?'—':an.toFixed(1)+' A'],['Comparación amperage',`<span class="${e.aClass}">${e.aStatus}</span>`]];
- if(cap!==null&&x.cap)a.push(['Capacidad ingresada',cap.toFixed(2)+' kW '+(Math.abs(cap-x.cap)/x.cap>.2?'⚠ revisar':'✓')]);
- if(x.capacityBTU)a.push(['Capacidad ficha',x.capacityBTU.toLocaleString('en-US')+' BTU/h']);
- const box=$('compressorResult');
- box.innerHTML=`<div class="small" style="margin-bottom:4px"><b>REFERENCIA LOCAL</b> · se usará como respaldo mientras se consulta Internet.</div><div class="compare-grid">${a.map(v=>`<div class="compare-item"><b>${v[0]}</b>${v[1]}</div>`).join('')}</div>`;
-}
-
-async function searchCompressor(){
- const q=text('compressorCode').trim().toUpperCase();
- const box=$('compressorResult');
- if(!box)return;
- if(!q){selectedCompressor=null;box.innerHTML='';return;}
- const nq=normalizeCode(q);
- const hit=COMPRESSORS.find(x=>{const nx=normalizeCode(x.model);return nx===nq||nx.includes(nq)||nq.includes(nx)});
- if(hit){selectedCompressor=hit;renderLocalCompressor(hit);}
- await webSearchCompressor(q);
-}
-
-function convertPressure(id,from,to){const v=num(id);if(v!==null)$(id).value=barP(pBar(v,from),to).toFixed(2)}
-function convertTemp(id,from,to){const v=num(id);if(v!==null)$(id).value=ct(tc(v,from),to).toFixed(1)}
-function convertCapacity(from,to){const v=num("capacity");if(v!==null)$( "capacity").value=kwCap(capKW(v,from),to).toFixed(2)}
-function updateUnits(){
- const np=text("punit"),nt=text("tempUnidad"),nc=text("capacityUnit");
- if(units.p!==np)convertPressure("psuc",units.p,np),convertPressure("pdis",units.p,np);
- if(units.t!==nt)["tevapout","tsuction","tliquid","tdischarge","tamb","treturnAir","tsupply"].forEach(id=>convertTemp(id,units.t,nt));
- if(units.cap!==nc)convertCapacity(units.cap,nc);
- units={p:np,t:nt,cap:nc};
- if(lastResult)calculate();
-}
-["punit","tempUnidad","capacityUnit"].forEach(id=>$(id).addEventListener("change",updateUnits));
-async function updateAmbientFromNetwork(){
-  const el=$("tamb");
-  if(!el) return;
-  try{
-    if(!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(async pos=>{
-      try{
-        const {latitude,longitude}=pos.coords;
-        const unit=text("tempUnidad")==="F"?"fahrenheit":"celsius";
-        const url=`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m&temperature_unit=${unit}`;
-        const res=await fetch(url);
-        const data=await res.json();
-        const temp=data?.current?.temperature_2m;
-        if(Number.isFinite(temp)){
-          el.value=Number(temp).toFixed(1);
-          if(lastResult) calculate();
+    async function obtenerClimaPuntoFijo() {
+      const lbl = document.getElementById('txtTempAmb');
+      try {
+        const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=11.7&longitude=-70.2&current_weather=true');
+        const data = await res.json();
+        if (data && data.current_weather) {
+          tempAmbientePuntoFijoC = data.current_weather.temperature;
+          let tempMostrar = convertirTemp(tempAmbientePuntoFijoC);
+          lbl.innerText = `${tempMostrar.toFixed(1)} °${tUnitActual}`;
+          guardarYActualizar();
+        } else {
+          lbl.innerText = "30.0 °C";
         }
-      }catch(e){}
-    },()=>{},{enableHighAccuracy:false,maximumAge:1800000,timeout:5000});
-  }catch(e){}
-}
-window.addEventListener("load",updateAmbientFromNetwork);
-$("ref").addEventListener("change",()=>{if(lastResult)calculate()});
-$("expansion").addEventListener("change",()=>{if(lastResult)calculate()});
-$("compressorCode").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();searchCompressor();}});
-document.querySelectorAll("input,textarea,select").forEach(e=>e.addEventListener("input",()=>{$("systemStatus").textContent="Cambios sin analizar"}));
+      } catch (e) {
+        lbl.innerText = "30.0 °C";
+      }
+    }
 
-function saveData(){
- const ids=["brand","fiscal","technician","modelBrand","model","compressorCode","tempUnidad","capacity","capacityUnit","ref","punit","type","expansion","applicationMode","psuc","pdis","tevapout","tsuction","tliquid","tdischarge","tamb","treturnAir","tsupply","vmeas","vnom","ameas","anom",];
- const d={};ids.forEach(id=>d[id]=text(id));localStorage.setItem("hvacrV31",JSON.stringify(d));alert("Datos guardados en este navegador.");
-}
-function loadData(){
- const d=JSON.parse(localStorage.getItem("hvacrV31")||"null");if(!d){alert("No hay datos guardados.");return}
- Object.entries(d).forEach(([id,v])=>{if($(id))$(id).value=v});units={p:text("punit"),t:text("tempUnidad"),cap:text("capacityUnit")};calculate();
-}
-function clearData(){
- if(!confirm("¿Limpiar todos los datos?"))return;
- document.querySelectorAll("input,textarea").forEach(e=>e.value="");
- $("ref").value="R410A";$("punit").value="psi";$("tempUnidad").value="C";$("capacityUnit").value="BTU/h";$("type").value="Split";$("expansion").value="TXV";$("applicationMode").value="AUTO";
- units={p:"psi",t:"C",cap:"BTU/h"};lastResult=null;renderMetrics(null);$("findings").innerHTML="<div class='alert'>Complete las mediciones y pulse ANALIZAR.</div>";$("causes").innerHTML="<li>Datos insuficientes.</li>";$("next").innerHTML="";Plotly.purge("plot");status("error","DATOS INSUFICIENTES","Ingrese las mediciones disponibles.");
-}
+    function actualizarEtiquetas() {
+      document.getElementById('lblPSuct').innerText = `P. Succión (${pUnits[pUnitActual].label})`;
+      document.getElementById('lblPDesc').innerText = `P. Descarga (${pUnits[pUnitActual].label})`;
+      document.getElementById('lblTEvapOut').innerText = `T. Salida Evap (°${tUnitActual})`;
+      document.getElementById('lblTSuct').innerText = `T. Succ Tubo (°${tUnitActual})`;
+      document.getElementById('lblTLiq').innerText = `T. Liq Tubo (°${tUnitActual})`;
+      document.getElementById('lblTDescReal').innerText = `T. Desc (°${tUnitActual})`;
+    }
 
-function pdfItem(label,value){return `<div class="pdf-item"><div class="pdf-label">${label}</div><div class="pdf-value">${value||"—"}</div></div>`}
-function generatePDF(){
- if(!lastResult){alert("Primero pulse ANALIZAR.");return}
- const r=lastResult,tu=text("tempUnidad"),pu=text("punit"),cu=text("capacityUnit");
- const T=c=>c===null?"—":fmt(ct(c,tu))+" "+(tu==="F"?"°F":"°C"),P=p=>p===null?"—":fmt(barP(p-ATM,pu),1)+" "+pu+" g ("+fmt(p,2)+" barA)";
- $("pdfDate").textContent=new Date().toLocaleString("es-ES");
- $("pdfAdmin").innerHTML=[pdfItem("Empresa",text("brand")),pdfItem("RIF",text("fiscal")),pdfItem("Técnico",text("technician")),pdfItem("Marca",text("modelBrand")),pdfItem("Modelo",text("model")),pdfItem("Compresor",text("compressorCode")),pdfItem("Unidad temperatura",tu==="F"?"°F":"°C")].join("");
- $("pdfEquipo").innerHTML=[pdfItem("Capacidad",num("capacity")===null?"—":num("capacity")+" "+cu),pdfItem("Refrigerante",text("ref")),pdfItem("Tipo de equipo",text("type")),pdfItem("Expansión",expansionRule().name),pdfItem("Aplicación de trabajo",text("applicationMode")||"AUTO"),pdfItem("Unidad presión",pu)].join("");
- $("pdfMed").innerHTML=[pdfItem("Presión succión",P(r.ps)),pdfItem("Temperatura salida evaporador",T(r.teo)),pdfItem("Temperatura succión",T(r.ts)),pdfItem("Presión descarga",P(r.pd)),pdfItem("Temperatura línea líquida",T(r.tl)),pdfItem("Temperatura descarga compresor",T(r.td)),pdfItem("Temperatura ambiente",T(r.amb)),pdfItem("Voltaje",r.vm===null?"—":r.vm+" V"),pdfItem("Amperaje",r.am===null?"—":r.am+" A")].join("");
- $("pdfInd").innerHTML=[pdfItem("T° saturación evaporación",T(r.tev)),pdfItem("T° saturación condensación",T(r.tcond)),pdfItem("Superheat evaporador",fmt(r.shEv)+" K"),pdfItem("Superheat total",fmt(r.shTot)+" K"),pdfItem("Superheat línea",fmt(r.shLine)+" K"),pdfItem("Subcooling",fmt(r.sc)+" K"),pdfItem("ΔT aire",fmt(r.dtAir)+" K"),pdfItem("ΔT condensación-ambiente",fmt(r.dtCond)+" K"),pdfItem("Relación de presión",fmt(r.ratio,2)),pdfItem("Desvío de voltaje",fmt(r.vDev)+" %"),pdfItem("Corriente vs nominal",fmt(r.iPct)+" %"),pdfItem("Efecto frigorífico específico",r.thermo?fmt(r.thermo.qEvap,1)+" kJ/kg":"—"),pdfItem("COP termodinámico",r.thermo?fmt(r.thermo.cop,2):"—"),pdfItem("Calidad después de expansión",r.thermo&&Number.isFinite(r.thermo.x4)?fmt(r.thermo.x4*100,1)+" %":"—")].join("");
- const envPdf=r.envelopeEval? r.envelopeEval.checks.map(c=>`${c.label}: ${c.ok?'DENTRO':'FUERA'} · ${c.detail}`).join(' | ') : 'Sin evaluación de envelope';
- $("pdfDiag").innerHTML=r.findings.map(f=>`<div class="pdf-finding"><b>${f.title}</b><br>${f.detail}</div>`).join("")+`<div class="pdf-finding"><b>Envelope del compresor</b><br>${envPdf}</div>`+"<b>Sugerencias</b><ul>"+[...new Set(r.next)].map(x=>`<li>${x}</li>`).join("")+"</ul>";
- 
- const report=$("pdfReport");report.style.display="block";
- html2pdf().set({margin:8,filename:"Reporte_HVAC_"+new Date().toISOString().slice(0,10)+".pdf",image:{type:"jpeg",quality:.96},html2canvas:{scale:2,useCORS:true,backgroundColor:"#fff"},jsPDF:{unit:"mm",format:"a4",orientation:"portrait"},pagebreak:{mode:["css","legacy"]}}).from(report).save().then(()=>report.style.display="none");
-}
-renderMetrics(null);
-(window.__coolPropPromise||Promise.resolve()).then(()=>drawChart({ref:$('ref').value}));
-</script>
+    function cambiarUnidades() {
+      const nuevaPUnit = document.getElementById('pUnitSelect').value;
+      const nuevaTUnit = document.getElementById('tUnitSelect').value;
+
+      const pFactorViejo = pUnits[pUnitActual].factor;
+      const pFactorNuevo = pUnits[nuevaPUnit].factor;
+
+      ['pSuct', 'pDesc'].forEach(id => {
+        const elem = document.getElementById(id);
+        const valBar = parseFloat(elem.value) / pFactorViejo;
+        elem.value = (valBar * pFactorNuevo).toFixed(nuevaPUnit === 'psi' ? 0 : 1);
+      });
+
+      if (tUnitActual !== nuevaTUnit) {
+        ['tEvapOut', 'tSuct', 'tLiq', 'tDescReal'].forEach(id => {
+          const elem = document.getElementById(id);
+          let val = parseFloat(elem.value);
+          if (nuevaTUnit === 'F') {
+            elem.value = (val * 9/5 + 32).toFixed(1);
+          } else {
+            elem.value = ((val - 32) * 5/9).toFixed(1);
+          }
+        });
+      }
+
+      pUnitActual = nuevaPUnit;
+      tUnitActual = nuevaTUnit;
+
+      actualizarEtiquetas();
+      obtenerClimaPuntoFijo();
+    }
+
+    function toggleZonaActiva() {
+      zonaActivaHabilitada = !zonaActivaHabilitada;
+      actualizarEstadoBotonZoom();
+      guardarYActualizar();
+    }
+
+    function actualizarEstadoBotonZoom() {
+      const btn = document.getElementById('btnZonaActiva');
+      btn.innerText = `🔍 Zoom Zona Activa: ${zonaActivaHabilitada ? 'ON' : 'OFF'}`;
+      btn.classList.toggle('active', zonaActivaHabilitada);
+    }
+
+    function guardarConfiguracion() {
+      const data = {
+        empresaNombre: document.getElementById('empresaNombre').value,
+        empresaRif: document.getElementById('empresaRif').value,
+        tecnicoNombre: document.getElementById('tecnicoNombre').value,
+        equipoMarca: document.getElementById('equipoMarca').value,
+        equipoModelo: document.getElementById('equipoModelo').value,
+        // Nuevo: guardamos valor numérico y unidad por separado
+        capFrigValue: document.getElementById('capFrigValue').value,
+        capFrigUnit: document.getElementById('capUnitSelect').value,
+        refSelect: document.getElementById('refSelect').value,
+        pUnitSelect: document.getElementById('pUnitSelect').value,
+        tUnitSelect: document.getElementById('tUnitSelect').value,
+        pSuct: document.getElementById('pSuct').value,
+        pDesc: document.getElementById('pDesc').value,
+        tEvapOut: document.getElementById('tEvapOut').value,
+        tSuct: document.getElementById('tSuct').value,
+        tLiq: document.getElementById('tLiq').value,
+        tDescReal: document.getElementById('tDescReal').value,
+        vVolt: document.getElementById('vVolt').value,
+        iAmp: document.getElementById('iAmp').value,
+        zonaActivaHabilitada: zonaActivaHabilitada
+      };
+      localStorage.setItem('mollier_app_report_data', JSON.stringify(data));
+    }
+
+    function cargarConfiguracion() {
+      const saved = localStorage.getItem('mollier_app_report_data');
+      if (saved) {
+        try {
+          const data = JSON.parse(saved);
+          if (data.empresaNombre !== undefined) document.getElementById('empresaNombre').value = data.empresaNombre;
+          if (data.empresaRif !== undefined) document.getElementById('empresaRif').value = data.empresaRif;
+          if (data.tecnicoNombre !== undefined) document.getElementById('tecnicoNombre').value = data.tecnicoNombre;
+          if (data.equipoMarca !== undefined) document.getElementById('equipoMarca').value = data.equipoMarca;
+          if (data.equipoModelo !== undefined) document.getElementById('equipoModelo').value = data.equipoModelo;
+
+          // Compatibilidad: si existe capFrigValue lo usamos; si solo existe el antiguo capFrigNominal intentamos parsearlo
+          if (data.capFrigValue !== undefined) {
+            document.getElementById('capFrigValue').value = data.capFrigValue;
+          } else if (data.capFrigNominal) {
+            const s = data.capFrigNominal;
+            const m = s.match(/([\d\.,]+)/);
+            if (m) {
+              const num = parseFloat(m[1].replace(/,/g, ''));
+              if (!isNaN(num)) document.getElementById('capFrigValue').value = num;
+            }
+          }
+          if (data.capFrigUnit !== undefined) {
+            document.getElementById('capUnitSelect').value = data.capFrigUnit;
+          } else if (data.capFrigNominal) {
+            const s = data.capFrigNominal.toLowerCase();
+            if (s.includes('ton')) document.getElementById('capUnitSelect').value = 'Ton';
+            else if (s.includes('kw')) document.getElementById('capUnitSelect').value = 'kW';
+            else document.getElementById('capUnitSelect').value = 'BTU/h';
+          }
+
+          if (data.refSelect) document.getElementById('refSelect').value = data.refSelect;
+          if (data.pUnitSelect) document.getElementById('pUnitSelect').value = data.pUnitSelect;
+          if (data.tUnitSelect) document.getElementById('tUnitSelect').value = data.tUnitSelect;
+          if (data.pSuct !== undefined) document.getElementById('pSuct').value = data.pSuct;
+          if (data.pDesc !== undefined) document.getElementById('pDesc').value = data.pDesc;
+          if (data.tEvapOut !== undefined) document.getElementById('tEvapOut').value = data.tEvapOut;
+          if (data.tSuct !== undefined) document.getElementById('tSuct').value = data.tSuct;
+          if (data.tLiq !== undefined) document.getElementById('tLiq').value = data.tLiq;
+          if (data.tDescReal !== undefined) document.getElementById('tDescReal').value = data.tDescReal;
+          if (data.vVolt !== undefined) document.getElementById('vVolt').value = data.vVolt;
+          if (data.iAmp !== undefined) document.getElementById('iAmp').value = data.iAmp;
+          if (data.zonaActivaHabilitada !== undefined) zonaActivaHabilitada = data.zonaActivaHabilitada;
+
+          pUnitActual = document.getElementById('pUnitSelect').value;
+          tUnitActual = document.getElementById('tUnitSelect').value;
+          actualizarEstadoBotonZoom();
+        } catch (e) {
+          console.error("Error al cargar datos", e);
+        }
+      }
+    }
+
+    function guardarYActualizar() {
+      guardarConfiguracion();
+      actualizarTodo();
+    }
+
+    function descargarPDFReporte() {
+      const element = document.getElementById('reporteArea');
+      document.body.classList.add('generating-pdf');
+
+      const opt = {
+        margin:       [5, 5, 5, 5],
+        filename:     `Reporte_Tecnico_${document.getElementById('equipoMarca').value}_${document.getElementById('equipoModelo').value}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, logging: false },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      html2pdf().set(opt).from(element).save().then(() => {
+        document.body.classList.remove('generating-pdf');
+      });
+    }
+
+    function getPropAtP(refData, pBarAbs) {
+      const dome = refData.dome;
+      if (pBarAbs <= dome[0].p) return dome[0];
+      if (pBarAbs >= refData.criticalP) return dome[dome.length - 1];
+
+      for (let i = 0; i < dome.length - 1; i++) {
+        if (pBarAbs >= dome[i].p && pBarAbs <= dome[i+1].p) {
+          const logP = Math.log(pBarAbs);
+          const logP1 = Math.log(dome[i].p);
+          const logP2 = Math.log(dome[i+1].p);
+          const factor = (logP - logP1) / (logP2 - logP1);
+
+          return {
+            hL: dome[i].hL + factor * (dome[i+1].hL - dome[i].hL),
+            hV: dome[i].hV + factor * (dome[i+1].hV - dome[i].hV),
+            tSat: dome[i].tSat + factor * (dome[i+1].tSat - dome[i].tSat)
+          };
+        }
+      }
+      return dome[0];
+    }
+
+    function getZoneTraces(refData, minX, maxX) {
+      const f = pUnits[pUnitActual].factor;
+      const dome = refData.dome;
+
+      const pVals = dome.map(pt => pt.p * f);
+      const hLVals = dome.map(pt => pt.hL);
+      const hVVals = dome.map(pt => pt.hV);
+
+      const pTop = pVals[pVals.length - 1];
+      const pBot = pVals[0];
+
+      const liquidX = [minX, minX];
+      const liquidY = [pBot, pTop];
+      for (let i = dome.length - 1; i >= 0; i--) {
+        liquidX.push(hLVals[i]);
+        liquidY.push(pVals[i]);
+      }
+
+      const traceLiquid = {
+        x: liquidX, y: liquidY, fill: 'toself',
+        fillcolor: 'rgba(2, 132, 199, 0.22)', line: { color: 'transparent' },
+        name: 'Líquido', showlegend: false, hoverinfo: 'none'
+      };
+
+      const satX = []; const satY = [];
+      for (let i = 0; i < dome.length; i++) { satX.push(hLVals[i]); satY.push(pVals[i]); }
+      for (let i = dome.length - 1; i >= 0; i--) { satX.push(hVVals[i]); satY.push(pVals[i]); }
+
+      const traceSat = {
+        x: satX, y: satY, fill: 'toself',
+        fillcolor: 'rgba(16, 185, 129, 0.22)', line: { color: 'transparent' },
+        name: 'Mezcla', showlegend: false, hoverinfo: 'none'
+      };
+
+      const vaporX = []; const vaporY = [];
+      for (let i = 0; i < dome.length; i++) { vaporX.push(hVVals[i]); vaporY.push(pVals[i]); }
+      vaporX.push(maxX, maxX);
+      vaporY.push(pTop, pBot);
+
+      const traceVapor = {
+        x: vaporX, y: vaporY, fill: 'toself',
+        fillcolor: 'rgba(245, 158, 11, 0.20)', line: { color: 'transparent' },
+        name: 'Vapor', showlegend: false, hoverinfo: 'none'
+      };
+
+      return [traceLiquid, traceSat, traceVapor];
+    }
+
+    function getDomeTrace(refData) {
+      const hVals = [];
+      const pVals = [];
+      const tempsText = [];
+      const f = pUnits[pUnitActual].factor;
+
+      refData.dome.forEach(pt => {
+        hVals.push(pt.hL);
+        pVals.push(pt.p * f);
+        tempsText.push(`${convertirTemp(pt.tSat).toFixed(1)} °${tUnitActual}`);
+      });
+
+      for (let i = refData.dome.length - 1; i >= 0; i--) {
+        hVals.push(refData.dome[i].hV);
+        pVals.push(refData.dome[i].p * f);
+        tempsText.push(`${convertirTemp(refData.dome[i].tSat).toFixed(1)} °${tUnitActual}`);
+      }
+
+      return {
+        x: hVals,
+        y: pVals,
+        mode: 'lines+markers',
+        name: `Domo ${refData.nombre}`,
+        line: { color: '#38bdf8', width: 2.0, shape: 'spline', smoothing: 1.1 },
+        marker: { size: 4, color: '#38bdf8' },
+        hovertemplate: `<b>Domo Sat. (${refData.nombre})</b><br>` +
+                       `Temp Sat: %{text}<br>` +
+                       `P: %{y:.1f} ${pUnits[pUnitActual].label}<br>` +
+                       `h: %{x:.1f} kJ/kg<extra></extra>`,
+        text: tempsText
+      };
+    }
+
+    function evaluarDiagnostico(refData, rP, tDescRealC, tLiqC, tSatCondC, SHUtil, SHTotal, SC, dischargeSuperHeatK, tempAmbienteC) {
+      const alertas = [];
+      let alarmaTDesc = false;
+      let alarmaTLiq = false;
+
+      const deltaTCondAmb = tSatCondC - tempAmbienteC;
+
+      if (tDescRealC > refData.tDescMax) {
+        alarmaTDesc = true;
+        alertas.push(`🔴 <b>CRÍTICO (T. Descarga ${tDescRealC.toFixed(0)}°C):</b> Supera el límite de ${refData.tDescMax}°C para ${refData.nombre}.`);
+      }
+
+      if (tLiqC >= tSatCondC) {
+        alarmaTLiq = true;
+        alertas.push(`🔴 <b>ALERTA (T. Líquido ${tLiqC.toFixed(1)}°C):</b> Sin Subenfriamiento (T. Líquido ≥ T. Sat ${tSatCondC.toFixed(1)}°C). Riesgo de Flash Gas.`);
+      }
+
+      if (SC < 3.0 && !alarmaTLiq) {
+        if (deltaTCondAmb > 18.0 || rP > refData.rPMax) {
+          alertas.push(`🔴 <b>CONDENSADOR SUCIO (SC = ${SC.toFixed(1)} K):</b> Subenfriamiento bajo con ΔT Cond-Amb elevado (${deltaTCondAmb.toFixed(1)} K).`);
+        } else if (SHTotal > refData.shOptimo[1]) {
+          alertas.push(`🟡 <b>FALTA DE REFRIGERANTE (SC = ${SC.toFixed(1)} K):</b> Subenfriamiento bajo y Recalentamiento elevado (${SHTotal.toFixed(1)} K).`);
+        } else {
+          alertas.push(`🟡 <b>Subenfriamiento Bajo (< 3.0 K):</b> Subenfriamiento insuficiente (${SC.toFixed(1)} K).`);
+        }
+      } else if (SC > refData.scOptimo[1]) {
+        alertas.push(`🔵 <b>Subenfriamiento Alto (> ${refData.scOptimo[1]} K):</b> Exceso de carga de refrigerante.`);
+      }
+
+      if (rP > refData.rPMax) {
+        alertas.push(`🔴 <b>Relación de Presión Excesiva (rP = ${rP.toFixed(1)} > ${refData.rPMax}):</b> Compresor fuera de rango.`);
+      }
+
+      if (SHUtil < refData.shOptimo[0]) {
+        alertas.push(`🔴 <b>Recalentamiento Útil Crítico (< ${refData.shOptimo[0]} K):</b> Riesgo de retorno de líquido.`);
+      } else if (SHUtil > refData.shOptimo[1]) {
+        alertas.push(`🟡 <b>Recalentamiento Útil Alto (> ${refData.shOptimo[1]} K):</b> Evaporador subalimentado.`);
+      }
+
+      return { alertas, alarmaTDesc, alarmaTLiq };
+    }
+
+    function actualizarTodo() {
+      const refKey = document.getElementById('refSelect').value;
+      const refData = refrigerantes[refKey];
+      const pf = pUnits[pUnitActual].factor;
+
+      let pSuctInput = parseFloat(document.getElementById('pSuct').value);
+      let pDescInput = parseFloat(document.getElementById('pDesc').value);
+
+      if (isNaN(pSuctInput)) pSuctInput = 25;
+      if (isNaN(pDescInput)) pDescInput = 290;
+
+      const barFactor = (pUnitActual === 'psi') ? 14.5038 : ((pUnitActual === 'kpa') ? 100 : 1.0);
+      const atmBar = 1.01325;
+
+      const pSuctBarAbs = Math.max((pSuctInput / barFactor) + atmBar, 0.2);
+      const pDescBarAbs = Math.min((pDescInput / barFactor) + atmBar, refData.criticalP - 0.2);
+
+      let tEvapOutVal = parseFloat(document.getElementById('tEvapOut').value) || -12;
+      let tSuctVal = parseFloat(document.getElementById('tSuct').value) || -10;
+      let tLiqVal = parseFloat(document.getElementById('tLiq').value) || 45;
+      let tDescRealVal = parseFloat(document.getElementById('tDescReal').value) || 90;
+
+      let tEvapOutC = tEvapOutVal;
+      let tSuctC = tSuctVal;
+      let tLiqC = tLiqVal;
+      let tDescRealC = tDescRealVal;
+
+      if (tUnitActual === 'F') {
+        tEvapOutC = (tEvapOutVal - 32) * 5/9;
+        tSuctC = (tSuctVal - 32) * 5/9;
+        tLiqC = (tLiqVal - 32) * 5/9;
+        tDescRealC = (tDescRealVal - 32) * 5/9;
+      }
+
+      const vVolt = parseFloat(document.getElementById('vVolt').value) || 220;
+      const iAmp = parseFloat(document.getElementById('iAmp').value) || 0;
+      const pKw = (vVolt * iAmp * 0.9) / 1000.0;
+
+      const propEvap = getPropAtP(refData, pSuctBarAbs);
+      const propCond = getPropAtP(refData, pDescBarAbs);
+
+      const superHeatUtilK = Math.max(tEvapOutC - propEvap.tSat, 0);
+      const superHeatTotalK = Math.max(tSuctC - propEvap.tSat, 0);
+      const subCoolK = Math.max(propCond.tSat - tLiqC, 0);
+      const dischargeSuperHeatK = Math.max(tDescRealC - propCond.tSat, 0);
+
+      const deltaTCondAmb = propCond.tSat - tempAmbientePuntoFijoC;
+
+      const h1 = propEvap.hV + (superHeatTotalK * refData.cpV);
+      const h3 = propCond.hL - (subCoolK * refData.cpL);
+      const h4 = h3; 
+
+      const qn = h1 - h4;
+
+      const rP = pDescBarAbs / pSuctBarAbs;
+      const deltaH_isentropico = h1 * 0.15 * Math.log(rP); 
+      const deltaT_superheat_desc = Math.max(tDescRealC - propCond.tSat, 0);
+      const h2_termico = propCond.hV + (deltaT_superheat_desc * refData.cpV);
+
+      const h2 = Math.max(h1 + deltaH_isentropico, h2_termico);
+
+      const w = h2 - h1;
+      const cop = w > 0 ? (qn / w) : 0;
+
+      document.getElementById('kpiSHUtil').innerText = `${superHeatUtilK.toFixed(1)} K`;
+      document.getElementById('kpiSHTotal').innerText = `${superHeatTotalK.toFixed(1)} K`;
+      document.getElementById('kpiSC').innerText = `${subCoolK.toFixed(1)} K`;
+      document.getElementById('kpiKW').innerText = `${pKw.toFixed(2)} kW`;
+      document.getElementById('kpiqn').innerText = `${qn.toFixed(1)} kJ/kg`;
+      document.getElementById('kpiw').innerText = `${w.toFixed(1)} kJ/kg`;
+      document.getElementById('kpicop').innerText = cop.toFixed(2);
+      document.getElementById('kpiDeltaAmb').innerText = `${deltaTCondAmb.toFixed(1)} K`;
+
+      const { alertas, alarmaTDesc, alarmaTLiq } = evaluarDiagnostico(
+        refData, rP, tDescRealC, tLiqC, propCond.tSat, superHeatUtilK, superHeatTotalK, subCoolK, dischargeSuperHeatK, tempAmbientePuntoFijoC
+      );
+      
+      const grpDesc = document.getElementById('grpTDescReal');
+      const grpLiq = document.getElementById('grpTLiq');
+      const panelAlertas = document.getElementById('panelAlertas');
+
+      if (alarmaTDesc) grpDesc.classList.add('alarm-field-active');
+      else grpDesc.classList.remove('alarm-field-active');
+
+      if (alarmaTLiq) grpLiq.classList.add('alarm-field-active');
+      else grpLiq.classList.remove('alarm-field-active');
+
+      if (alertas.length === 0) {
+        panelAlertas.innerHTML = `<div class="diag-item" style="color: #34d399; text-align: left;">✅ <b>Sistema Estable:</b> El equipo con ${refData.nombre} opera dentro de los parámetros previstos.</div>`;
+      } else {
+        panelAlertas.innerHTML = alertas.map(a => `<div class="diag-item" style="color: #cbd5e1;">${a}</div>`).join('');
+      }
+
+      const pSuctPlot = pSuctBarAbs * pf;
+      const pDescPlot = pDescBarAbs * pf;
+
+      const minX = refData.xRange[0];
+      const maxX = refData.xRange[1];
+
+      const zoneTraces = getZoneTraces(refData, minX, maxX);
+
+      const t1Str = `${convertirTemp(tSuctC).toFixed(1)} °${tUnitActual}`;
+      const t2Str = `${convertirTemp(tDescRealC).toFixed(1)} °${tUnitActual}`;
+      const t3Str = `${convertirTemp(tLiqC).toFixed(1)} °${tUnitActual}`;
+      const t4Str = `${convertirTemp(propEvap.tSat).toFixed(1)} °${tUnitActual}`;
+
+      const cycleTrace = {
+        x: [h1, h2, h3, h4, h1],
+        y: [pSuctPlot, pDescPlot, pDescPlot, pSuctPlot, pSuctPlot],
+        mode: 'lines+markers+text',
+        name: 'Ciclo Operativo',
+        text: ['1', '2', '3', '4', '1'],
+        textposition: 'top center',
+        textfont: { size: 8, color: '#f8fafc' },
+        line: { color: '#ef4444', width: 2.2 },
+        marker: { size: 6, color: '#f59e0b' },
+        hovertemplate: '<b>Punto %{text} del Ciclo</b><br>' +
+                       'Temp: %{customdata}<br>' +
+                       'P: %{y:.1f} ' + pUnits[pUnitActual].label + '<br>' +
+                       'h: %{x:.1f} kJ/kg<extra></extra>',
+        customdata: [t1Str, t2Str, t3Str, t4Str, t1Str]
+      };
+
+      const domeTrace = getDomeTrace(refData);
+
+      const layout = {
+        autosize: true,
+        margin: { l: 22, r: 10, t: 10, b: 22 },
+        paper_bgcolor: '#1e293b',
+        plot_bgcolor: '#0f172a',
+        showlegend: false,
+        xaxis: {
+          title: 'h (kJ/kg)',
+          titlefont: { size: 7, color: '#94a3b8' },
+          tickfont: { size: 6.5, color: '#cbd5e1' },
+          gridcolor: '#334155',
+          zeroline: false,
+          autorange: !zonaActivaHabilitada,
+          range: zonaActivaHabilitada ? [Math.max(h4 - 25, minX), Math.min(h2 + 25, maxX)] : undefined
+        },
+        yaxis: {
+          title: `P. Abs (${pUnits[pUnitActual].label})`,
+          titlefont: { size: 7, color: '#94a3b8' },
+          tickfont: { size: 6.5, color: '#cbd5e1' },
+          type: 'log',
+          automargin: true,
+          gridcolor: '#334155',
+          zeroline: false,
+          autorange: !zonaActivaHabilitada,
+          range: zonaActivaHabilitada ? [Math.log10(pSuctPlot * 0.75), Math.log10(pDescPlot * 1.25)] : undefined
+        }
+      };
+
+      Plotly.react('mollierPlot', [...zoneTraces, domeTrace, cycleTrace], layout, { responsive: true, displayModeBar: false });
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      cargarConfiguracion();
+      actualizarEtiquetas();
+      actualizarReloj();
+      setInterval(actualizarReloj, 1000);
+      obtenerClimaPuntoFijo();
+    });
+  </script>
 </body>
 </html>
