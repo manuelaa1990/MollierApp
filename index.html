@@ -558,6 +558,15 @@
 
         <div class="diag-container" id="panelAlertas">
         </div>
+        <div id="confiabilidadDiagnostico" style="margin-top:4px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.56rem;color:#94a3b8;">
+            <span>Confiabilidad del análisis</span>
+            <b id="txtConfiabilidad" style="color:#f8fafc;">0%</b>
+          </div>
+          <div style="height:5px;background:#334155;border-radius:5px;overflow:hidden;margin-top:2px;">
+            <div id="barraConfiabilidad" style="height:100%;width:0%;background:#64748b;border-radius:5px;transition:width .25s ease,background .25s ease;"></div>
+          </div>
+        </div>
       </div>
 
     </header>
@@ -972,46 +981,191 @@
       };
     }
 
-    function evaluarDiagnostico(refData, rP, tDescRealC, tLiqC, tSatCondC, SHUtil, SHTotal, SC, dischargeSuperHeatK, tempAmbienteC) {
+    /*
+     * MOTOR DE EVIDENCIA / DIAGNÓSTICO V2
+     * La interfaz y las variables de campo se mantienen intactas.
+     * El motor NO declara una falla como confirmada: pondera evidencias,
+     * contradicciones y datos faltantes.
+     */
+    function evaluarDiagnostico(refData, rP, tDescRealC, tLiqC, tSatCondC,
+      SHUtil, SHTotal, SC, dischargeSuperHeatK, tempAmbienteC,
+      pSuctBarAbs, pDescBarAbs) {
+
       const alertas = [];
       let alarmaTDesc = false;
       let alarmaTLiq = false;
+      const evidencias = [];
+      const contradicciones = [];
+      let score = 100;
 
       const deltaTCondAmb = tSatCondC - tempAmbienteC;
+      const shMin = refData.shOptimo[0];
+      const shMax = refData.shOptimo[1];
+      const scMin = refData.scOptimo[0];
+      const scMax = refData.scOptimo[1];
 
-      if (tDescRealC > refData.tDescMax) {
+      const finite = v => Number.isFinite(v);
+
+      // Penalización por calidad de datos. Evita un 100% cuando faltan
+      // mediciones esenciales o las entradas no son físicamente coherentes.
+      const required = [
+        pSuctBarAbs, pDescBarAbs, tSatCondC, tDescRealC,
+        tLiqC, SHUtil, SHTotal, SC, dischargeSuperHeatK
+      ];
+      const validCount = required.filter(finite).length;
+      score -= (required.length - validCount) * 9;
+
+      if (!finite(pSuctBarAbs) || !finite(pDescBarAbs) || pSuctBarAbs <= 0 || pDescBarAbs <= 0) {
+        alertas.push(`🔴 <b>DATOS INSUFICIENTES:</b> No es posible validar correctamente las relaciones de presión.`);
+      }
+
+      if (pDescBarAbs <= pSuctBarAbs) {
+        score -= 35;
+        alertas.push(`🔴 <b>INCONSISTENCIA DE MEDICIÓN:</b> La presión absoluta de descarga no supera a la de succión. Verifique manómetros, unidades y puntos de toma.`);
+      }
+
+      // Temperatura de descarga: condición crítica real, pero no atribución automática.
+      if (finite(tDescRealC) && tDescRealC > refData.tDescMax) {
         alarmaTDesc = true;
-        alertas.push(`🔴 <b>CRÍTICO (T. Descarga ${tDescRealC.toFixed(0)}°C):</b> Supera el límite de ${refData.tDescMax}°C para ${refData.nombre}.`);
+        score -= 18;
+        evidencias.push(`Temperatura de descarga ${tDescRealC.toFixed(1)} °C por encima del límite de referencia de ${refData.tDescMax} °C.`);
+        alertas.push(`🔴 <b>CONDICIÓN CRÍTICA — T. DESCARGA:</b> ${tDescRealC.toFixed(1)} °C supera ${refData.tDescMax} °C. <span style="color:#fca5a5;">Indica una condición térmica de riesgo; la causa debe verificarse.</span>`);
+      } else if (finite(tDescRealC) && tDescRealC > refData.tDescMax - 10) {
+        score -= 4;
+        alertas.push(`🟠 <b>VIGILAR T. DESCARGA:</b> ${tDescRealC.toFixed(1)} °C está próxima al límite de referencia (${refData.tDescMax} °C).`);
       }
 
-      if (tLiqC >= tSatCondC) {
+      // Líquido / flash gas.
+      if (finite(tLiqC) && finite(tSatCondC) && tLiqC >= tSatCondC) {
         alarmaTLiq = true;
-        alertas.push(`🔴 <b>ALERTA (T. Líquido ${tLiqC.toFixed(1)}°C):</b> Sin Subenfriamiento (T. Líquido ≥ T. Sat ${tSatCondC.toFixed(1)}°C). Riesgo de Flash Gas.`);
+        score -= 15;
+        evidencias.push(`Temperatura de líquido ${tLiqC.toFixed(1)} °C no muestra margen de subenfriamiento respecto a la saturación.`);
+        alertas.push(`🔴 <b>CONDICIÓN DE LÍQUIDO:</b> T. líquido ${tLiqC.toFixed(1)} °C ≥ T. saturación ${tSatCondC.toFixed(1)} °C. <span style="color:#fca5a5;">Existe indicio de ausencia de subenfriamiento y posible formación de gas flash.</span>`);
       }
 
-      if (SC < 3.0 && !alarmaTLiq) {
-        if (deltaTCondAmb > 18.0 || rP > refData.rPMax) {
-          alertas.push(`🔴 <b>CONDENSADOR SUCIO (SC = ${SC.toFixed(1)} K):</b> Subenfriamiento bajo con ΔT Cond-Amb elevado (${deltaTCondAmb.toFixed(1)} K).`);
-        } else if (SHTotal > refData.shOptimo[1]) {
-          alertas.push(`🟡 <b>FALTA DE REFRIGERANTE (SC = ${SC.toFixed(1)} K):</b> Subenfriamiento bajo y Recalentamiento elevado (${SHTotal.toFixed(1)} K).`);
+      // Subenfriamiento: diagnóstico diferencial, no "falta de refrigerante" automática.
+      if (finite(SC)) {
+        if (SC < scMin) {
+          score -= 8;
+          evidencias.push(`Subenfriamiento ${SC.toFixed(1)} K por debajo del rango de referencia ${scMin}–${scMax} K.`);
+
+          const condenserEvidence = finite(deltaTCondAmb) && deltaTCondAmb > 18;
+          const pressureEvidence = finite(rP) && rP > refData.rPMax;
+          const chargeEvidence = finite(SHTotal) && SHTotal > shMax;
+
+          if (condenserEvidence && pressureEvidence) {
+            score -= 4;
+            alertas.push(`🟠 <b>INDICIO COMPATIBLE CON RESTRICCIÓN / BAJA RECHAZO DE CALOR EN CONDENSADOR:</b> SC ${SC.toFixed(1)} K bajo + ΔT Cond-Amb ${deltaTCondAmb.toFixed(1)} K + relación de presión ${rP.toFixed(2)}. <span style="color:#fcd34d;">Verifique limpieza, flujo de aire, ventilación y temperatura ambiente antes de concluir.</span>`);
+          } else if (chargeEvidence) {
+            score -= 3;
+            alertas.push(`🟡 <b>HIPÓTESIS: CARGA DE REFRIGERANTE INSUFICIENTE:</b> SC ${SC.toFixed(1)} K bajo junto con SH total ${SHTotal.toFixed(1)} K elevado. <span style="color:#fde68a;">Es una hipótesis; confirme con método de carga, visor, masa recuperada/cargada y condiciones del fabricante.</span>`);
+          } else {
+            alertas.push(`🟡 <b>SUBENFRIAMIENTO BAJO:</b> ${SC.toFixed(1)} K frente al rango ${scMin}–${scMax} K. <span style="color:#fde68a;">La medición por sí sola no identifica la causa.</span>`);
+          }
+        } else if (SC > scMax) {
+          score -= 5;
+          alertas.push(`🔵 <b>SUBENFRIAMIENTO ALTO:</b> ${SC.toFixed(1)} K > ${scMax} K. <span style="color:#c4b5fd;">Puede ser compatible con exceso de carga, baja transferencia de calor u otra condición; no se confirma la causa solo con SC.</span>`);
         } else {
-          alertas.push(`🟡 <b>Subenfriamiento Bajo (< 3.0 K):</b> Subenfriamiento insuficiente (${SC.toFixed(1)} K).`);
+          evidencias.push(`SC ${SC.toFixed(1)} K dentro del rango de referencia.`);
         }
-      } else if (SC > refData.scOptimo[1]) {
-        alertas.push(`🔵 <b>Subenfriamiento Alto (> ${refData.scOptimo[1]} K):</b> Exceso de carga de refrigerante.`);
       }
 
-      if (rP > refData.rPMax) {
-        alertas.push(`🔴 <b>Relación de Presión Excesiva (rP = ${rP.toFixed(1)} > ${refData.rPMax}):</b> Compresor fuera de rango.`);
+      // Relación de presión.
+      if (finite(rP)) {
+        if (rP > refData.rPMax) {
+          score -= 10;
+          evidencias.push(`Relación de presión ${rP.toFixed(2)} superior al umbral de referencia ${refData.rPMax}.`);
+          alertas.push(`🟠 <b>RELACIÓN DE PRESIÓN ELEVADA:</b> ${rP.toFixed(2)} > ${refData.rPMax}. <span style="color:#fcd34d;">Es un indicio de mayor esfuerzo del compresor; no confirma una falla del compresor.</span>`);
+        }
       }
 
-      if (SHUtil < refData.shOptimo[0]) {
-        alertas.push(`🔴 <b>Recalentamiento Útil Crítico (< ${refData.shOptimo[0]} K):</b> Riesgo de retorno de líquido.`);
-      } else if (SHUtil > refData.shOptimo[1]) {
-        alertas.push(`🟡 <b>Recalentamiento Útil Alto (> ${refData.shOptimo[1]} K):</b> Evaporador subalimentado.`);
+      // SH útil.
+      if (finite(SHUtil)) {
+        if (SHUtil < shMin) {
+          score -= 10;
+          evidencias.push(`SH útil ${SHUtil.toFixed(1)} K por debajo del mínimo de referencia.`);
+          alertas.push(`🔴 <b>SH ÚTIL BAJO:</b> ${SHUtil.toFixed(1)} K < ${shMin} K. <span style="color:#fca5a5;">Condición compatible con riesgo de retorno de líquido; confirme ubicación del sensor y estabilidad antes de intervenir.</span>`);
+        } else if (SHUtil > shMax) {
+          score -= 7;
+          evidencias.push(`SH útil ${SHUtil.toFixed(1)} K por encima del rango de referencia.`);
+          alertas.push(`🟡 <b>SH ÚTIL ALTO:</b> ${SHUtil.toFixed(1)} K > ${shMax} K. <span style="color:#fde68a;">Compatible con evaporador subalimentado o baja carga térmica, entre otras causas.</span>`);
+        } else {
+          evidencias.push(`SH útil ${SHUtil.toFixed(1)} K dentro del rango de referencia.`);
+        }
       }
 
-      return { alertas, alarmaTDesc, alarmaTLiq };
+      // SH total y descarga: corroboración / contradicción.
+      if (finite(SHTotal)) {
+        if (SHTotal > shMax) {
+          score -= 5;
+          evidencias.push(`SH total ${SHTotal.toFixed(1)} K elevado.`);
+        } else if (SHTotal >= shMin && SHTotal <= shMax) {
+          evidencias.push(`SH total ${SHTotal.toFixed(1)} K dentro del rango de referencia.`);
+        }
+      }
+
+      // Contradicciones que reducen confianza.
+      if (finite(SC) && finite(SHTotal) && SC >= scMin && SC <= scMax && SHTotal > shMax) {
+        contradicciones.push("SC normal pero SH total elevado: la hipótesis de baja carga no queda demostrada.");
+        score -= 6;
+      }
+      if (finite(SHUtil) && SHUtil >= shMin && SHUtil <= shMax && alarmaTLiq) {
+        contradicciones.push("SH útil dentro de referencia mientras la medición de líquido no muestra subenfriamiento.");
+        score -= 4;
+      }
+      if (finite(deltaTCondAmb) && deltaTCondAmb < 5 && finite(rP) && rP > refData.rPMax) {
+        contradicciones.push("Relación de presión elevada sin un ΔT Cond-Amb elevado; revisar condiciones de medición antes de atribuirlo al condensador.");
+        score -= 3;
+      }
+
+      // Mezclas zeotrópicas: la barra no puede alcanzar alta certeza con una
+      // sola temperatura de saturación simplificada.
+      if (refData.esZeotropico) {
+        score -= 6;
+        alertas.push(`🔵 <b>MEZCLA ZEOTRÓPICA (${refData.nombre}):</b> La interpretación de SH/SC depende de punto de rocío y burbuja. <span style="color:#cbd5e1;">La certeza se limita mientras el motor no disponga de ambas referencias P-T.</span>`);
+      }
+
+      // Mensaje global cuando no hay una condición concreta.
+      if (alertas.length === 0) {
+        alertas.push(`🟢 <b>CONDICIONES SIN ALERTAS RELEVANTES:</b> Las mediciones introducidas son compatibles con el rango de referencia. <span style="color:#86efac;">Esto no constituye una certificación de funcionamiento perfecto.</span>`);
+      }
+
+      // Resumen de evidencia / faltantes sin crear nuevos cuadros.
+      if (evidencias.length >= 4) {
+        alertas.push(`🔎 <b>EVIDENCIA:</b> ${evidencias.length} indicadores revisados de forma cruzada; ${contradicciones.length ? contradicciones.length + " contradicción(es) reducen la certeza." : "sin contradicciones importantes detectadas."}`);
+      }
+
+      if (contradicciones.length) {
+        alertas.push(`⚠️ <b>DATOS EN CONFLICTO:</b> ${contradicciones.join(" ")}`);
+      }
+
+      // La confiabilidad es de la calidad/coherencia del análisis, NO probabilidad de falla.
+      score = Math.max(0, Math.min(100, Math.round(score)));
+
+      return { alertas, alarmaTDesc, alarmaTLiq, confiabilidad: score };
+    }
+
+    function actualizarBarraConfiabilidad(valor) {
+      const pct = Math.max(0, Math.min(100, Math.round(valor)));
+      const txt = document.getElementById('txtConfiabilidad');
+      const bar = document.getElementById('barraConfiabilidad');
+      if (!txt || !bar) return;
+
+      txt.innerText = `${pct}%`;
+      bar.style.width = `${pct}%`;
+
+      // Verde = análisis bien sustentado; amarillo = evidencia parcial;
+      // rojo = datos insuficientes/inconsistentes.
+      if (pct >= 85) {
+        bar.style.background = '#10b981';
+        txt.style.color = '#34d399';
+      } else if (pct >= 65) {
+        bar.style.background = '#f59e0b';
+        txt.style.color = '#fbbf24';
+      } else {
+        bar.style.background = '#ef4444';
+        txt.style.color = '#f87171';
+      }
     }
 
     function actualizarTodo() {
@@ -1050,7 +1204,7 @@
 
       const vVolt = parseFloat(document.getElementById('vVolt').value) || 220;
       const iAmp = parseFloat(document.getElementById('iAmp').value) || 0;
-      const pKw = (vVolt * iAmp * 0.9) / 1000.0;
+      // Potencia eléctrica estimada: se conserva el factor 0.90 de la versión base.\n      // No se presenta como potencia medida si no existe PF/medición de kW.\n      const pKw = (vVolt * iAmp * 0.9) / 1000.0;
 
       const propEvap = getPropAtP(refData, pSuctBarAbs);
       const propCond = getPropAtP(refData, pDescBarAbs);
@@ -1087,8 +1241,9 @@
       document.getElementById('kpicop').innerText = cop.toFixed(2);
       document.getElementById('kpiDeltaAmb').innerText = `${deltaTCondAmb.toFixed(1)} K`;
 
-      const { alertas, alarmaTDesc, alarmaTLiq } = evaluarDiagnostico(
-        refData, rP, tDescRealC, tLiqC, propCond.tSat, superHeatUtilK, superHeatTotalK, subCoolK, dischargeSuperHeatK, tempAmbientePuntoFijoC
+      const { alertas, alarmaTDesc, alarmaTLiq, confiabilidad } = evaluarDiagnostico(
+        refData, rP, tDescRealC, tLiqC, propCond.tSat, superHeatUtilK, superHeatTotalK, subCoolK, dischargeSuperHeatK, tempAmbientePuntoFijoC,
+        pSuctBarAbs, pDescBarAbs
       );
       
       const grpDesc = document.getElementById('grpTDescReal');
@@ -1101,11 +1256,8 @@
       if (alarmaTLiq) grpLiq.classList.add('alarm-field-active');
       else grpLiq.classList.remove('alarm-field-active');
 
-      if (alertas.length === 0) {
-        panelAlertas.innerHTML = `<div class="diag-item" style="color: #34d399; text-align: left;">✅ <b>Sistema Estable:</b> El equipo con ${refData.nombre} opera dentro de los parámetros previstos.</div>`;
-      } else {
-        panelAlertas.innerHTML = alertas.map(a => `<div class="diag-item" style="color: #cbd5e1;">${a}</div>`).join('');
-      }
+      panelAlertas.innerHTML = alertas.map(a => `<div class="diag-item" style="color: #cbd5e1;">${a}</div>`).join('');
+      actualizarBarraConfiabilidad(confiabilidad);
 
       const pSuctPlot = pSuctBarAbs * pf;
       const pDescPlot = pDescBarAbs * pf;
