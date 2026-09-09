@@ -3,6 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" sizes="48x48" href="./favicon-48.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+  <meta name="theme-color" content="#071a33">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
   <title>Diagramas de Mollier (p-h) Pro - Mediciones y Diagnóstico de Campo</title>
   
   <!-- CDNs necesarios: Plotly para la gráfica y html2pdf para generar el PDF -->
@@ -2120,6 +2129,14 @@
 
       gd.addEventListener('touchend', finalizarPinch, { capture: true, passive: false });
       gd.addEventListener('touchcancel', finalizarPinch, { capture: true, passive: false });
+    }
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js', { scope: './' })
+          .then(reg => console.info('PWA Service Worker activo:', reg.scope))
+          .catch(err => console.warn('PWA Service Worker no disponible:', err));
+      });
     }
 
     window.addEventListener('DOMContentLoaded', () => {
