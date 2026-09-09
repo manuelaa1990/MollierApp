@@ -1735,14 +1735,16 @@
       };
 
 
-      // Puntos de consulta: punto medio de cada tramo del ciclo.
-      // El tramo 2-3 es el "medio de la descarga/condensación" que el técnico
-      // puede inspeccionar pasando el cursor por el punto.
+      // Puntos de consulta: uno por tramo.
+      // IMPORTANTE: el eje de presión es logarítmico. Para que el punto
+      // quede visualmente sobre el 50 % del tramo vertical 1→2, 3→4, etc.,
+      // la interpolación de presión debe hacerse en escala logarítmica.
+      // Con presión lineal el marcador se desplazaba fuera de la línea.
       const probeDefs = [
-        {name:"Medio compresión 1→2", a:[h1,pSuctPlot], b:[h2,pDescPlot], frac:0.50},
-        {name:"Medio descarga / condensación 2→3", a:[h2,pDescPlot], b:[h3,pDescPlot], frac:0.50},
-        {name:"Medio expansión 3→4", a:[h3,pDescPlot], b:[h4,pSuctPlot], frac:0.50},
-        {name:"Medio evaporación 4→1", a:[h4,pSuctPlot], b:[h1,pSuctPlot], frac:0.50}
+        {name:"Medio compresión 1→2", a:[h1,pSuctBarAbs], b:[h2,pDescBarAbs], frac:0.50},
+        {name:"Medio descarga / condensación 2→3", a:[h2,pDescBarAbs], b:[h3,pDescBarAbs], frac:0.50},
+        {name:"Medio expansión 3→4", a:[h3,pDescBarAbs], b:[h4,pSuctBarAbs], frac:0.50},
+        {name:"Medio evaporación 4→1", a:[h4,pSuctBarAbs], b:[h1,pSuctBarAbs], frac:0.50}
       ];
 
       const probeX = [];
@@ -1750,10 +1752,15 @@
       const probeText = [];
       const probeCustom = [];
 
+      const interpLogP = (pA, pB, f) => {
+        if (!(pA > 0) || !(pB > 0)) return NaN;
+        return Math.exp(Math.log(pA) + (Math.log(pB) - Math.log(pA)) * f);
+      };
+
       probeDefs.forEach(pr => {
         const x = pr.a[0] + (pr.b[0]-pr.a[0])*pr.frac;
-        const y = pr.a[1] + (pr.b[1]-pr.a[1])*pr.frac;
-        const pBar = y / pf;
+        const pBar = interpLogP(pr.a[1], pr.b[1], pr.frac);
+        const y = pBar * pf;
         const t = getStatePH(refData, pBar, x);
         probeX.push(x);
         probeY.push(y);
@@ -1832,11 +1839,36 @@
       if (Number.isFinite(pModoMin) && Number.isFinite(pModoMax) && pModoMin > 0 && pModoMax > 0) {
         const yLow = Math.min(pModoMin, pModoMax) * pf;
         const yHigh = Math.max(pModoMin, pModoMax) * pf;
+        // Zona de aplicación: sombreado muy tenue para no competir con el ciclo.
+        // Las dos fronteras son las únicas líneas visibles de referencia.
         modoBandTraces.push({
           x:[minX,maxX,maxX,minX,minX], y:[yLow,yLow,yHigh,yHigh,yLow],
-          fill:'toself', mode:'lines', line:{color:modo.color,width:1,dash:'dot'},
-          fillcolor:'rgba(148,163,184,0.045)', name:`Rango ${modoEvapActual}`,
+          fill:'toself', mode:'lines',
+          line:{color:'rgba(0,0,0,0)',width:0},
+          fillcolor:'rgba(148,163,184,0.025)', name:`Zona ${modoEvapActual}`,
           hoverinfo:'skip', showlegend:false
+        });
+        modoBandTraces.push({
+          x:[minX,maxX], y:[yLow,yLow], mode:'lines',
+          line:{color:modo.color,width:1,dash:'dot'},
+          hovertemplate:`<b>${modoEvapActual} — límite inferior</b><br>Tevap: ${modo.tMin} °C<extra></extra>`,
+          showlegend:false
+        });
+        modoBandTraces.push({
+          x:[minX,maxX], y:[yHigh,yHigh], mode:'lines',
+          line:{color:modo.color,width:1,dash:'dot'},
+          hovertemplate:`<b>${modoEvapActual} — límite superior</b><br>Tevap: ${modo.tMax} °C<extra></extra>`,
+          showlegend:false
+        });
+        modoBandTraces.push({
+          x:[maxX - (maxX-minX)*0.08],
+          y:[Math.sqrt(yLow*yHigh)],
+          mode:'text',
+          text:[modoEvapActual],
+          textposition:'middle right',
+          textfont:{size:8,color:modo.color},
+          hoverinfo:'skip',
+          showlegend:false
         });
       }
 
@@ -1844,6 +1876,9 @@
 
       const layout = {
         autosize: true,
+        // Navegación del gráfico: arrastrar desplaza el Mollier.
+        // Se evita el zoom rectangular por selección.
+        dragmode: 'pan',
         margin: { l: 22, r: 10, t: 10, b: 22 },
         paper_bgcolor: '#1e293b',
         plot_bgcolor: '#0f172a',
@@ -1873,7 +1908,11 @@
       if (typeof Plotly !== 'undefined') {
         Plotly.react('mollierPlot', [...zoneTraces, ...modoBandTraces, domeTrace, ...idealTraces, cycleTrace, probeTrace], layout, {
           responsive: true,
-          displayModeBar: false
+          displayModeBar: false,
+          // Sin barra de herramientas: la navegación se realiza directamente
+          // sobre el gráfico. Mouse/touch = desplazamiento; rueda/pinch = zoom.
+          scrollZoom: true,
+          doubleClick: 'reset'
         });
       } else {
         console.warn('Plotly todavía no está disponible; se reintentará.');
