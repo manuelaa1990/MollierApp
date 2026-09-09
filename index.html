@@ -179,7 +179,8 @@
 
     .config-row .input-group-ref { flex: 2; min-width: 0; }
     .config-row .input-group-unit { flex: 1; min-width: 0; }
-    .config-row .input-group-app { flex: 1.15; min-width: 0; }
+    .config-row .input-group-app { flex: 1.0; min-width: 0; }
+    .config-row .input-group-exp { flex: 1.25; min-width: 0; }
 
     .controls-grid {
       display: grid;
@@ -546,6 +547,28 @@
             </select>
           </div>
 
+          <div class="input-group input-group-exp">
+            <label for="expansionSelect">Expansión</label>
+            <select id="expansionSelect" onchange="cambiarExpansion()">
+              <optgroup label="Dispositivos de orificio fijo">
+                <option value="CAPILAR">Capilar</option>
+                <option value="ORIFICIO">Orificio fijo</option>
+                <option value="PISTON">Pistón calibrado</option>
+                <option value="SHORT_TUBE">Short-Tube / Restrictor</option>
+              </optgroup>
+              <optgroup label="Válvulas de expansión">
+                <option value="TXV" selected>VET / TXV</option>
+                <option value="AEV">Válvula automática (AEV)</option>
+                <option value="MANUAL">Válvula manual</option>
+                <option value="EEV">Válvula electrónica (EEV)</option>
+              </optgroup>
+              <optgroup label="Control por nivel">
+                <option value="FLOAT_H">Flotador alta presión</option>
+                <option value="FLOAT_L">Flotador baja presión</option>
+              </optgroup>
+            </select>
+          </div>
+
           <div class="input-group input-group-unit">
             <label for="pUnitSelect">U. Presión</label>
             <select id="pUnitSelect" onchange="cambiarUnidades()">
@@ -683,6 +706,7 @@
     let zonaActivaHabilitada = false;
     let compresionIdealVisible = false;
     let modoEvapActual = 'MBP';
+    let expansionActual = 'TXV';
     let pUnitActual = 'psi';
     let tUnitActual = 'C';
     let tempAmbientePuntoFijoC = 30.0;
@@ -944,6 +968,24 @@
       guardarYActualizar();
     }
 
+    function cambiarExpansion() {
+      expansionActual = document.getElementById('expansionSelect').value;
+      guardarYActualizar();
+    }
+
+    const TIPOS_EXPANSION = {
+      CAPILAR: {label:'Capilar', control:'fijo', chargeSensitive:true, shControl:false, levelControl:false, desc:'Restricción fija; el caudal depende de presión, subenfriamiento y carga.'},
+      ORIFICIO: {label:'Orificio fijo', control:'fijo', chargeSensitive:true, shControl:false, levelControl:false, desc:'Orificio calibrado; sensible a carga y condiciones de operación.'},
+      PISTON: {label:'Pistón calibrado', control:'fijo', chargeSensitive:true, shControl:false, levelControl:false, desc:'Restricción fija calibrada; el diagnóstico se apoya en SH + SC + presiones.'},
+      SHORT_TUBE: {label:'Short-Tube / Restrictor', control:'fijo', chargeSensitive:true, shControl:false, levelControl:false, desc:'Restrictor de orificio fijo; sensible a carga y diferencial de presión.'},
+      TXV: {label:'VET / TXV', control:'SH', chargeSensitive:false, shControl:true, levelControl:false, desc:'Válvula termostática que regula el sobrecalentamiento en el evaporador.'},
+      AEV: {label:'Válvula automática (AEV)', control:'Pevap', chargeSensitive:false, shControl:false, levelControl:false, desc:'Regula principalmente la presión de evaporación; el SH puede variar con la carga.'},
+      MANUAL: {label:'Válvula manual', control:'manual', chargeSensitive:false, shControl:false, levelControl:false, desc:'Apertura fija/manual; requiere correlacionar SH, SC y respuesta a carga.'},
+      EEV: {label:'Válvula electrónica (EEV)', control:'SH', chargeSensitive:false, shControl:true, levelControl:false, desc:'Control electrónico; normalmente mantiene un objetivo de sobrecalentamiento mediante sensores.'},
+      FLOAT_H: {label:'Flotador alta presión', control:'nivel', chargeSensitive:false, shControl:false, levelControl:true, desc:'Controla alimentación según nivel de líquido en el lado de alta.'},
+      FLOAT_L: {label:'Flotador baja presión', control:'nivel', chargeSensitive:false, shControl:false, levelControl:true, desc:'Controla alimentación según nivel de líquido en el evaporador/lado de baja.'}
+    };
+
     function guardarConfiguracion() {
       const data = {
         empresaNombre: document.getElementById('empresaNombre').value,
@@ -956,6 +998,7 @@
         capFrigUnit: document.getElementById('capUnitSelect').value,
         refSelect: document.getElementById('refSelect').value,
         modoEvapSelect: document.getElementById('modoEvapSelect').value,
+        expansionSelect: document.getElementById('expansionSelect').value,
         compresionIdealVisible: compresionIdealVisible,
         pUnitSelect: document.getElementById('pUnitSelect').value,
         tUnitSelect: document.getElementById('tUnitSelect').value,
@@ -1007,6 +1050,10 @@
           if (data.modoEvapSelect) {
             document.getElementById('modoEvapSelect').value = data.modoEvapSelect;
             modoEvapActual = data.modoEvapSelect;
+          }
+          if (data.expansionSelect) {
+            document.getElementById('expansionSelect').value = data.expansionSelect;
+            expansionActual = data.expansionSelect;
           }
           if (data.compresionIdealVisible !== undefined) compresionIdealVisible = !!data.compresionIdealVisible;
           if (data.pUnitSelect) document.getElementById('pUnitSelect').value = data.pUnitSelect;
@@ -1357,7 +1404,7 @@
      */
     function evaluarDiagnostico(refData, rP, tDescRealC, tLiqC, tSatCondC,
       SHUtil, SHTotal, SC, dischargeSuperHeatK, tempAmbienteC,
-      pSuctBarAbs, pDescBarAbs, tEvapSatRef) {
+      pSuctBarAbs, pDescBarAbs, tEvapSatRef, expansionKey) {
 
       const alertas = [];
       let alarmaTDesc = false;
@@ -1374,6 +1421,41 @@
 
       const finite = v => Number.isFinite(v);
       const modo = MODOS_EVAP[modoEvapActual] || MODOS_EVAP.MBP;
+
+      const expansion = TIPOS_EXPANSION[expansionKey] || TIPOS_EXPANSION.TXV;
+
+      // La expansión cambia la interpretación diagnóstica, no los estados termodinámicos medidos.
+      if (expansionKey === 'TXV' || expansionKey === 'EEV') {
+        if (finite(SHUtil)) {
+          if (SHUtil < shMin) {
+            score -= 6;
+            alertas.push(`🔴 <b>CONTROL DE EXPANSIÓN — ${expansion.label}:</b> SH útil ${SHUtil.toFixed(1)} K está por debajo del rango ${shMin}–${shMax} K. <span style="color:#fca5a5;">Condición compatible con sobrealimentación del evaporador o control insuficiente; confirme sensor, bulbo/actuador y estabilidad.</span>`);
+          } else if (SHUtil > shMax) {
+            score -= 4;
+            alertas.push(`🟡 <b>CONTROL DE EXPANSIÓN — ${expansion.label}:</b> SH útil ${SHUtil.toFixed(1)} K está por encima de ${shMax} K. <span style="color:#fde68a;">Compatible con evaporador subalimentado, ajuste/control conservador u otra causa.</span>`);
+          } else {
+            evidencias.push(`${expansion.label}: SH útil dentro del objetivo de referencia.`);
+          }
+        }
+      } else if (expansionKey === 'CAPILAR' || expansionKey === 'ORIFICIO' || expansionKey === 'PISTON' || expansionKey === 'SHORT_TUBE') {
+        if (finite(SHUtil) && finite(SC)) {
+          if (SHUtil > shMax && SC < scMin) {
+            score -= 5;
+            alertas.push(`🟠 <b>EXPANSIÓN FIJA — ${expansion.label}:</b> SH útil alto (${SHUtil.toFixed(1)} K) + SC bajo (${SC.toFixed(1)} K). <span style="color:#fcd34d;">La combinación es compatible con evaporador subalimentado; revise carga, restricción, caída de presión y condiciones de condensación.</span>`);
+          } else if (SHUtil < shMin && SC > scMax) {
+            score -= 5;
+            alertas.push(`🟠 <b>EXPANSIÓN FIJA — ${expansion.label}:</b> SH útil bajo (${SHUtil.toFixed(1)} K) + SC alto (${SC.toFixed(1)} K). <span style="color:#fcd34d;">La combinación puede ser compatible con exceso de alimentación/carga o restricción demasiado abierta para las condiciones.</span>`);
+          } else {
+            evidencias.push(`${expansion.label}: SH y SC evaluados conjuntamente por tratarse de un dispositivo fijo.`);
+          }
+        }
+      } else if (expansionKey === 'AEV') {
+        evidencias.push(`${expansion.label}: el SH no se interpreta como una consigna directa de la válvula; se priorizan presión de evaporación y respuesta de carga.`);
+      } else if (expansionKey === 'MANUAL') {
+        evidencias.push(`${expansion.label}: la apertura no se corrige automáticamente; se requiere observar SH/SC y respuesta estable después de cada ajuste.`);
+      } else if (expansionKey === 'FLOAT_H' || expansionKey === 'FLOAT_L') {
+        evidencias.push(`${expansion.label}: el control depende del nivel de líquido; SH/SC no deben interpretarse como única evidencia de regulación.`);
+      }
 
       // Penalización por calidad de datos. Evita un 100% cuando faltan
       // mediciones esenciales o las entradas no son físicamente coherentes.
@@ -1659,7 +1741,7 @@
 
       const { alertas, alarmaTDesc, alarmaTLiq, confiabilidad } = evaluarDiagnostico(
         refData, rP, tDescRealC, tLiqC, tSatCondBubble, superHeatUtilK, superHeatTotalK, subCoolK, dischargeSuperHeatK, tempAmbientePuntoFijoC,
-        pSuctBarAbs, pDescBarAbs, tSatEvapDew
+        pSuctBarAbs, pDescBarAbs, tSatEvapDew, expansionActual
       );
       
       const grpDesc = document.getElementById('grpTDescReal');
@@ -1695,6 +1777,7 @@
       };
 
       const filas = [];
+      filas.push(`<tr class="diag-info"><td class="diag-status">⚙</td><td class="diag-title">Expansión</td><td class="diag-text">${TIPOS_EXPANSION[expansionActual]?.label || expansionActual} · ${TIPOS_EXPANSION[expansionActual]?.desc || ''}</td></tr>`);
       filas.push(`<tr class="diag-info"><td class="diag-status">⚙</td><td class="diag-title">Aplicación</td><td class="diag-text">${modoTexto} · referencia ${MODOS_EVAP[modoEvapActual]?.tMin ?? '—'} a ${MODOS_EVAP[modoEvapActual]?.tMax ?? '—'} °C</td></tr>`);
       alertas.forEach(a => {
         let cls = '';
