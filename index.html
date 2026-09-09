@@ -1204,7 +1204,8 @@
 
       const vVolt = parseFloat(document.getElementById('vVolt').value) || 220;
       const iAmp = parseFloat(document.getElementById('iAmp').value) || 0;
-      // Potencia eléctrica estimada: se conserva el factor 0.90 de la versión base.\n      // No se presenta como potencia medida si no existe PF/medición de kW.\n      const pKw = (vVolt * iAmp * 0.9) / 1000.0;
+      // Potencia eléctrica estimada: se conserva el factor 0.90 de la versión base.
+      // No se presenta como potencia medida si no existe PF/medición de kW.\n      const pKw = (vVolt * iAmp * 0.9) / 1000.0;
 
       const propEvap = getPropAtP(refData, pSuctBarAbs);
       const propCond = getPropAtP(refData, pDescBarAbs);
@@ -1319,15 +1320,38 @@
         }
       };
 
-      Plotly.react('mollierPlot', [...zoneTraces, domeTrace, cycleTrace], layout, { responsive: true, displayModeBar: false });
+      if (typeof Plotly !== 'undefined') {
+        Plotly.react('mollierPlot', [...zoneTraces, domeTrace, cycleTrace], layout, {
+          responsive: true,
+          displayModeBar: false
+        });
+      } else {
+        console.warn('Plotly todavía no está disponible; se reintentará.');
+        setTimeout(() => {
+          if (typeof Plotly !== 'undefined') {
+            actualizarTodo();
+          }
+        }, 800);
+      }
     }
 
     window.addEventListener('DOMContentLoaded', () => {
       cargarConfiguracion();
       actualizarEtiquetas();
       actualizarReloj();
+      actualizarEstadoBotonZoom();
       setInterval(actualizarReloj, 1000);
-      obtenerClimaPuntoFijo();
+
+      // Render inicial independiente de Internet/clima.
+      // Esto garantiza KPIs, alertas y Mollier desde el primer momento.
+      try {
+        actualizarTodo();
+      } catch (e) {
+        console.error('Error en render inicial:', e);
+      }
+
+      // El clima solo actualiza el Delta T después; no bloquea el diagnóstico.
+      obtenerClimaPuntoFijo().catch(e => console.warn('Clima no disponible:', e));
     });
   </script>
 </body>
