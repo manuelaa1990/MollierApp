@@ -179,6 +179,7 @@
 
     .config-row .input-group-ref { flex: 2; min-width: 0; }
     .config-row .input-group-unit { flex: 1; min-width: 0; }
+    .config-row .input-group-app { flex: 1.15; min-width: 0; }
 
     .controls-grid {
       display: grid;
@@ -308,18 +309,64 @@
       width: 100%;
     }
 
-    .diag-item {
-      font-size: 0.62rem;
-      margin-bottom: 2px;
-      line-height: 1.2;
-      display: flex;
-      align-items: flex-start;
-      gap: 4px;
-      text-align: justify;
+    /* Diagnóstico: tabla compacta para separar evidencia, dato e interpretación */
+    .diag-table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid #334155;
+      border-radius: 5px;
+      background: #0b1220;
     }
-
-    .diag-item:last-child {
-      margin-bottom: 0;
+    .diag-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 0.57rem;
+      line-height: 1.15;
+    }
+    .diag-table th {
+      padding: 3px 4px;
+      text-align: left;
+      color: #38bdf8;
+      background: #172033;
+      border-bottom: 1px solid #334155;
+      font-size: 0.52rem;
+      text-transform: uppercase;
+      letter-spacing: .25px;
+    }
+    .diag-table td {
+      padding: 3px 4px;
+      vertical-align: top;
+      border-bottom: 1px solid #263449;
+      color: #cbd5e1;
+      overflow-wrap: anywhere;
+    }
+    .diag-table tr:last-child td { border-bottom: none; }
+    .diag-table .diag-status {
+      width: 30px;
+      text-align: center;
+      font-size: 0.70rem;
+    }
+    .diag-table .diag-title {
+      width: 31%;
+      color: #f8fafc;
+      font-weight: 700;
+    }
+    .diag-table .diag-text { width: auto; }
+    .diag-table .diag-info td {
+      background: rgba(56,189,248,.035);
+      color: #93c5fd;
+    }
+    .diag-table .diag-system td {
+      color: #64748b;
+      font-size: 0.48rem;
+    }
+    .diag-table .diag-compression td {
+      color: #c4b5fd;
+      background: rgba(167,139,250,.035);
+    }
+    .diag-table .diag-conflict td {
+      background: rgba(245,158,11,.035);
     }
 
     .chart-card {
@@ -486,6 +533,16 @@
             </select>
           </div>
 
+          <div class="input-group input-group-app">
+            <label for="modoEvapSelect">Aplicación Evap.</label>
+            <select id="modoEvapSelect" onchange="cambiarModoEvaporacion()">
+              <option value="LBP">LBP — Baja</option>
+              <option value="MBP" selected>MBP — Media</option>
+              <option value="HBP">HBP — Alta</option>
+              <option value="CBP">CBP — Comercial</option>
+            </select>
+          </div>
+
           <div class="input-group input-group-unit">
             <label for="pUnitSelect">U. Presión</label>
             <select id="pUnitSelect" onchange="cambiarUnidades()">
@@ -605,6 +662,9 @@
         <button class="btn btn-toggle" id="btnZonaActiva" onclick="toggleZonaActiva()">
           🔍 Zoom Zona Activa: OFF
         </button>
+        <button class="btn btn-toggle" id="btnCompresionIdeal" onclick="toggleCompresionIdeal()">
+          ⚙ Compresión ideal: OFF
+        </button>
         <!-- Botón verde de reporte -->
         <button class="btn btn-reporte" onclick="descargarPDFReporte()">
           📄 Reporte
@@ -618,6 +678,8 @@
 
   <script>
     let zonaActivaHabilitada = false;
+    let compresionIdealVisible = false;
+    let modoEvapActual = 'MBP';
     let pUnitActual = 'psi';
     let tUnitActual = 'C';
     let tempAmbientePuntoFijoC = 30.0;
@@ -630,6 +692,16 @@
       bar: { factor: 1.0, label: 'Bar', atm: P_ATM_BAR },
       psi: { factor: 14.5038, label: 'PSI', atm: P_ATM_PSI },
       kpa: { factor: 100.0, label: 'kPa', atm: P_ATM_KPA }
+    };
+
+    // Clasificación de aplicación por temperatura de evaporación.
+    // Son envolventes de referencia: el rango exacto depende del compresor/modelo.
+    // LBP/MBP/HBP: referencias de fabricantes; CBP es especialmente dependiente del modelo.
+    const MODOS_EVAP = {
+      LBP: {label:'LBP — Low Back Pressure', tMin:-35, tMax:-10, color:'#38bdf8', desc:'Baja temperatura de evaporación; congeladores, vitrinas y conservación.'},
+      MBP: {label:'MBP — Medium Back Pressure', tMin:-20, tMax:0, color:'#22c55e', desc:'Temperatura media; refrigeración de alimentos y bebidas.'},
+      HBP: {label:'HBP — High Back Pressure', tMin:-5, tMax:15, color:'#f59e0b', desc:'Temperatura alta; enfriadores, deshumidificación y aplicaciones similares.'},
+      CBP: {label:'CBP — Commercial Back Pressure', tMin:-18, tMax:10, color:'#a78bfa', desc:'Aplicación comercial; rango orientativo, verificar ficha del compresor.'}
     };
 
     const refrigerantes = {
@@ -851,6 +923,24 @@
       btn.classList.toggle('active', zonaActivaHabilitada);
     }
 
+    function toggleCompresionIdeal() {
+      compresionIdealVisible = !compresionIdealVisible;
+      actualizarEstadoBotonCompresionIdeal();
+      guardarYActualizar();
+    }
+
+    function actualizarEstadoBotonCompresionIdeal() {
+      const btn = document.getElementById('btnCompresionIdeal');
+      if (!btn) return;
+      btn.innerText = `⚙ Compresión ideal: ${compresionIdealVisible ? 'ON' : 'OFF'}`;
+      btn.classList.toggle('active', compresionIdealVisible);
+    }
+
+    function cambiarModoEvaporacion() {
+      modoEvapActual = document.getElementById('modoEvapSelect').value;
+      guardarYActualizar();
+    }
+
     function guardarConfiguracion() {
       const data = {
         empresaNombre: document.getElementById('empresaNombre').value,
@@ -862,6 +952,8 @@
         capFrigValue: document.getElementById('capFrigValue').value,
         capFrigUnit: document.getElementById('capUnitSelect').value,
         refSelect: document.getElementById('refSelect').value,
+        modoEvapSelect: document.getElementById('modoEvapSelect').value,
+        compresionIdealVisible: compresionIdealVisible,
         pUnitSelect: document.getElementById('pUnitSelect').value,
         tUnitSelect: document.getElementById('tUnitSelect').value,
         pSuct: document.getElementById('pSuct').value,
@@ -909,6 +1001,11 @@
           }
 
           if (data.refSelect) document.getElementById('refSelect').value = data.refSelect;
+          if (data.modoEvapSelect) {
+            document.getElementById('modoEvapSelect').value = data.modoEvapSelect;
+            modoEvapActual = data.modoEvapSelect;
+          }
+          if (data.compresionIdealVisible !== undefined) compresionIdealVisible = !!data.compresionIdealVisible;
           if (data.pUnitSelect) document.getElementById('pUnitSelect').value = data.pUnitSelect;
           if (data.tUnitSelect) document.getElementById('tUnitSelect').value = data.tUnitSelect;
           if (data.pSuct !== undefined) document.getElementById('pSuct').value = data.pSuct;
@@ -924,6 +1021,7 @@
           pUnitActual = document.getElementById('pUnitSelect').value;
           tUnitActual = document.getElementById('tUnitSelect').value;
           actualizarEstadoBotonZoom();
+          actualizarEstadoBotonCompresionIdeal();
         } catch (e) {
           console.error("Error al cargar datos", e);
         }
@@ -1063,6 +1161,31 @@
         cp: cpV,
         source:"tabla local"
       };
+    }
+
+    function getStatePS(refData, pBarAbs, sKjKgK) {
+      const fluid = refData.coolprop;
+      if (window.CoolProp && fluid && Number.isFinite(sKjKgK)) {
+        const P = pBarAbs * 100000;
+        const S = sKjKgK * 1000;
+        const h = cpCall("H", "P", P, "S", S, fluid);
+        const t = cpCall("T", "P", P, "S", S, fluid);
+        if ([h,t].every(Number.isFinite)) {
+          return { h:h/1000, t:t-273.15, s:sKjKgK, source:"CoolProp 6.6.0" };
+        }
+      }
+      return null;
+    }
+
+    function pressureAtT(refData, tC, quality=1) {
+      const fluid = refData.coolprop;
+      if (window.CoolProp && fluid && Number.isFinite(tC)) {
+        try {
+          const pPa = cpCall("P", "T", tC + 273.15, "Q", quality, fluid);
+          if (Number.isFinite(pPa) && pPa > 0) return pPa / 100000;
+        } catch (e) {}
+      }
+      return null;
     }
 
     function getStatePH(refData, pBarAbs, hKjKg) {
@@ -1231,7 +1354,7 @@
      */
     function evaluarDiagnostico(refData, rP, tDescRealC, tLiqC, tSatCondC,
       SHUtil, SHTotal, SC, dischargeSuperHeatK, tempAmbienteC,
-      pSuctBarAbs, pDescBarAbs) {
+      pSuctBarAbs, pDescBarAbs, tEvapSatRef) {
 
       const alertas = [];
       let alarmaTDesc = false;
@@ -1247,6 +1370,7 @@
       const scMax = refData.scOptimo[1];
 
       const finite = v => Number.isFinite(v);
+      const modo = MODOS_EVAP[modoEvapActual] || MODOS_EVAP.MBP;
 
       // Penalización por calidad de datos. Evita un 100% cuando faltan
       // mediciones esenciales o las entradas no son físicamente coherentes.
@@ -1264,6 +1388,17 @@
       if (pDescBarAbs <= pSuctBarAbs) {
         score -= 35;
         alertas.push(`🔴 <b>INCONSISTENCIA DE MEDICIÓN:</b> La presión absoluta de descarga no supera a la de succión. Verifique manómetros, unidades y puntos de toma.`);
+      }
+
+      // Clasificación de aplicación: compara la evaporación real con el modo elegido.
+      // No modifica la termodinámica medida; modifica la referencia diagnóstica.
+      if (finite(tEvapSatRef)) {
+        if (tEvapSatRef < modo.tMin || tEvapSatRef > modo.tMax) {
+          score -= 10;
+          alertas.push(`🟠 <b>APLICACIÓN ${modoEvapActual}:</b> T. evaporación de referencia ${tEvapSatRef.toFixed(1)} °C está fuera del rango orientativo ${modo.tMin} a ${modo.tMax} °C. <span style="color:#fcd34d;">Verifique que la clasificación del compresor coincida con su ficha técnica.</span>`);
+        } else {
+          evidencias.push(`Aplicación ${modoEvapActual}: T. evaporación ${tEvapSatRef.toFixed(1)} °C dentro del rango orientativo ${modo.tMin} a ${modo.tMax} °C.`);
+        }
       }
 
       // Temperatura de descarga: condición crítica real, pero no atribución automática.
@@ -1500,6 +1635,16 @@
       const w = h2 - h1;
       const cop = w > 0 ? (qn / w) : 0;
 
+      // Estado 2s: compresión isentrópica ideal desde el estado 1 hasta P2.
+      // Se calcula siempre para alimentar el motor; el botón solo controla su trazado.
+      const estado2s = (Number.isFinite(estado1.s) && pDescBarAbs > pSuctBarAbs)
+        ? getStatePS(refData, pDescBarAbs, estado1.s)
+        : null;
+      const h2s = estado2s && Number.isFinite(estado2s.h) ? estado2s.h : null;
+      const wIdeal = Number.isFinite(h2s) ? h2s - h1 : null;
+      const etaIs = Number.isFinite(w) && w > 0 && Number.isFinite(wIdeal) && wIdeal > 0
+        ? Math.max(0, Math.min(1.5, wIdeal / w)) : null;
+
       document.getElementById('kpiSHUtil').innerText = `${superHeatUtilK.toFixed(1)} K`;
       document.getElementById('kpiSHTotal').innerText = `${superHeatTotalK.toFixed(1)} K`;
       document.getElementById('kpiSC').innerText = `${subCoolK.toFixed(1)} K`;
@@ -1511,7 +1656,7 @@
 
       const { alertas, alarmaTDesc, alarmaTLiq, confiabilidad } = evaluarDiagnostico(
         refData, rP, tDescRealC, tLiqC, tSatCondBubble, superHeatUtilK, superHeatTotalK, subCoolK, dischargeSuperHeatK, tempAmbientePuntoFijoC,
-        pSuctBarAbs, pDescBarAbs
+        pSuctBarAbs, pDescBarAbs, tSatEvapDew
       );
       
       const grpDesc = document.getElementById('grpTDescReal');
@@ -1525,9 +1670,38 @@
       else grpLiq.classList.remove('alarm-field-active');
 
       const fuenteTermo = refData.thermoSource || (window.CoolProp ? 'CoolProp disponible' : 'tabla local de respaldo');
-      panelAlertas.innerHTML =
-        alertas.map(a => `<div class="diag-item" style="color: #cbd5e1;">${a}</div>`).join('') +
-        `<div class="diag-item" style="color:#64748b;font-size:0.48rem;">Motor P/T-h: ${fuenteTermo}. Las tablas locales son respaldo aproximado.</div>`;
+      const modoTexto = MODOS_EVAP[modoEvapActual] ? MODOS_EVAP[modoEvapActual].label : modoEvapActual;
+      const idealTexto = Number.isFinite(etaIs)
+        ? `2s disponible: h₂s ${h2s.toFixed(1)} kJ/kg · w ideal ${wIdeal.toFixed(1)} kJ/kg · ηis ${(etaIs*100).toFixed(1)} %`
+        : `2s no disponible: se requiere CoolProp para calcular la compresión isentrópica.`;
+      // Presentación estructurada: una fila por evidencia/alerta.
+      // El motor conserva el texto completo; aquí solo lo organizamos visualmente.
+      const escaparHtml = txt => String(txt)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+
+      const filaDiagnostico = (html, extraClass='') => {
+        const raw = String(html);
+        const iconMatch = raw.match(/^(🔴|🟠|🟡|🟢|🔵|⚠️|🔎)/);
+        const icon = iconMatch ? iconMatch[1] : '•';
+        let contenido = raw.replace(/^(🔴|🟠|🟡|🟢|🔵|⚠️|🔎)\s*/, '');
+        const titleMatch = contenido.match(/^<b>(.*?)<\/b>\s*:?\s*/);
+        let title = titleMatch ? titleMatch[1].replace(/:$/,'') : 'Diagnóstico';
+        let detalle = titleMatch ? contenido.slice(titleMatch[0].length) : contenido;
+        return `<tr class="${extraClass}"><td class="diag-status">${icon}</td><td class="diag-title">${title}</td><td class="diag-text">${detalle}</td></tr>`;
+      };
+
+      const filas = [];
+      filas.push(`<tr class="diag-info"><td class="diag-status">⚙</td><td class="diag-title">Aplicación</td><td class="diag-text">${modoTexto} · referencia ${MODOS_EVAP[modoEvapActual]?.tMin ?? '—'} a ${MODOS_EVAP[modoEvapActual]?.tMax ?? '—'} °C</td></tr>`);
+      alertas.forEach(a => {
+        let cls = '';
+        if (String(a).includes('DATOS EN CONFLICTO')) cls = 'diag-conflict';
+        filas.push(filaDiagnostico(a, cls));
+      });
+      filas.push(`<tr class="diag-compression"><td class="diag-status">⚙</td><td class="diag-title">Compresión ideal</td><td class="diag-text">${idealTexto}</td></tr>`);
+      filas.push(`<tr class="diag-system"><td class="diag-status">ⓘ</td><td class="diag-title">Motor termodinámico</td><td class="diag-text">${fuenteTermo}. Las tablas locales son respaldo aproximado.</td></tr>`);
+
+      panelAlertas.innerHTML = `<div class="diag-table-wrap"><table class="diag-table"><thead><tr><th class="diag-status">Est.</th><th>Indicador</th><th>Resultado / interpretación</th></tr></thead><tbody>${filas.join('')}</tbody></table></div>`;
       actualizarBarraConfiabilidad(confiabilidad);
 
       const pSuctPlot = pSuctBarAbs * pf;
@@ -1614,6 +1788,58 @@
         showlegend: false
       };
 
+      // Trazado de compresión ideal: curva 1→2s a entropía constante.
+      const idealTraces = [];
+      if (compresionIdealVisible && estado2s && Number.isFinite(h2s) && Number.isFinite(estado1.s)) {
+        const idealX = [];
+        const idealY = [];
+        const idealT = [];
+        const nIdeal = 28;
+        for (let i = 0; i < nIdeal; i++) {
+          const f = i / (nIdeal - 1);
+          const pBar = pSuctBarAbs * Math.pow(pDescBarAbs / pSuctBarAbs, f);
+          const st = getStatePS(refData, pBar, estado1.s);
+          if (st && Number.isFinite(st.h)) {
+            idealX.push(st.h);
+            idealY.push(pBar * pf);
+            idealT.push(`${convertirTemp(st.t).toFixed(1)} °${tUnitActual}`);
+          }
+        }
+        if (idealX.length > 1) {
+          idealTraces.push({
+            x: idealX, y: idealY, mode:'lines', name:'Compresión ideal 1→2s',
+            line:{color:'#a78bfa', width:2, dash:'dot'},
+            customdata:idealT,
+            hovertemplate:'<b>Compresión ideal 1→2s</b><br>T: %{customdata}<br>P: %{y:.1f} '+pUnits[pUnitActual].label+'<br>h: %{x:.1f} kJ/kg<extra></extra>',
+            showlegend:false
+          });
+          idealTraces.push({
+            x:[h2s], y:[pDescPlot], mode:'markers+text', name:'Punto 2s',
+            text:['2s'], textposition:'top center',
+            textfont:{size:8,color:'#ddd6fe'},
+            marker:{size:8,color:'#a78bfa',symbol:'diamond',line:{color:'#0f172a',width:1.5}},
+            customdata:[[estado2s.t, h2s, estado1.s, wIdeal, etaIs]],
+            hovertemplate:'<b>Punto 2s — compresión ideal</b><br>T: %{customdata[0]:.1f} °C<br>P: %{y:.1f} '+pUnits[pUnitActual].label+'<br>h: %{customdata[1]:.1f} kJ/kg<br>s₁: %{customdata[2]:.3f} kJ/kg·K<br>Trabajo ideal: %{customdata[3]:.1f} kJ/kg<br>ηis: %{customdata[4]:.1%}<extra></extra>',
+            showlegend:false
+          });
+        }
+      }
+
+      const modo = MODOS_EVAP[modoEvapActual] || MODOS_EVAP.MBP;
+      const modoBandTraces = [];
+      const pModoMin = pressureAtT(refData, modo.tMin, 1);
+      const pModoMax = pressureAtT(refData, modo.tMax, 1);
+      if (Number.isFinite(pModoMin) && Number.isFinite(pModoMax) && pModoMin > 0 && pModoMax > 0) {
+        const yLow = Math.min(pModoMin, pModoMax) * pf;
+        const yHigh = Math.max(pModoMin, pModoMax) * pf;
+        modoBandTraces.push({
+          x:[minX,maxX,maxX,minX,minX], y:[yLow,yLow,yHigh,yHigh,yLow],
+          fill:'toself', mode:'lines', line:{color:modo.color,width:1,dash:'dot'},
+          fillcolor:'rgba(148,163,184,0.045)', name:`Rango ${modoEvapActual}`,
+          hoverinfo:'skip', showlegend:false
+        });
+      }
+
       const domeTrace = getDomeTrace(refData);
 
       const layout = {
@@ -1645,7 +1871,7 @@
       };
 
       if (typeof Plotly !== 'undefined') {
-        Plotly.react('mollierPlot', [...zoneTraces, domeTrace, cycleTrace, probeTrace], layout, {
+        Plotly.react('mollierPlot', [...zoneTraces, ...modoBandTraces, domeTrace, ...idealTraces, cycleTrace, probeTrace], layout, {
           responsive: true,
           displayModeBar: false
         });
@@ -1664,6 +1890,7 @@
       actualizarEtiquetas();
       actualizarReloj();
       actualizarEstadoBotonZoom();
+      actualizarEstadoBotonCompresionIdeal();
       setInterval(actualizarReloj, 1000);
 
       // Render inicial independiente de Internet/clima.
