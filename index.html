@@ -3,15 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <link rel="manifest" href="./manifest.json">
-  <link rel="icon" type="image/png" sizes="48x48" href="./favicon-48.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
-  <meta name="theme-color" content="#071a33">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
   <title>Diagramas de Mollier (p-h) Pro - Mediciones y Diagnóstico de Campo</title>
   
   <!-- CDNs necesarios: Plotly para la gráfica y html2pdf para generar el PDF -->
@@ -1593,7 +1584,21 @@
       // sola temperatura de saturación simplificada.
       if (refData.esZeotropico) {
         score -= 6;
-        alertas.push(`🔵 <b>MEZCLA ZEOTRÓPICA (${refData.nombre}):</b> La interpretación de SH/SC depende de punto de rocío y burbuja. <span style="color:#cbd5e1;">La certeza se limita mientras el motor no disponga de ambas referencias P-T.</span>`);
+        const satCheck = { dew: false, bubble: false };
+    try {
+      if (window.CoolProp && refData.coolprop) {
+        const dew = saturationAtP(refData, pSuctBarAbs, 1);
+        const bubble = saturationAtP(refData, pSuctBarAbs, 0);
+        satCheck.dew = !!(dew && Number.isFinite(dew.T));
+        satCheck.bubble = !!(bubble && Number.isFinite(bubble.T));
+      }
+    } catch(e) {}
+    if (satCheck.dew && satCheck.bubble) {
+      alertas.push(`🔵 <b>MEZCLA ZEOTRÓPICA (${refData.nombre}):</b> SH se referencia al punto de rocío y SC al punto de burbuja. <span style="color:#86efac;">Ambas referencias P–T están disponibles en el motor termodinámico.</span>`);
+    } else {
+      const faltan = [!satCheck.dew ? 'rocío' : '', !satCheck.bubble ? 'burbuja' : ''].filter(Boolean).join(' y ');
+      alertas.push(`🟠 <b>REFERENCIA P–T INCOMPLETA (${refData.nombre}):</b> Falta referencia de ${faltan || 'saturación'} para evaluar SH/SC con plena confianza. <span style="color:#cbd5e1;">Verifique disponibilidad del motor termodinámico o utilice una tabla P–T del refrigerante.</span>`);
+    }
       }
 
       // Mensaje global cuando no hay una condición concreta.
@@ -2129,14 +2134,6 @@
 
       gd.addEventListener('touchend', finalizarPinch, { capture: true, passive: false });
       gd.addEventListener('touchcancel', finalizarPinch, { capture: true, passive: false });
-    }
-
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js', { scope: './' })
-          .then(reg => console.info('PWA Service Worker activo:', reg.scope))
-          .catch(err => console.warn('PWA Service Worker no disponible:', err));
-      });
     }
 
     window.addEventListener('DOMContentLoaded', () => {
