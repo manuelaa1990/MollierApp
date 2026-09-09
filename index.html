@@ -8,6 +8,24 @@
   <!-- CDNs necesarios: Plotly para la gráfica y html2pdf para generar el PDF -->
   <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script type="module">
+    /*
+     * Motor termodinámico principal:
+     * CoolProp 6.6.0 WebAssembly. Si no carga, la aplicación conserva
+     * las tablas locales de respaldo para no dejar la interfaz inutilizable.
+     */
+    (async () => {
+      try {
+        const CoolPropModule = await import('https://unpkg.com/coolprop-wasm@6.6.0/coolprop.js');
+        window.CoolProp = await CoolPropModule.default();
+        window.dispatchEvent(new Event('coolprop-ready'));
+        console.info('CoolProp WASM listo:', window.CoolProp.get_global_param_string('version'));
+      } catch (e) {
+        console.warn('CoolProp WASM no disponible; se utilizará el respaldo local.', e);
+        window.dispatchEvent(new Event('coolprop-failed'));
+      }
+    })();
+  </script>
 
   <style>
     * {
@@ -444,15 +462,26 @@
                 <option value="R22">R-22</option>
                 <option value="R410A">R-410A</option>
                 <option value="R32">R-32</option>
+                <option value="R717">R-717 (Amoníaco)</option>
+                <option value="R744">R-744 (CO₂)</option>
               </optgroup>
               <optgroup label="Hidrocarburos (HC)">
                 <option value="R290">R-290 (Propano)</option>
                 <option value="R600a">R-600a (Isobutano)</option>
               </optgroup>
-              <optgroup label="Mezclas HFC (Serie 400 / 500)">
+              <optgroup label="Mezclas HFC / HFO de uso frecuente">
                 <option value="R404A" selected>R-404A</option>
                 <option value="R507A">R-507A</option>
                 <option value="R407C">R-407C</option>
+                <option value="R407F">R-407F</option>
+                <option value="R448A">R-448A</option>
+                <option value="R449A">R-449A</option>
+                <option value="R513A">R-513A</option>
+              </optgroup>
+              <optgroup label="Alternativas / reemplazos de R-22">
+                <option value="R422D">R-422D (reemplazo R-22)</option>
+                <option value="R427A">R-427A (reemplazo R-22)</option>
+                <option value="R438A">R-438A (reemplazo R-22)</option>
               </optgroup>
             </select>
           </div>
@@ -686,6 +715,51 @@
           {p: 7.0, hL: 212.0, hV: 418.0, tSat: 8.5},   {p: 15.0, hL: 252.0, hV: 417.0, tSat: 38.2},
           {p: 30.0, hL: 310.0, hV: 402.0, tSat: 67.4}, {p: 46.3, hL: 410.0, hV: 410.0, tSat: 86.0}
         ]
+      },
+      R717: {
+        nombre: "R-717 (Amoníaco)", criticalP: 113.5, xRange: [700, 1850],
+        cpL: 4.70, cpV: 2.20, glide: 0, tDescMax: 125, shOptimo: [5, 12], scOptimo: [3, 8], rPMax: 8.0, esZeotropico: false,
+        dome: [{p:0.8,hL:260,hV:1460,tSat:-33.3},{p:2,hL:330,hV:1485,tSat:-17},{p:5,hL:430,hV:1510,tSat:2},{p:10,hL:540,hV:1525,tSat:25},{p:25,hL:720,hV:1510,tSat:58},{p:60,hL:980,hV:1430,tSat:95},{p:113.5,hL:1200,hV:1200,tSat:132.4}]
+      },
+      R744: {
+        nombre: "R-744 (CO₂)", criticalP: 73.8, xRange: [180, 520], 
+        cpL: 2.20, cpV: 0.90, glide: 0, tDescMax: 140, shOptimo: [4, 10], scOptimo: [2, 8], rPMax: 4.0, esZeotropico: false,
+        dome: [{p:5.2,hL:180,hV:430,tSat:-56.6},{p:8,hL:205,hV:430,tSat:-46},{p:12,hL:235,hV:440,tSat:-30},{p:20,hL:280,hV:455,tSat:-11},{p:35,hL:335,hV:470,tSat:5},{p:55,hL:390,hV:475,tSat:22},{p:73.8,hL:430,hV:430,tSat:31.0}]
+      },
+      R407F: {
+        nombre: "R-407F", criticalP: 44.9, xRange: [130, 470],
+        cpL: 1.50, cpV: 0.95, glide: 6.0, tDescMax: 105, shOptimo: [5, 9], scOptimo: [3, 7], rPMax: 8.0, esZeotropico: true,
+        dome: [{p:1,hL:145,hV:405,tSat:-44},{p:3,hL:180,hV:414,tSat:-20},{p:7,hL:215,hV:420,tSat:7},{p:15,hL:255,hV:418,tSat:36},{p:30,hL:315,hV:402,tSat:65},{p:44.9,hL:410,hV:410,tSat:82}]
+      },
+      R448A: {
+        nombre: "R-448A", criticalP: 44.7, xRange: [120, 460],
+        cpL: 1.50, cpV: 0.94, glide: 5.0, tDescMax: 105, shOptimo: [5, 9], scOptimo: [3, 7], rPMax: 8.5, esZeotropico: true,
+        dome: [{p:1,hL:140,hV:395,tSat:-45},{p:3,hL:175,hV:405,tSat:-23},{p:7,hL:210,hV:414,tSat:2},{p:15,hL:250,hV:415,tSat:29},{p:30,hL:310,hV:405,tSat:59},{p:44.7,hL:405,hV:405,tSat:82}]
+      },
+      R449A: {
+        nombre: "R-449A", criticalP: 44.5, xRange: [120, 460],
+        cpL: 1.50, cpV: 0.94, glide: 4.5, tDescMax: 105, shOptimo: [5, 9], scOptimo: [3, 7], rPMax: 8.5, esZeotropico: true,
+        dome: [{p:1,hL:140,hV:397,tSat:-45},{p:3,hL:175,hV:407,tSat:-23},{p:7,hL:210,hV:416,tSat:2},{p:15,hL:250,hV:416,tSat:29},{p:30,hL:310,hV:405,tSat:59},{p:44.5,hL:405,hV:405,tSat:82}]
+      },
+      R422D: {
+        nombre: "R-422D", criticalP: 37.95, xRange: [110, 420],
+        cpL: 1.48, cpV: 0.92, glide: 1.6, tDescMax: 100, shOptimo: [5, 10], scOptimo: [3, 7], rPMax: 8.0, esZeotropico: true,
+        dome: [{p:1,hL:130,hV:360,tSat:-43.5},{p:3,hL:160,hV:368,tSat:-23},{p:7,hL:195,hV:374,tSat:1},{p:15,hL:235,hV:372,tSat:28},{p:26,hL:275,hV:360,tSat:54},{p:37.95,hL:325,hV:325,tSat:79.6}]
+      },
+      R427A: {
+        nombre: "R-427A", criticalP: 43.9, xRange: [120, 450],
+        cpL: 1.50, cpV: 0.93, glide: 2.0, tDescMax: 105, shOptimo: [5, 10], scOptimo: [3, 7], rPMax: 8.0, esZeotropico: true,
+        dome: [{p:1,hL:135,hV:390,tSat:-42.7},{p:3,hL:170,hV:399,tSat:-22},{p:7,hL:205,hV:406,tSat:3},{p:15,hL:245,hV:407,tSat:30},{p:30,hL:305,hV:395,tSat:58},{p:43.9,hL:400,hV:400,tSat:85.3}]
+      },
+      R438A: {
+        nombre: "R-438A", criticalP: 42.16, xRange: [120, 450],
+        cpL: 1.48, cpV: 0.93, glide: 1.5, tDescMax: 105, shOptimo: [5, 10], scOptimo: [3, 7], rPMax: 8.0, esZeotropico: true,
+        dome: [{p:1,hL:132,hV:388,tSat:-42.3},{p:3,hL:168,hV:397,tSat:-22},{p:7,hL:204,hV:404,tSat:3},{p:15,hL:244,hV:405,tSat:30},{p:28,hL:300,hV:394,tSat:57},{p:42.16,hL:398,hV:398,tSat:83.7}]
+      },
+      R513A: {
+        nombre: "R-513A", criticalP: 36.48, xRange: [150, 450],
+        cpL: 1.41, cpV: 1.05, glide: 0.1, tDescMax: 100, shOptimo: [5, 9], scOptimo: [3, 7], rPMax: 8.0, esZeotropico: true,
+        dome: [{p:0.7,hL:150,hV:360,tSat:-45},{p:1,hL:160,hV:365,tSat:-39},{p:3,hL:195,hV:375,tSat:-10},{p:7,hL:230,hV:380,tSat:16},{p:15,hL:275,hV:378,tSat:43},{p:28,hL:330,hV:365,tSat:72},{p:36.48,hL:370,hV:370,tSat:94.9}]
       }
     };
 
@@ -878,26 +952,194 @@
       });
     }
 
-    function getPropAtP(refData, pBarAbs) {
+    function cpCall(output, name1, value1, name2, value2, fluid) {
+      if (!window.CoolProp) return null;
+      try {
+        const v = window.CoolProp.PropsSI(output, name1, value1, name2, value2, fluid);
+        return Number.isFinite(v) ? v : null;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function cpConst(output, fluid) {
+      if (!window.CoolProp) return null;
+      try {
+        const v = window.CoolProp.PropsSI(output, "", 0, "", 0, fluid);
+        return Number.isFinite(v) ? v : null;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function refreshCoolPropMeta(refData) {
+      if (!window.CoolProp || !refData.coolprop) return false;
+      try {
+        const pc = cpConst("pcrit", refData.coolprop) / 100000;
+        if (Number.isFinite(pc) && pc > 0) {
+          refData.criticalP = pc;
+          refData.xRange = [refData.xRange[0], Math.max(refData.xRange[1], 450)];
+          return true;
+        }
+      } catch (e) {}
+      return false;
+    }
+
+    function saturationAtP(refData, pBarAbs) {
+      const fluid = refData.coolprop || refData.nombre.replace(/^R-/, "");
+      const P = pBarAbs * 100000;
+
+      if (window.CoolProp && fluid) {
+        try {
+          const tBubbleK = cpCall("T", "P", P, "Q", 0, fluid);
+          const tDewK = cpCall("T", "P", P, "Q", 1, fluid);
+          const hL = cpCall("H", "P", P, "Q", 0, fluid);
+          const hV = cpCall("H", "P", P, "Q", 1, fluid);
+
+          if ([tBubbleK, tDewK, hL, hV].every(Number.isFinite)) {
+            return {
+              hL: hL / 1000,
+              hV: hV / 1000,
+              tBubble: tBubbleK - 273.15,
+              tDew: tDewK - 273.15,
+              tSat: tDewK - 273.15,
+              source: "CoolProp 6.6.0"
+            };
+          }
+        } catch (e) {}
+      }
+
       const dome = refData.dome;
-      if (pBarAbs <= dome[0].p) return dome[0];
-      if (pBarAbs >= refData.criticalP) return dome[dome.length - 1];
+      if (pBarAbs <= dome[0].p) return {...dome[0], tBubble: dome[0].tSat, tDew: dome[0].tSat, source:"tabla local"};
+      if (pBarAbs >= refData.criticalP) {
+        const d = dome[dome.length - 1];
+        return {...d, tBubble:d.tSat, tDew:d.tSat, source:"tabla local"};
+      }
 
       for (let i = 0; i < dome.length - 1; i++) {
         if (pBarAbs >= dome[i].p && pBarAbs <= dome[i+1].p) {
-          const logP = Math.log(pBarAbs);
-          const logP1 = Math.log(dome[i].p);
-          const logP2 = Math.log(dome[i+1].p);
-          const factor = (logP - logP1) / (logP2 - logP1);
-
+          const a = dome[i], b = dome[i+1];
+          const f = (Math.log(pBarAbs) - Math.log(a.p)) / (Math.log(b.p) - Math.log(a.p));
+          const t = a.tSat + f * (b.tSat - a.tSat);
           return {
-            hL: dome[i].hL + factor * (dome[i+1].hL - dome[i].hL),
-            hV: dome[i].hV + factor * (dome[i+1].hV - dome[i].hV),
-            tSat: dome[i].tSat + factor * (dome[i+1].tSat - dome[i].tSat)
+            hL: a.hL + f*(b.hL-a.hL),
+            hV: a.hV + f*(b.hV-a.hV),
+            tSat:t, tBubble:t, tDew:t,
+            source:"tabla local"
           };
         }
       }
       return dome[0];
+    }
+
+    function getPropAtP(refData, pBarAbs) {
+      return saturationAtP(refData, pBarAbs);
+    }
+
+    function getStatePT(refData, pBarAbs, tC) {
+      const fluid = refData.coolprop;
+      if (window.CoolProp && fluid) {
+        const P = pBarAbs * 100000;
+        const T = tC + 273.15;
+        const h = cpCall("H", "P", P, "T", T, fluid);
+        const s = cpCall("S", "P", P, "T", T, fluid);
+        const cp = cpCall("C", "P", P, "T", T, fluid);
+        if ([h, s].every(Number.isFinite)) {
+          return {
+            h: h/1000,
+            s: s/1000,
+            cp: Number.isFinite(cp) ? cp/1000 : null,
+            source:"CoolProp 6.6.0"
+          };
+        }
+      }
+
+      const sat = saturationAtP(refData, pBarAbs);
+      const superheat = Math.max(tC - sat.tDew, 0);
+      const cpV = refData.cpV || 1.0;
+      return {
+        h: sat.hV + superheat*cpV,
+        s: null,
+        cp: cpV,
+        source:"tabla local"
+      };
+    }
+
+    function getStatePH(refData, pBarAbs, hKjKg) {
+      const fluid = refData.coolprop;
+      if (window.CoolProp && fluid) {
+        const P = pBarAbs * 100000;
+        const H = hKjKg * 1000;
+        const t = cpCall("T", "P", P, "H", H, fluid);
+        if (Number.isFinite(t)) return t - 273.15;
+      }
+      return null;
+    }
+
+    function buildCoolPropDome(refData, n=48) {
+      if (!window.CoolProp || !refData.coolprop) return null;
+      const pc = cpConst("pcrit", refData.coolprop);
+      const pmin = cpConst("ptriple", refData.coolprop);
+      if (!Number.isFinite(pc)) return null;
+
+      const lo = Math.max((Number.isFinite(pmin) ? pmin : 5000) / 100000, 0.005);
+      const hi = (pc / 100000) * 0.995;
+      const pts = [];
+
+      for (let i=0; i<n; i++) {
+        const f = i/(n-1);
+        const p = Math.exp(Math.log(lo) + f*(Math.log(hi)-Math.log(lo)));
+        const sat = saturationAtP(refData, p);
+        if (sat && Number.isFinite(sat.hL) && Number.isFinite(sat.hV)) {
+          pts.push({
+            p, hL:sat.hL, hV:sat.hV,
+            tSat:sat.tDew,
+            tBubble:sat.tBubble,
+            tDew:sat.tDew
+          });
+        }
+      }
+      if (pts.length >= 10) {
+        refData.dome = pts;
+        refData.thermoSource = "CoolProp 6.6.0";
+        refData.criticalP = pc/100000;
+        return pts;
+      }
+      return null;
+    }
+
+    const COOLPROP_FLUID_MAP = {
+      R134a: 'R134a',
+      R22: 'R22',
+      R404A: 'R404A',
+      R410A: 'R410A',
+      R32: 'R32',
+      R290: 'R290',
+      R600a: 'R600a',
+      R507A: 'R507A',
+      R407C: 'R407C',
+      R717: 'Ammonia',
+      R744: 'CarbonDioxide',
+      R407F: 'R407F',
+      R448A: 'R448A',
+      R449A: 'R449A',
+      R513A: 'R513A',
+      R422D: 'R422D',
+      R427A: 'R427A',
+      R438A: 'R438A'
+    };
+
+    function prepareRefrigerant(refData) {
+      const selectedKey = document.getElementById('refSelect')?.value;
+      if (!refData.coolprop && selectedKey && COOLPROP_FLUID_MAP[selectedKey]) {
+        refData.coolprop = COOLPROP_FLUID_MAP[selectedKey];
+      }
+
+      if (window.CoolProp && refData.coolprop) {
+        refreshCoolPropMeta(refData);
+        buildCoolPropDome(refData, 52);
+      }
+      return refData;
     }
 
     function getZoneTraces(refData, minX, maxX) {
@@ -1208,29 +1450,53 @@
       // No se presenta como potencia medida si no existe PF/medición de kW.
       const pKw = (vVolt * iAmp * 0.9) / 1000.0;
 
+      prepareRefrigerant(refData);
+
       const propEvap = getPropAtP(refData, pSuctBarAbs);
       const propCond = getPropAtP(refData, pDescBarAbs);
 
-      const superHeatUtilK = Math.max(tEvapOutC - propEvap.tSat, 0);
-      const superHeatTotalK = Math.max(tSuctC - propEvap.tSat, 0);
-      const subCoolK = Math.max(propCond.tSat - tLiqC, 0);
-      const dischargeSuperHeatK = Math.max(tDescRealC - propCond.tSat, 0);
+      // Para mezclas: SH se referencia al punto de rocío y SC al punto de burbuja.
+      const tSatEvapDew = Number.isFinite(propEvap.tDew) ? propEvap.tDew : propEvap.tSat;
+      const tSatCondBubble = Number.isFinite(propCond.tBubble) ? propCond.tBubble : propCond.tSat;
+      const tSatCondDew = Number.isFinite(propCond.tDew) ? propCond.tDew : propCond.tSat;
 
-      const deltaTCondAmb = propCond.tSat - tempAmbientePuntoFijoC;
+      const superHeatUtilK = tEvapOutC - tSatEvapDew;
+      const superHeatTotalK = tSuctC - tSatEvapDew;
+      const subCoolK = tSatCondBubble - tLiqC;
+      const dischargeSuperHeatK = tDescRealC - tSatCondDew;
 
-      const h1 = propEvap.hV + (superHeatTotalK * refData.cpV);
-      const h3 = propCond.hL - (subCoolK * refData.cpL);
-      const h4 = h3; 
+      const deltaTCondAmb = tSatCondBubble - tempAmbientePuntoFijoC;
 
+      /*
+       * ESTADOS REALES:
+       * 1 = P1 + T1
+       * 2 = P2 + T2  <-- la temperatura de descarga ahora determina h2
+       * 3 = P3 + T3
+       * 4 = h3, P4=P1 (expansión isentálpica)
+       *
+       * Ya no se utiliza Math.max() entre una estimación de compresión
+       * y otra térmica. La medición de campo P2/T2 manda sobre el punto 2.
+       */
+      const estado1 = getStatePT(refData, pSuctBarAbs, tSuctC);
+      const estado2 = getStatePT(refData, pDescBarAbs, tDescRealC);
+      const estado3 = getStatePT(refData, pDescBarAbs, tLiqC);
+
+      const h1 = Number.isFinite(estado1.h)
+        ? estado1.h
+        : propEvap.hV + Math.max(superHeatTotalK,0) * (refData.cpV || 1.0);
+
+      const h2 = Number.isFinite(estado2.h)
+        ? estado2.h
+        : propCond.hV + Math.max(dischargeSuperHeatK,0) * (refData.cpV || 1.0);
+
+      const h3 = Number.isFinite(estado3.h)
+        ? estado3.h
+        : propCond.hL - Math.max(subCoolK,0) * (refData.cpL || 1.0);
+
+      const h4 = h3;
       const qn = h1 - h4;
 
       const rP = pDescBarAbs / pSuctBarAbs;
-      const deltaH_isentropico = h1 * 0.15 * Math.log(rP); 
-      const deltaT_superheat_desc = Math.max(tDescRealC - propCond.tSat, 0);
-      const h2_termico = propCond.hV + (deltaT_superheat_desc * refData.cpV);
-
-      const h2 = Math.max(h1 + deltaH_isentropico, h2_termico);
-
       const w = h2 - h1;
       const cop = w > 0 ? (qn / w) : 0;
 
@@ -1244,7 +1510,7 @@
       document.getElementById('kpiDeltaAmb').innerText = `${deltaTCondAmb.toFixed(1)} K`;
 
       const { alertas, alarmaTDesc, alarmaTLiq, confiabilidad } = evaluarDiagnostico(
-        refData, rP, tDescRealC, tLiqC, propCond.tSat, superHeatUtilK, superHeatTotalK, subCoolK, dischargeSuperHeatK, tempAmbientePuntoFijoC,
+        refData, rP, tDescRealC, tLiqC, tSatCondBubble, superHeatUtilK, superHeatTotalK, subCoolK, dischargeSuperHeatK, tempAmbientePuntoFijoC,
         pSuctBarAbs, pDescBarAbs
       );
       
@@ -1258,7 +1524,10 @@
       if (alarmaTLiq) grpLiq.classList.add('alarm-field-active');
       else grpLiq.classList.remove('alarm-field-active');
 
-      panelAlertas.innerHTML = alertas.map(a => `<div class="diag-item" style="color: #cbd5e1;">${a}</div>`).join('');
+      const fuenteTermo = refData.thermoSource || (window.CoolProp ? 'CoolProp disponible' : 'tabla local de respaldo');
+      panelAlertas.innerHTML =
+        alertas.map(a => `<div class="diag-item" style="color: #cbd5e1;">${a}</div>`).join('') +
+        `<div class="diag-item" style="color:#64748b;font-size:0.48rem;">Motor P/T-h: ${fuenteTermo}. Las tablas locales son respaldo aproximado.</div>`;
       actualizarBarraConfiabilidad(confiabilidad);
 
       const pSuctPlot = pSuctBarAbs * pf;
@@ -1272,7 +1541,7 @@
       const t1Str = `${convertirTemp(tSuctC).toFixed(1)} °${tUnitActual}`;
       const t2Str = `${convertirTemp(tDescRealC).toFixed(1)} °${tUnitActual}`;
       const t3Str = `${convertirTemp(tLiqC).toFixed(1)} °${tUnitActual}`;
-      const t4Str = `${convertirTemp(propEvap.tSat).toFixed(1)} °${tUnitActual}`;
+      const t4Str = `${convertirTemp(tSatEvapDew).toFixed(1)} °${tUnitActual}`;
 
       const cycleTrace = {
         x: [h1, h2, h3, h4, h1],
@@ -1289,6 +1558,60 @@
                        'P: %{y:.1f} ' + pUnits[pUnitActual].label + '<br>' +
                        'h: %{x:.1f} kJ/kg<extra></extra>',
         customdata: [t1Str, t2Str, t3Str, t4Str, t1Str]
+      };
+
+
+      // Puntos de consulta: punto medio de cada tramo del ciclo.
+      // El tramo 2-3 es el "medio de la descarga/condensación" que el técnico
+      // puede inspeccionar pasando el cursor por el punto.
+      const probeDefs = [
+        {name:"Medio compresión 1→2", a:[h1,pSuctPlot], b:[h2,pDescPlot], frac:0.50},
+        {name:"Medio descarga / condensación 2→3", a:[h2,pDescPlot], b:[h3,pDescPlot], frac:0.50},
+        {name:"Medio expansión 3→4", a:[h3,pDescPlot], b:[h4,pSuctPlot], frac:0.50},
+        {name:"Medio evaporación 4→1", a:[h4,pSuctPlot], b:[h1,pSuctPlot], frac:0.50}
+      ];
+
+      const probeX = [];
+      const probeY = [];
+      const probeText = [];
+      const probeCustom = [];
+
+      probeDefs.forEach(pr => {
+        const x = pr.a[0] + (pr.b[0]-pr.a[0])*pr.frac;
+        const y = pr.a[1] + (pr.b[1]-pr.a[1])*pr.frac;
+        const pBar = y / pf;
+        const t = getStatePH(refData, pBar, x);
+        probeX.push(x);
+        probeY.push(y);
+        probeText.push("•");
+        probeCustom.push([
+          pr.name,
+          Number.isFinite(t) ? `${convertirTemp(t).toFixed(1)} °${tUnitActual}` : "—",
+          `${(pBar*pf).toFixed(1)} ${pUnits[pUnitActual].label}`,
+          `${x.toFixed(1)} kJ/kg`
+        ]);
+      });
+
+      const probeTrace = {
+        x: probeX,
+        y: probeY,
+        mode: 'markers+text',
+        text: probeText,
+        textposition: 'middle center',
+        name: 'Puntos de consulta',
+        marker: {
+          size: 11,
+          color: '#fbbf24',
+          line: {color:'#0f172a', width:1.5},
+          symbol: 'circle'
+        },
+        customdata: probeCustom,
+        hovertemplate:
+          '<b>%{customdata[0]}</b><br>' +
+          'T aprox.: %{customdata[1]}<br>' +
+          'P: %{customdata[2]}<br>' +
+          'h: %{customdata[3]}<extra></extra>',
+        showlegend: false
       };
 
       const domeTrace = getDomeTrace(refData);
@@ -1322,7 +1645,7 @@
       };
 
       if (typeof Plotly !== 'undefined') {
-        Plotly.react('mollierPlot', [...zoneTraces, domeTrace, cycleTrace], layout, {
+        Plotly.react('mollierPlot', [...zoneTraces, domeTrace, cycleTrace, probeTrace], layout, {
           responsive: true,
           displayModeBar: false
         });
@@ -1353,6 +1676,18 @@
 
       // El clima solo actualiza el Delta T después; no bloquea el diagnóstico.
       obtenerClimaPuntoFijo().catch(e => console.warn('Clima no disponible:', e));
+
+      // Si CoolProp termina de cargar después del primer render,
+      // sustituimos tablas locales por EOS y redibujamos el domo.
+      window.addEventListener('coolprop-ready', () => {
+        try {
+          const rd = refrigerantes[document.getElementById('refSelect').value];
+          prepareRefrigerant(rd);
+          actualizarTodo();
+        } catch (e) {
+          console.error('No se pudo activar CoolProp:', e);
+        }
+      });
     });
   </script>
 </body>
