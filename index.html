@@ -1205,7 +1205,8 @@
       const vVolt = parseFloat(document.getElementById('vVolt').value) || 220;
       const iAmp = parseFloat(document.getElementById('iAmp').value) || 0;
       // Potencia eléctrica estimada: se conserva el factor 0.90 de la versión base.
-      // No se presenta como potencia medida si no existe PF/medición de kW.\n      const pKw = (vVolt * iAmp * 0.9) / 1000.0;
+      // No se presenta como potencia medida si no existe PF/medición de kW.
+      const pKw = (vVolt * iAmp * 0.9) / 1000.0;
 
       const propEvap = getPropAtP(refData, pSuctBarAbs);
       const propCond = getPropAtP(refData, pDescBarAbs);
