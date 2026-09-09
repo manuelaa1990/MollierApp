@@ -1580,25 +1580,30 @@
         score -= 3;
       }
 
-      // Mezclas zeotrópicas: la barra no puede alcanzar alta certeza con una
-      // sola temperatura de saturación simplificada.
+      // Mezclas zeotrópicas: verificar en tiempo real que el motor pueda resolver
+      // ambas referencias de saturación en la presión de succión.
+      // SH -> rocío (Q=1) y SC -> burbuja (Q=0). No se penaliza la certeza
+      // cuando ambas referencias están disponibles en CoolProp.
       if (refData.esZeotropico) {
-        score -= 6;
         const satCheck = { dew: false, bubble: false };
-    try {
-      if (window.CoolProp && refData.coolprop) {
-        const dew = saturationAtP(refData, pSuctBarAbs, 1);
-        const bubble = saturationAtP(refData, pSuctBarAbs, 0);
-        satCheck.dew = !!(dew && Number.isFinite(dew.T));
-        satCheck.bubble = !!(bubble && Number.isFinite(bubble.T));
-      }
-    } catch(e) {}
-    if (satCheck.dew && satCheck.bubble) {
-      alertas.push(`🔵 <b>MEZCLA ZEOTRÓPICA (${refData.nombre}):</b> SH se referencia al punto de rocío y SC al punto de burbuja. <span style="color:#86efac;">Ambas referencias P–T están disponibles en el motor termodinámico.</span>`);
-    } else {
-      const faltan = [!satCheck.dew ? 'rocío' : '', !satCheck.bubble ? 'burbuja' : ''].filter(Boolean).join(' y ');
-      alertas.push(`🟠 <b>REFERENCIA P–T INCOMPLETA (${refData.nombre}):</b> Falta referencia de ${faltan || 'saturación'} para evaluar SH/SC con plena confianza. <span style="color:#cbd5e1;">Verifique disponibilidad del motor termodinámico o utilice una tabla P–T del refrigerante.</span>`);
-    }
+        try {
+          if (window.CoolProp && refData.coolprop && finite(pSuctBarAbs) && pSuctBarAbs > 0) {
+            const dew = saturationAtP(refData, pSuctBarAbs, 1);
+            const bubble = saturationAtP(refData, pSuctBarAbs, 0);
+            satCheck.dew = !!(dew && Number.isFinite(dew.T));
+            satCheck.bubble = !!(bubble && Number.isFinite(bubble.T));
+          }
+        } catch(e) {
+          console.warn('No se pudieron verificar referencias Dew/Bubble:', e);
+        }
+
+        if (satCheck.dew && satCheck.bubble) {
+          alertas.push(`🟢 <b>REFERENCIAS P–T DISPONIBLES (${refData.nombre}):</b> SH se calcula con el punto de rocío y SC con el punto de burbuja. <span style="color:#86efac;">Ambas referencias fueron resueltas por el motor termodinámico para la presión de succión.</span>`);
+        } else {
+          const faltan = [!satCheck.dew ? 'rocío' : '', !satCheck.bubble ? 'burbuja' : ''].filter(Boolean).join(' y ');
+          score -= 8;
+          alertas.push(`🟠 <b>REFERENCIA P–T INCOMPLETA (${refData.nombre}):</b> No fue posible resolver ${faltan || 'las referencias de saturación'} para esta condición. <span style="color:#fcd34d;">SH/SC no deben utilizarse como evidencia principal hasta disponer de la referencia correspondiente.</span>`);
+        }
       }
 
       // Mensaje global cuando no hay una condición concreta.
